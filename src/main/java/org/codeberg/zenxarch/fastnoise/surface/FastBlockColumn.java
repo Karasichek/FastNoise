@@ -5,7 +5,6 @@ import java.util.stream.Stream;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.collection.PaletteStorage;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
@@ -17,9 +16,11 @@ import org.codeberg.zenxarch.fastnoise.mixin.HeightmapAccessor;
 public class FastBlockColumn implements BlockColumn {
 
   private final Chunk chunk;
-  private final BlockPos.Mutable columnPos;
+
+  private int lx;
+  private int lz;
+
   private final int minY;
-  private final int maxY;
   private final PaletteStorage[] heightmapData;
   private final ChunkSection[] sections;
 
@@ -33,11 +34,9 @@ public class FastBlockColumn implements BlockColumn {
   private final Predicate<BlockState>[] predicates =
       Stream.of(heightmaps).map(type -> type.getBlockPredicate()).toArray(Predicate[]::new);
 
-  public FastBlockColumn(final Chunk chunk, final BlockPos.Mutable columnPos) {
+  public FastBlockColumn(final Chunk chunk) {
     this.chunk = chunk;
-    this.columnPos = columnPos;
     this.minY = this.chunk.getBottomY();
-    this.maxY = this.chunk.getTopYInclusive();
     this.heightmapData = new PaletteStorage[heightmaps.length];
 
     for (int i = 0; i < heightmapData.length; i++) {
@@ -46,6 +45,11 @@ public class FastBlockColumn implements BlockColumn {
     }
 
     this.sections = chunk.getSectionArray();
+  }
+
+  public void updateXZ(int x, int z) {
+    this.lx = x;
+    this.lz = z;
   }
 
   public int getSectionIndex(int y) {
@@ -57,9 +61,9 @@ public class FastBlockColumn implements BlockColumn {
   }
 
   private ChunkSection zenxarch$getSection(final int y) {
-    columnPos.setY(y);
-    if (y < minY || y > maxY) return null;
-    return getSection(y);
+    var cy = getSectionIndex(y);
+    if (cy < 0 || cy >= sections.length) return null;
+    return this.sections[cy];
   }
 
   @Override
@@ -67,30 +71,23 @@ public class FastBlockColumn implements BlockColumn {
     var section = zenxarch$getSection(y);
     if (section == null) return VOID_AIR;
     if (section.isEmpty()) return AIR;
-    return section.getBlockState(
-        columnPos.getX() & 0xF, columnPos.getY() & 0xF, columnPos.getZ() & 0xF);
+    return section.getBlockState(lx, y & 0xF, lz);
   }
 
   @Override
   public void setState(int y, BlockState state) {
-    var section = zenxarch$getSection(y);
+    var cy = getSectionIndex(y);
+    if (cy < 0 || cy >= sections.length) return;
+    var section = this.sections[cy];
 
-    int lx = columnPos.getX() & 0xF;
-    int lz = columnPos.getZ() & 0xF;
+    final int ly = y & 0xF;
 
-    section.setBlockState(lx, y & 15, lz, state, false);
+    section.setBlockState(lx, ly, lz, state, false);
     this.fastUpdateHeightmap(lx, lz, y, state);
 
-    if (!state.getFluidState().isEmpty()) {
-      chunk.markBlockForPostProcessing(columnPos);
-    }
-  }
+    if (state.getFluidState().isEmpty()) return;
 
-  public void fastSetState(ChunkSection section, int lx, int ly, int lz, BlockState state) {
-
-    if (!state.getFluidState().isEmpty()) {
-      chunk.markBlockForPostProcessing(columnPos);
-    }
+    Chunk.getList(chunk.getPostProcessingLists(), cy).add((short) (lx | ly << 4 | lz << 8));
   }
 
   public void fastUpdateHeightmap(int lx, int lz, int iy, BlockState state) {

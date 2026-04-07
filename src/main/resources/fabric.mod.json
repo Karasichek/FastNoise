@@ -2,8 +2,8 @@
 	"schemaVersion": 1,
 	"id": "zfastnoise",
 	"version": "${version}",
-	"name": "Fast Noise Mod",
-	"description": "This mod makes improvements to noise gen",
+	"name": "Fast Noise",
+	"description": "Vanilla worldgen optimization mod",
 	"authors": [
 		"ZenXArch"
 	],
@@ -30,9 +30,7 @@
 		"java": ">=25"
 	},
 	"breaks": {
-		"moonrise": "*",
-		"noisium": "*",
-		"noisiumed": "*"
+		"moonrise": "*"
 	},
 	"recommends": {
 		"c2me": "*"

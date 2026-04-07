@@ -12,11 +12,13 @@ import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
+import org.codeberg.zenxarch.fastnoise.surface.biome.BiomeProvider;
+import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeProvider;
+import org.codeberg.zenxarch.fastnoise.surface.biome.NoAllocationBiomeProvider;
 
 public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
-  private final RegistryEntry<Biome>[] singleBiomes;
-  private final int minY;
+  private final BiomeProvider posToBiomeProvider;
 
   public MaterialRuleContext(
       SurfaceBuilder surfaceBuilder,
@@ -35,13 +37,17 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
         posToBiome,
         biomeRegistry,
         heightContext);
-    this.singleBiomes = singleBiomes;
-    this.minY = chunk.getBottomY();
+    this.posToBiomeProvider =
+        FastNoiseConfig.OPTIMIZE_BIOME_ACCESS
+            ? new FastBiomeProvider(chunk, posToBiome)
+            : new NoAllocationBiomeProvider(posToBiome);
+    this.biomeSupplier = this.posToBiomeProvider;
   }
 
   @Override
   public void initHorizontalContext(int blockX, int blockZ) {
     super.initHorizontalContext(blockX, blockZ);
+    this.posToBiomeProvider.updateXZ(blockX, blockZ);
   }
 
   @Override
@@ -52,35 +58,12 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       int blockX,
       int blockY,
       int blockZ) {
-    super.initVerticalContext(
-        stoneDepthAbove, stoneDepthBelow, fluidHeight, blockX, blockY, blockZ);
-
-    if (!FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) return;
-
-    var x = blockX & 0xF;
-    if (x < 2 || x > 13) return;
-    var z = blockZ & 0xF;
-    if (z < 2 || z > 13) return;
-
-    var y = blockY - minY;
-    var ly = y & 0xF;
-    var cy = y >> 4;
-
-    var single = singleBiomes[cy];
-
-    if (single == null) return;
-
-    if (ly < 2) {
-      if (cy == 0) return;
-      if (singleBiomes[cy] != singleBiomes[cy - 1]) return;
-    }
-
-    if (ly > 13) {
-      if (cy == (this.singleBiomes.length - 1)) return;
-      if (singleBiomes[cy] != singleBiomes[cy + 1]) return;
-    }
-
-    this.biomeSupplier = () -> single;
+    this.uniquePosValue++;
+    this.blockY = blockY;
+    this.fluidHeight = fluidHeight;
+    this.stoneDepthBelow = stoneDepthBelow;
+    this.stoneDepthAbove = stoneDepthAbove;
+    this.posToBiomeProvider.updateY(blockY);
   }
 
   @Override

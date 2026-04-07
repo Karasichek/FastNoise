@@ -33,6 +33,20 @@ public abstract class SurfaceBuilderMixin {
       final ChunkNoiseSampler chunkNoiseSampler,
       final MaterialRules.MaterialRule materialRule,
       Operation<Void> op) {
+
+    if (chunk.hasBelowZeroRetrogen()) {
+      op.call(
+          noiseConfig,
+          biomeAccess,
+          biomeRegistry,
+          useLegacyRandom,
+          heightContext,
+          chunk,
+          chunkNoiseSampler,
+          materialRule);
+      return;
+    }
+
     FastSurfaceGen.buildSurface(
         (SurfaceBuilderAccessor) this,
         noiseConfig,
