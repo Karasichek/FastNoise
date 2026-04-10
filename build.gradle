@@ -27,8 +27,8 @@ loom {
   accessWidenerPath = file("src/main/resources/zfastnoise.ct")
 
   decompilerOptions.named("vineflower") {
-        options.put("mark-corresponding-synthetics", "1")
-    }
+    options.put("mark-corresponding-synthetics", "1")
+  }
 
   intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
   useIntermediateMappings = true
