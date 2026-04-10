@@ -53,7 +53,9 @@ dependencies {
 
   // ocl
 
-  modImplementation files("libs/ocl.jar")
+  for (lib in (new File('./libs').list())) {
+    modImplementation files("libs/$lib")
+  }
 }
 
 processResources {
