@@ -22,7 +22,8 @@
 		]
 	},
 	"mixins": [
-		"zfastnoise.mixins.json"
+		"zfastnoise.mixins.json",
+    "zfastnoise.ocl.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=${loader_version}",
