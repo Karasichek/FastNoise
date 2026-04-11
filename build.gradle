@@ -36,6 +36,7 @@ loom {
 
 test {
   useJUnitPlatform()
+  workingDir = file("run")
 }
 
 dependencies {
