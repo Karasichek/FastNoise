@@ -75,6 +75,7 @@ public class FastSurfaceGen {
     final int endY = chunk.getBottomY();
     final int topY = chunk.getTopYInclusive();
 
+    @SuppressWarnings("unchecked")
     RegistryEntry<Biome>[] surfaceBiomes = new RegistryEntry[256];
 
     // TODO: just update the chunk cache instead
