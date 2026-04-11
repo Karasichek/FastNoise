@@ -91,6 +91,7 @@ public class FastNoiseConfig {
   }
 
   public static final boolean OPTIMIZE_END_BIOMES = get(FastNoiseConfigEntries.OPTIMIZE_END_BIOMES);
+  public static final boolean OPTIMIZE_BIOME_TREE = get(FastNoiseConfigEntries.OPTIMIZE_BIOME_TREE);
   public static final boolean OPTIMIZE_FIXED_BIOMES =
       get(FastNoiseConfigEntries.OPTIMIZE_FIXED_BIOMES);
   public static final boolean SKIP_TRIVIAL_SURFACE_BUILDER =
