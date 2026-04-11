@@ -97,7 +97,7 @@ public final class FastCopyBufferDataIntoChunks {
       FastChunkSection section,
       BlockState defaultState,
       CLBlockStateMappings mappings) {
-    var blockIdx = value & 0x7F;
+    var blockIdx = value & ((byte) 0x7F);
 
     if (blockIdx == 1) return false;
     if (blockIdx == 2) {
@@ -105,10 +105,10 @@ public final class FastCopyBufferDataIntoChunks {
       return false;
     }
 
-    var state = mappings.getBlockState(value);
+    var state = mappings.getBlockState(blockIdx);
     section.setBlockState(x, y, z, state);
 
-    return (value & 0x80) != 0;
+    return (value & (byte) 0x80) != 0;
   }
 
   private static final BlockState AIR = Blocks.AIR.getDefaultState();
