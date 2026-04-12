@@ -4,9 +4,11 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeSupplier;
 import net.minecraft.world.biome.source.FixedBiomeSource;
+import net.minecraft.world.biome.source.MultiNoiseBiomeSource;
 import net.minecraft.world.biome.source.TheEndBiomeSource;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil.MultiNoiseSampler;
+import net.minecraft.world.biome.source.util.MultiNoiseUtil.SearchTree.TreeNode;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.PalettedContainer;
@@ -14,8 +16,11 @@ import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.noise.NoiseConfig;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.mixin.ChunkNoiseSamplerAccessor;
+import org.codeberg.zenxarch.fastnoise.mixin.EntriesAccessor;
+import org.codeberg.zenxarch.fastnoise.mixin.MultiNoiseBiomeSourceAccessor;
 
 public final class FastBiomeGen {
 
@@ -50,6 +55,13 @@ public final class FastBiomeGen {
           createSampler(sampler, config, settings));
       return;
     }
+
+    if (FastNoiseConfig.OPTIMIZE_BIOME_TREE
+        && supplier instanceof MultiNoiseBiomeSource multiNoise) {
+      populateMultiNoiseBiomes(multiNoise, chunk, createSampler(sampler, config, settings));
+      return;
+    }
+
     populateBiomes(chunk, supplier, createSampler(sampler, config, settings));
   }
 
@@ -189,5 +201,40 @@ public final class FastBiomeGen {
       FastNoisePaletteHelper.packFourEntries(
           (PalettedContainer<RegistryEntry<Biome>>) sections[i].biomeContainer, a, b, c, d);
     }
+  }
+
+  private static void populateMultiNoiseBiomes(
+      MultiNoiseBiomeSource source, Chunk chunk, MultiNoiseSampler sampler) {
+    @SuppressWarnings("unchecked")
+    final var tree =
+        ((EntriesAccessor<RegistryEntry<Biome>>)
+                ((MultiNoiseBiomeSourceAccessor) source).zenxarch$getBiomeEntries())
+            .zenxarch$tree();
+
+    final var resultNode = new MutableObject<>(tree.previousResultNode.get());
+
+    final long[] point = new long[] {0, 0, 0, 0, 0, 0, 0};
+
+    BiomeSupplier modifiedSupplier =
+        (x, y, z, samplerx) -> {
+          var sampled = sampler.sample(x, y, z);
+
+          point[0] = sampled.temperatureNoise();
+          point[1] = sampled.humidityNoise();
+          point[2] = sampled.continentalnessNoise();
+          point[3] = sampled.erosionNoise();
+          point[4] = sampled.depth();
+          point[5] = sampled.weirdnessNoise();
+
+          var leaf =
+              tree.firstNode.getResultingNode(
+                  point, resultNode.get(), TreeNode::getSquaredDistance);
+          resultNode.setValue(leaf);
+          return leaf.value;
+        };
+
+    populateBiomes(chunk, modifiedSupplier, sampler);
+
+    tree.previousResultNode.set(resultNode.get());
   }
 }
