@@ -15,7 +15,7 @@ public final class FastChunkCache {
     for (int i = 0; i < sections.length; i++) {
       caches[i] =
           switch (sections[i].blockStateContainer.data.palette()) {
-            case SingularPalette<BlockState> _ -> new FastSectionCache();
+            case SingularPalette<BlockState> unused -> new FastSectionCache();
             case ArrayPalette<BlockState> array ->
                 new FastSectionCache(
                     array, sections[i].blockStateContainer.data.storage().getData(), defaultState);
