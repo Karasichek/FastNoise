@@ -228,13 +228,13 @@ public final class FastBiomeGen {
 
           var leaf =
               tree.firstNode.getResultingNode(
-                  point, resultNode.get(), TreeNode::getSquaredDistance);
+                  point, resultNode.getValue(), TreeNode::getSquaredDistance);
           resultNode.setValue(leaf);
           return leaf.value;
         };
 
     populateBiomes(chunk, modifiedSupplier, sampler);
 
-    tree.previousResultNode.set(resultNode.get());
+    tree.previousResultNode.set(resultNode.getValue());
   }
 }
