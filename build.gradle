@@ -56,6 +56,9 @@ dependencies {
 
   for (lib in (new File('./libs').list())) {
     modImplementation files("libs/$lib")
+    modImplementation zipTree("libs/$lib").matching {
+      include '**/*.jar'
+    }
   }
 }
 
