@@ -59,3 +59,6 @@ publish ptype="alpha":
 
 task taskName:
     ./gradlew {{taskName}}
+
+bytecode:
+    ./bytecode.sh
