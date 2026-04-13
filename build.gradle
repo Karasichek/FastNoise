@@ -152,6 +152,8 @@ task curseforge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge) {
   mainFile.addGameVersion("Client")
   mainFile.addGameVersion("Server")
 
+  mainFile.addGameVersion("1.21.9")
+
   mainFile.addGameVersion(project.cf_mc_version)
 
   mainFile.withAdditionalFile(sourcesJar)
