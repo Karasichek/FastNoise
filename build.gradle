@@ -3,6 +3,7 @@ plugins {
   id 'maven-publish'
   id 'me.champeau.jmh' version "${jmh_version}"
   id "com.modrinth.minotaur" version "${minotaur_version}"
+  id "net.darkhax.curseforgegradle" version "${cf_gradle_version}"
 }
 
 version = project.mod_version + "+" + project.minecraft_version
@@ -143,6 +144,30 @@ modrinth {
   dependencies {
     incompatible.project "moonrise-opt"
   }
+}
+
+task curseforge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+  dependsOn(remapJar)
+  dependsOn(sourcesJar)
+
+  apiToken = System.getenv("CURSEFORGE_TOKEN")
+  def projectId = "1460602"
+
+  def mainFile = upload(projectId, remapJar)
+
+  mainFile.changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
+  mainFile.changelogType = "markdown"
+
+  mainFile.releaseType = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
+  mainFile.addModLoader("Quilt")
+  mainFile.addJavaVersion("Java 25")
+
+  mainFile.addGameVersion("Client")
+  mainFile.addGameVersion("Server")
+
+  mainFile.addGameVersion(project.cf_mc_version)
+
+  mainFile.withAdditionalFile(sourcesJar)
 }
 
 tasks.register("prodClient", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
