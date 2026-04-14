@@ -66,7 +66,7 @@ public class FastSurfaceGen {
             noiseConfig,
             chunk,
             chunkNoiseSampler,
-            biomeAccess::getBiome,
+            biomeAccess,
             biomeRegistry,
             heightContext);
     var rule = materialRule.apply(context);
