@@ -3,6 +3,7 @@ plugins {
   id 'maven-publish'
   id 'me.champeau.jmh' version "${jmh_version}"
   id "com.modrinth.minotaur" version "${minotaur_version}"
+  id "net.darkhax.curseforgegradle" version "${cf_gradle_version}"
 }
 
 version = project.mod_version + "+" + project.minecraft_version + "+neoforge"
@@ -27,8 +28,8 @@ loom {
   accessWidenerPath = file("src/main/resources/zfastnoise.ct")
 
   decompilerOptions.named("vineflower") {
-        options.put("mark-corresponding-synthetics", "1")
-    }
+    options.put("mark-corresponding-synthetics", "1")
+  }
 
   intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
   useIntermediateMappings = true
@@ -37,6 +38,12 @@ loom {
 remapJar {
   atAccessWideners.add("zfastnoise.ct")
 }
+
+// TODO: fix after neo-loom fixes it
+// test {
+//  useJUnitPlatform()
+//  workingDir = mkdir("run")
+// }
 
 dependencies {
   // To change the versions see the gradle.properties file
@@ -135,6 +142,30 @@ modrinth {
   dependencies {
     incompatible.project "moonrise-opt"
   }
+}
+
+task curseforge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+  dependsOn(remapJar)
+  dependsOn(sourcesJar)
+
+  apiToken = System.getenv("CURSEFORGE_TOKEN")
+  def projectId = "1460602"
+
+  def mainFile = upload(projectId, remapJar)
+
+  mainFile.changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
+  mainFile.changelogType = "markdown"
+
+  mainFile.releaseType = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
+  mainFile.addModLoader("NeoForge")
+  mainFile.addJavaVersion("Java 25")
+
+  mainFile.addGameVersion("Client")
+  mainFile.addGameVersion("Server")
+
+  mainFile.addGameVersion(project.cf_mc_version)
+
+  mainFile.withAdditionalFile(sourcesJar)
 }
 
 // TODO: Uncomment after it is implemented

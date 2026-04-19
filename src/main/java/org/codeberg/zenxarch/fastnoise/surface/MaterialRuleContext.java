@@ -27,8 +27,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       ChunkNoiseSampler chunkNoiseSampler,
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
       Registry<Biome> biomeRegistry,
-      HeightContext heightContext,
-      RegistryEntry<Biome>[] singleBiomes) {
+      HeightContext heightContext) {
     super(
         surfaceBuilder,
         noiseConfig,

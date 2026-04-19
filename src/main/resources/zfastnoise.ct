@@ -49,3 +49,16 @@ accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthBelow I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthAbove I
 
+# threadlocal
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree
+accessible field net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree firstNode Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode;
+accessible field net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree previousResultNode Ljava/lang/ThreadLocal;
+
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode
+accessible field net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode value Ljava/lang/Object;
+
+accessible method net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode getSquaredDistance ([J)J
+accessible method net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode getResultingNode ([JLnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode;Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction;)Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode;
+
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction
