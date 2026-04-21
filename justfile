@@ -54,7 +54,8 @@ curseforge ptype="alpha":
 publish ptype="alpha":
     touch changelog.md
     $EDITOR changelog.md
-    ./gradlew modrinth curseforge -Pzmtype="{{ptype}}"
+    ./gradlew modrinth -Pzmtype="{{ptype}}"
+    ./gradlew curseforge -Pzmtype="{{ptype}}"
     rm changelog.md
 
 task taskName:
