@@ -40,7 +40,7 @@ loom {
 
 test {
   useJUnitPlatform()
-  workingDir = mkdir("run")
+  workingDir = mkdir(layout.buildDirectory.dir("testrun"))
 }
 
 dependencies {
