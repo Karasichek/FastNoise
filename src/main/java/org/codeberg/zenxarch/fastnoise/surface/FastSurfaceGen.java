@@ -1,8 +1,8 @@
 package org.codeberg.zenxarch.fastnoise.surface;
 
+import java.util.Set;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -43,12 +43,12 @@ public class FastSurfaceGen {
       SurfaceBuilderAccessor builder,
       final NoiseConfig noiseConfig,
       final BiomeAccess biomeAccess,
-      final Registry<Biome> biomeRegistry,
       final boolean useLegacyRandom,
       final HeightContext heightContext,
       final Chunk chunk,
       final ChunkNoiseSampler chunkNoiseSampler,
-      final MaterialRules.MaterialRule materialRule) {
+      final MaterialRules.MaterialRule materialRule,
+      final Set<RegistryEntry<Biome>> possibleBiomes) {
 
     final var defaultState = builder.zenxarch$getDefaultState();
 
@@ -67,8 +67,8 @@ public class FastSurfaceGen {
             chunk,
             chunkNoiseSampler,
             biomeAccess::getBiome,
-            biomeRegistry,
-            heightContext);
+            heightContext,
+            possibleBiomes);
     var rule = materialRule.apply(context);
     BlockPos.Mutable blockPos = new BlockPos.Mutable();
 
@@ -146,8 +146,7 @@ public class FastSurfaceGen {
 
               stoneAboveDepth++;
               int stoneBelowDepth = y - nextCeilingStoneY + 1;
-              context.initVerticalContext(
-                  stoneAboveDepth, stoneBelowDepth, waterHeight, blockX, y, blockZ);
+              context.initVerticalContext(stoneAboveDepth, stoneBelowDepth, waterHeight, y);
             }
             case STONE -> {
               if (nextCeilingStoneY >= y)
@@ -156,8 +155,7 @@ public class FastSurfaceGen {
 
               stoneAboveDepth++;
               int stoneBelowDepth = y - nextCeilingStoneY + 1;
-              context.initVerticalContext(
-                  stoneAboveDepth, stoneBelowDepth, waterHeight, blockX, y, blockZ);
+              context.initVerticalContext(stoneAboveDepth, stoneBelowDepth, waterHeight, y);
               setBlockState(section, x, y, z, rule.tryApply(blockX, y, blockZ), column, chunk);
             }
           }

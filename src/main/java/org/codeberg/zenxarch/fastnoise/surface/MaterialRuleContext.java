@@ -1,7 +1,7 @@
 package org.codeberg.zenxarch.fastnoise.surface;
 
+import java.util.Set;
 import java.util.function.Function;
-import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
@@ -26,21 +26,20 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       Chunk chunk,
       ChunkNoiseSampler chunkNoiseSampler,
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
-      Registry<Biome> biomeRegistry,
-      HeightContext heightContext) {
+      HeightContext heightContext,
+      final Set<RegistryEntry<Biome>> possibleBiomes) {
     super(
         surfaceBuilder,
         noiseConfig,
         chunk,
         chunkNoiseSampler,
         posToBiome,
-        biomeRegistry,
-        heightContext);
+        heightContext,
+        possibleBiomes);
     this.posToBiomeProvider =
         FastNoiseConfig.OPTIMIZE_BIOME_ACCESS
             ? new FastBiomeProvider(chunk, posToBiome)
             : new NoAllocationBiomeProvider(posToBiome);
-    this.biomeSupplier = this.posToBiomeProvider;
   }
 
   @Override
@@ -51,18 +50,18 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
   @Override
   public void initVerticalContext(
-      int stoneDepthAbove,
-      int stoneDepthBelow,
-      int fluidHeight,
-      int blockX,
-      int blockY,
-      int blockZ) {
+      int stoneDepthAbove, int stoneDepthBelow, int fluidHeight, int blockY) {
     this.uniquePosValue++;
     this.blockY = blockY;
     this.fluidHeight = fluidHeight;
     this.stoneDepthBelow = stoneDepthBelow;
     this.stoneDepthAbove = stoneDepthAbove;
     this.posToBiomeProvider.updateY(blockY);
+  }
+
+  @Override
+  protected RegistryEntry<Biome> method_1_5130() {
+    return this.posToBiomeProvider.get();
   }
 
   @Override
