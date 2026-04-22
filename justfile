@@ -63,3 +63,6 @@ task taskName:
 
 bytecode:
     ./bytecode.sh
+
+asprof:
+    ./asprof.sh
