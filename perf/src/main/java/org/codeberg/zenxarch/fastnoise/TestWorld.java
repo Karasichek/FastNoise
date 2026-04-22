@@ -1,8 +1,10 @@
 package org.codeberg.zenxarch.fastnoise;
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Set;
 import net.minecraft.block.Blocks;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -137,8 +139,21 @@ public final class TestWorld {
         noiseConfig,
         null,
         new BiomeAccess(biomeSource, this.seed),
-        registry,
-        Blender.getNoBlending());
+        Blender.getNoBlending(),
+        getBiomesAround(biomeSource, chunk.getPos(), 1));
+  }
+
+  private static Set<RegistryEntry<Biome>> getBiomesAround(
+      final ChunkRegion region, ChunkPos center, final int radiusChunks) {
+    Set<RegistryEntry<Biome>> chunkBiomes = new ReferenceOpenHashSet<>();
+
+    for (int z = center.z() - radiusChunks; z <= center.z() + radiusChunks; z++) {
+      for (int x = center.x() - radiusChunks; x <= center.x() + radiusChunks; x++) {
+        region.getChunk(x, z).getBiomes(chunkBiomes);
+      }
+    }
+
+    return chunkBiomes;
   }
 
   public static void matches(ProtoChunk a, ProtoChunk b) {
