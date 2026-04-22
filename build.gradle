@@ -22,8 +22,6 @@ repositories {
   maven {
     url = "https://repo.codemc.io/repository/relativitymc/"
   }
-
-  mavenLocal()
 }
 
 loom {
