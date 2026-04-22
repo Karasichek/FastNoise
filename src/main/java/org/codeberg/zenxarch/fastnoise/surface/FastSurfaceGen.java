@@ -207,7 +207,7 @@ public class FastSurfaceGen {
       int lx,
       int lz,
       FastChunkCache chunkCache) {
-    final int wayBelowMinY = DimensionType.MIN_HEIGHT_SECTIONS;
+    final int wayBelowMinY = DimensionType.BELOW_MIN_HEIGHT;
     if (startY <= minY) {
       if (!builder.zenxarch$isDefaultBlock(VOID_AIR)) return minY - 1;
       return wayBelowMinY;
