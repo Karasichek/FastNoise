@@ -33,8 +33,7 @@ loom {
     options.put("mark-corresponding-synthetics", "1")
   }
 
-  intermediaryUrl = new URI("https://repo.codemc.io/repository/relativitymc/").resolve('org/relativitymc/intermediary').resolve(project.minecraft_version)
-    .resolve("intermediary-" + project.minecraft_version + "-v2.jar").toString()
+  intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
   useIntermediateMappings = true
 }
 
