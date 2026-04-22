@@ -32,7 +32,7 @@ public abstract class SurfaceBuilderMixin {
       final Chunk chunk,
       final ChunkNoiseSampler chunkNoiseSampler,
       final MaterialRules.MaterialRule materialRule,
-      final Set<RegistryEntry<Biome>> possibleBiomes,
+      final Set<RegistryEntry<Biome>> includedBiomes,
       Operation<Void> op) {
     if (!FastSurfaceGen.canUseSurfaceBuilder(chunk)) {
       op.call(
@@ -43,7 +43,7 @@ public abstract class SurfaceBuilderMixin {
           chunk,
           chunkNoiseSampler,
           materialRule,
-          possibleBiomes);
+          includedBiomes);
       return;
     }
 
@@ -56,6 +56,6 @@ public abstract class SurfaceBuilderMixin {
         chunk,
         chunkNoiseSampler,
         materialRule,
-        possibleBiomes);
+        includedBiomes);
   }
 }

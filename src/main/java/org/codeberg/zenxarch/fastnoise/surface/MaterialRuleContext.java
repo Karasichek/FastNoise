@@ -27,7 +27,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       ChunkNoiseSampler chunkNoiseSampler,
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
       HeightContext heightContext,
-      final Set<RegistryEntry<Biome>> possibleBiomes) {
+      final Set<RegistryEntry<Biome>> includedBiomes) {
     super(
         surfaceBuilder,
         noiseConfig,
@@ -35,7 +35,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
         chunkNoiseSampler,
         posToBiome,
         heightContext,
-        possibleBiomes);
+        includedBiomes);
     this.posToBiomeProvider =
         FastNoiseConfig.OPTIMIZE_BIOME_ACCESS
             ? new FastBiomeProvider(chunk, posToBiome)

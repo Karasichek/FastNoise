@@ -20,6 +20,7 @@ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
+import org.codeberg.zenxarch.fastnoise.FastNoiseConstants;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.mixin.SurfaceBuilderAccessor;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastChunkCache;
@@ -48,7 +49,7 @@ public class FastSurfaceGen {
       final Chunk chunk,
       final ChunkNoiseSampler chunkNoiseSampler,
       final MaterialRules.MaterialRule materialRule,
-      final Set<RegistryEntry<Biome>> possibleBiomes) {
+      final Set<RegistryEntry<Biome>> includedBiomes) {
 
     final var defaultState = builder.zenxarch$getDefaultState();
 
@@ -68,7 +69,7 @@ public class FastSurfaceGen {
             chunkNoiseSampler,
             biomeAccess::getBiome,
             heightContext,
-            possibleBiomes);
+            includedBiomes);
     var rule = materialRule.apply(context);
     BlockPos.Mutable blockPos = new BlockPos.Mutable();
 
