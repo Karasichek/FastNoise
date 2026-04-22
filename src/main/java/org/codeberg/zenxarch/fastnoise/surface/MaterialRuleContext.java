@@ -60,7 +60,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   }
 
   @Override
-  protected RegistryEntry<Biome> method_1_5130() {
+  protected RegistryEntry<Biome> getCurrentBiome() {
     return this.posToBiomeProvider.get();
   }
 
