@@ -33,7 +33,7 @@ loom {
     options.put("mark-corresponding-synthetics", "1")
   }
 
-  intermediaryUrl = repositories.mavenLocal().getUrl().resolve('org/relativitymc/intermediary').resolve(project.minecraft_version)
+  intermediaryUrl = new URI("https://repo.codemc.io/repository/relativitymc/").resolve('org/relativitymc/intermediary').resolve(project.minecraft_version)
     .resolve("intermediary-" + project.minecraft_version + "-v2.jar").toString()
   useIntermediateMappings = true
 }
