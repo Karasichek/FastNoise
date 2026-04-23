@@ -86,3 +86,5 @@ task taskName:
     ./gradlew {{taskName}}
 bytecode:
     ./bytecode.sh
+asprof:
+    ./asprof.sh
