@@ -12,13 +12,9 @@ import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
-import org.codeberg.zenxarch.fastnoise.surface.biome.BiomeProvider;
 import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeProvider;
-import org.codeberg.zenxarch.fastnoise.surface.biome.NoAllocationBiomeProvider;
 
 public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
-
-  private final BiomeProvider posToBiomeProvider;
 
   public MaterialRuleContext(
       SurfaceBuilder surfaceBuilder,
@@ -33,35 +29,26 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
         noiseConfig,
         chunk,
         chunkNoiseSampler,
-        posToBiome,
+        mapPosToBiome(chunk, posToBiome),
         heightContext,
         includedBiomes);
-    this.posToBiomeProvider =
-        FastNoiseConfig.OPTIMIZE_BIOME_ACCESS
-            ? new FastBiomeProvider(chunk, posToBiome)
-            : new NoAllocationBiomeProvider(posToBiome);
+  }
+
+  private static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
+      Chunk chunk, Function<BlockPos, RegistryEntry<Biome>> posToBiome) {
+    if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) return new FastBiomeProvider(chunk, posToBiome);
+    return posToBiome;
   }
 
   @Override
   public void initHorizontalContext(int blockX, int blockZ) {
     super.initHorizontalContext(blockX, blockZ);
-    this.posToBiomeProvider.updateXZ(blockX, blockZ);
   }
 
   @Override
   public void initVerticalContext(
       int stoneDepthAbove, int stoneDepthBelow, int fluidHeight, int blockY) {
-    this.uniquePosValue++;
-    this.blockY = blockY;
-    this.fluidHeight = fluidHeight;
-    this.stoneDepthBelow = stoneDepthBelow;
-    this.stoneDepthAbove = stoneDepthAbove;
-    this.posToBiomeProvider.updateY(blockY);
-  }
-
-  @Override
-  protected RegistryEntry<Biome> getCurrentBiome() {
-    return this.posToBiomeProvider.get();
+    super.initVerticalContext(stoneDepthAbove, stoneDepthBelow, fluidHeight, blockY);
   }
 
   @Override
