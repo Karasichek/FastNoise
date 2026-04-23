@@ -29,14 +29,21 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
         noiseConfig,
         chunk,
         chunkNoiseSampler,
-        mapPosToBiome(chunk, posToBiome),
+        mapPosToBiome(chunk, posToBiome, includedBiomes),
         heightContext,
         includedBiomes);
   }
 
   private static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
-      Chunk chunk, Function<BlockPos, RegistryEntry<Biome>> posToBiome) {
-    if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) return new FastBiomeProvider(chunk, posToBiome);
+      Chunk chunk,
+      Function<BlockPos, RegistryEntry<Biome>> posToBiome,
+      Set<RegistryEntry<Biome>> includedBiomes) {
+    if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) {
+      if (includedBiomes.size() == 1) {
+        for (var biome : includedBiomes) return (_) -> biome;
+      }
+      return new FastBiomeProvider(chunk, posToBiome);
+    }
     return posToBiome;
   }
 
