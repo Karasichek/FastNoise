@@ -29,6 +29,7 @@ loom {
 
 	forge {
         mixinConfig 'zfastnoise.mixins.json'
+		convertAccessWideners = true
     }
 }
 
