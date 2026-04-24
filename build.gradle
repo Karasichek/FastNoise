@@ -1,5 +1,5 @@
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+	id 'dev.architectury.loom' version "${loom_version}"
 	id 'maven-publish'
 	id 'me.champeau.jmh' version "${jmh_version}"
 	id "com.modrinth.minotaur" version "${minotaur_version}"
@@ -26,31 +26,31 @@ loom {
 	decompilerOptions.named("vineflower") {
         options.put("mark-corresponding-synthetics", "1")
     }
-}
 
-test {
-	useJUnitPlatform()
+	forge {
+        mixinConfig 'zfastnoise.mixins.json'
+    }
 }
 
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	forge "net.minecraftforge:forge:$project.forge_version"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
-
-	testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
 }
 
 processResources {
-	inputs.property "version", project.version
-	inputs.property "loader_version", project.loader_version
-	inputs.property "minecraft_version", project.min_minecraft_version
+	var replaceProperties = [
+    minecraft_version      : min_minecraft_version,
+    minecraft_version_range: minecraft_version_range,
+    forge_version          : forge_version,
+    mod_version            : mod_version,
+  ]
+  inputs.properties replaceProperties
 
-	filesMatching("fabric.mod.json") {
-		expand(inputs.properties)
-	}
+  filesMatching(['META-INF/mods.toml']) {
+    expand replaceProperties
+  }
 }
 
 tasks.withType(JavaCompile).configureEach {

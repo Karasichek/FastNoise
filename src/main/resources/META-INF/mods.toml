@@ -1,0 +1,32 @@
+modLoader = "javafml"
+loaderVersion = "[${forge_version},)"
+issueTrackerURL = "https://codeberg.org/ZenXArch/FastNoise/issues"
+license = "Mozilla Public License 2.0"
+
+showAsResourcePack=false
+clientSideOnly=false
+
+[[mods]]
+modId = "zfastnoise"
+version = "${mod_version}"
+displayName = "Fast Noise Mod"
+displayURL="https://modrinth.com/mod/zfastnoise"
+authors = "ZenXArch"
+description = '''
+This mod makes improvements to noise gen
+'''
+logoFile="assets/zfastnoise/icon.png"
+
+[[dependencies.zfastnoise]]
+  modId = "forge"
+  mandatory = true
+  versionRange = "[${forge_version},)"
+  ordering = "NONE"
+  side = "BOTH"
+
+[[dependencies.zfastnoise]]
+  modId="minecraft"
+  mandatory=true
+  versionRange="${minecraft_version_range}"
+  ordering="NONE"
+  side="BOTH"
