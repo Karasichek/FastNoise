@@ -1,3 +1,5 @@
+modLoader="javafml"
+loaderVersion="[1,)"
 license="Mozilla Public License 2.0"
 
 issueTrackerURL="https://codeberg.org/ZenXArch/FastNoise/issues"
