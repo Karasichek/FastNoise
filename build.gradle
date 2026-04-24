@@ -40,7 +40,7 @@ dependencies {
 }
 
 processResources {
-	var replaceProperties = [
+  var replaceProperties = [
     minecraft_version      : min_minecraft_version,
     minecraft_version_range: minecraft_version_range,
     forge_version          : forge_version,
