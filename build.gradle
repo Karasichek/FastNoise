@@ -120,8 +120,8 @@ modrinth {
 
 	changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
 
-  gameVersions = [project.minecraft_version,"1.20.1","1.20.2","1.20.3","1.20.4","1.20.5","1.20.6"]
-  loaders = ["forge"]
+  gameVersions = [project.minecraft_version,"1.21.1","1.21.2","1.21.3","1.21.4","1.21.5","1.21.6","1.21.7","1.21.8"]
+  loaders = ["neoforge"]
   dependencies {
     incompatible.project "noisiumforked"
     incompatible.project "moonrise-opt"
@@ -141,19 +141,21 @@ task curseforge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge) {
   mainFile.changelogType = "markdown"
 
   mainFile.releaseType = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
-  mainFile.addModLoader("Forge")
-  mainFile.addJavaVersion("Java 17")
+  mainFile.addModLoader("NeoForge")
+  mainFile.addJavaVersion("Java 21")
 
   mainFile.addGameVersion("Client")
   mainFile.addGameVersion("Server")
 
   mainFile.addGameVersion(project.cf_mc_version)
-  mainFile.addGameVersion("1.20.1")
-  mainFile.addGameVersion("1.20.2")
-  mainFile.addGameVersion("1.20.3")
-  mainFile.addGameVersion("1.20.4")
-  mainFile.addGameVersion("1.20.5")
-  mainFile.addGameVersion("1.20.6")
+  mainFile.addGameVersion("1.21.1")
+  mainFile.addGameVersion("1.21.2")
+  mainFile.addGameVersion("1.21.3")
+  mainFile.addGameVersion("1.21.4")
+  mainFile.addGameVersion("1.21.5")
+  mainFile.addGameVersion("1.21.6")
+  mainFile.addGameVersion("1.21.7")
+  mainFile.addGameVersion("1.21.8")
 
   mainFile.withAdditionalFile(sourcesJar)
 }
