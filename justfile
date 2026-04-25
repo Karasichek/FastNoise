@@ -45,5 +45,24 @@ modrinth ptype="alpha":
     ./gradlew modrinth -Pzmtype="{{ptype}}"
     rm changelog.md
 
+curseforge ptype="alpha":
+    touch changelog.md
+    $EDITOR changelog.md
+    ./gradlew curseforge -Pzmtype="{{ptype}}"
+    rm changelog.md
+
+publish ptype="alpha":
+    touch changelog.md
+    $EDITOR changelog.md
+    ./gradlew modrinth -Pzmtype="{{ptype}}"
+    ./gradlew curseforge -Pzmtype="{{ptype}}"
+    rm changelog.md
+
 task taskName:
     ./gradlew {{taskName}}
+
+bytecode:
+    ./bytecode.sh
+
+asprof:
+    ./asprof.sh

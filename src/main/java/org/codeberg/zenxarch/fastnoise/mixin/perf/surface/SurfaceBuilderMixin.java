@@ -2,8 +2,9 @@ package org.codeberg.zenxarch.fastnoise.mixin.perf.surface;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import java.util.Set;
 import net.minecraft.block.BlockState;
-import net.minecraft.registry.Registry;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.Chunk;
@@ -26,23 +27,23 @@ public abstract class SurfaceBuilderMixin {
   public void zenxarch$buildSurface(
       final NoiseConfig noiseConfig,
       final BiomeAccess biomeAccess,
-      final Registry<Biome> biomeRegistry,
       final boolean useLegacyRandom,
       final HeightContext heightContext,
       final Chunk chunk,
       final ChunkNoiseSampler chunkNoiseSampler,
       final MaterialRules.MaterialRule materialRule,
+      final Set<RegistryEntry<Biome>> includedBiomes,
       Operation<Void> op) {
     if (!FastSurfaceGen.canUseSurfaceBuilder(chunk)) {
       op.call(
           noiseConfig,
           biomeAccess,
-          biomeRegistry,
           useLegacyRandom,
           heightContext,
           chunk,
           chunkNoiseSampler,
-          materialRule);
+          materialRule,
+          includedBiomes);
       return;
     }
 
@@ -50,11 +51,11 @@ public abstract class SurfaceBuilderMixin {
         (SurfaceBuilderAccessor) this,
         noiseConfig,
         biomeAccess,
-        biomeRegistry,
         useLegacyRandom,
         heightContext,
         chunk,
         chunkNoiseSampler,
-        materialRule);
+        materialRule,
+        includedBiomes);
   }
 }

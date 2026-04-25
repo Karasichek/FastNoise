@@ -1,7 +1,7 @@
 package org.codeberg.zenxarch.fastnoise.surface;
 
+import java.util.Set;
 import java.util.function.Function;
-import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
@@ -12,13 +12,9 @@ import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
-import org.codeberg.zenxarch.fastnoise.surface.biome.BiomeProvider;
 import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeProvider;
-import org.codeberg.zenxarch.fastnoise.surface.biome.NoAllocationBiomeProvider;
 
 public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
-
-  private final BiomeProvider posToBiomeProvider;
 
   public MaterialRuleContext(
       SurfaceBuilder surfaceBuilder,
@@ -26,43 +22,40 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       Chunk chunk,
       ChunkNoiseSampler chunkNoiseSampler,
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
-      Registry<Biome> biomeRegistry,
-      HeightContext heightContext) {
+      HeightContext heightContext,
+      final Set<RegistryEntry<Biome>> includedBiomes) {
     super(
         surfaceBuilder,
         noiseConfig,
         chunk,
         chunkNoiseSampler,
-        posToBiome,
-        biomeRegistry,
-        heightContext);
-    this.posToBiomeProvider =
-        FastNoiseConfig.OPTIMIZE_BIOME_ACCESS
-            ? new FastBiomeProvider(chunk, posToBiome)
-            : new NoAllocationBiomeProvider(posToBiome);
-    this.biomeSupplier = this.posToBiomeProvider;
+        mapPosToBiome(chunk, posToBiome, includedBiomes),
+        heightContext,
+        includedBiomes);
+  }
+
+  private static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
+      Chunk chunk,
+      Function<BlockPos, RegistryEntry<Biome>> posToBiome,
+      Set<RegistryEntry<Biome>> includedBiomes) {
+    if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) {
+      if (includedBiomes.size() == 1) {
+        for (var biome : includedBiomes) return (_) -> biome;
+      }
+      return new FastBiomeProvider(chunk, posToBiome);
+    }
+    return posToBiome;
   }
 
   @Override
   public void initHorizontalContext(int blockX, int blockZ) {
     super.initHorizontalContext(blockX, blockZ);
-    this.posToBiomeProvider.updateXZ(blockX, blockZ);
   }
 
   @Override
   public void initVerticalContext(
-      int stoneDepthAbove,
-      int stoneDepthBelow,
-      int fluidHeight,
-      int blockX,
-      int blockY,
-      int blockZ) {
-    this.uniquePosValue++;
-    this.blockY = blockY;
-    this.fluidHeight = fluidHeight;
-    this.stoneDepthBelow = stoneDepthBelow;
-    this.stoneDepthAbove = stoneDepthAbove;
-    this.posToBiomeProvider.updateY(blockY);
+      int stoneDepthAbove, int stoneDepthBelow, int fluidHeight, int blockY) {
+    super.initVerticalContext(stoneDepthAbove, stoneDepthBelow, fluidHeight, blockY);
   }
 
   @Override

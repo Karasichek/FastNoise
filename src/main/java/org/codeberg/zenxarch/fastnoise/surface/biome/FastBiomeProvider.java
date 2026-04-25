@@ -8,18 +8,11 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.SingularPalette;
 
-public final class FastBiomeProvider implements BiomeProvider {
-
-  private RegistryEntry<Biome> biome;
-  private boolean withinBounds;
-  private int blockX;
-  private int blockY;
-  private int blockZ;
+public final class FastBiomeProvider implements Function<BlockPos, RegistryEntry<Biome>> {
 
   private final RegistryEntry<Biome>[] singleBiomes;
   private final Function<BlockPos, RegistryEntry<Biome>> posToBiome;
 
-  private final BlockPos.Mutable mutable = new BlockPos.Mutable();
   private final int minY;
 
   @SuppressWarnings("unchecked")
@@ -42,20 +35,17 @@ public final class FastBiomeProvider implements BiomeProvider {
   }
 
   @Override
-  public RegistryEntry<Biome> get() {
-    if (biome == null) biome = compute();
-    return biome;
-  }
-
-  private RegistryEntry<Biome> compute() {
-    var single = getSingleBiome();
+  public RegistryEntry<Biome> apply(BlockPos pos) {
+    var single = getSingleBiome(pos.getX(), pos.getY(), pos.getZ());
     if (single == null) {
-      return this.posToBiome.apply(mutable.set(blockX, blockY, blockZ));
+      return this.posToBiome.apply(pos);
     }
     return single;
   }
 
-  private RegistryEntry<Biome> getSingleBiome() {
+  private RegistryEntry<Biome> getSingleBiome(int blockX, int blockY, int blockZ) {
+    var withinBounds = withinBounds(blockX) && withinBounds(blockZ);
+
     if (!withinBounds || !withinBounds(blockY)) {
       return null;
     }
@@ -81,18 +71,7 @@ public final class FastBiomeProvider implements BiomeProvider {
     return single;
   }
 
-  public void updateXZ(int blockX, int blockZ) {
-    withinBounds = withinBounds(blockX) && withinBounds(blockZ);
-    this.blockX = blockX;
-    this.blockZ = blockZ;
-  }
-
-  public void updateY(int blockY) {
-    this.blockY = blockY;
-    this.biome = null;
-  }
-
-  private boolean withinBounds(int i) {
+  private static boolean withinBounds(int i) {
     return ((0x1 << (i & 0xF)) & ~0b0011_1111_1111_1100) == 0;
   }
 }
