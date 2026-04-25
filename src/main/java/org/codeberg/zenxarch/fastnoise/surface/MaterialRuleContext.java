@@ -1,8 +1,10 @@
 package org.codeberg.zenxarch.fastnoise.surface;
 
+import java.util.function.Function;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
@@ -23,7 +25,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       NoiseConfig noiseConfig,
       Chunk chunk,
       ChunkNoiseSampler chunkNoiseSampler,
-      BiomeAccess biomeAccess,
+      Function<BlockPos, RegistryEntry<Biome>> posToBiome,
       Registry<Biome> biomeRegistry,
       HeightContext heightContext) {
     super(
@@ -31,13 +33,13 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
         noiseConfig,
         chunk,
         chunkNoiseSampler,
-        biomeAccess::getBiome,
+        posToBiome,
         biomeRegistry,
         heightContext);
     this.posToBiomeProvider =
         FastNoiseConfig.OPTIMIZE_BIOME_ACCESS
-            ? new FastBiomeProvider(chunk, biomeAccess)
-            : new NoAllocationBiomeProvider(biomeAccess::getBiome);
+            ? new FastBiomeProvider(chunk, posToBiome)
+            : new NoAllocationBiomeProvider(posToBiome);
     this.biomeSupplier = this.posToBiomeProvider;
   }
 

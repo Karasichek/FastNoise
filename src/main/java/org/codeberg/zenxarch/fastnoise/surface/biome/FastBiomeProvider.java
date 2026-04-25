@@ -1,31 +1,44 @@
 package org.codeberg.zenxarch.fastnoise.surface.biome;
 
+import java.util.function.Function;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.PalettedContainer;
+import net.minecraft.world.chunk.SingularPalette;
 
 public final class FastBiomeProvider implements BiomeProvider {
 
   private RegistryEntry<Biome> biome;
+  private boolean withinBounds;
   private int blockX;
   private int blockY;
   private int blockZ;
 
-  private final SpeculativePosToBiome[] speculativePosToBiomes;
-  private final BiomeAccess biomeAccess;
+  private final RegistryEntry<Biome>[] singleBiomes;
+  private final Function<BlockPos, RegistryEntry<Biome>> posToBiome;
 
   private final BlockPos.Mutable mutable = new BlockPos.Mutable();
   private final int minY;
 
-  public FastBiomeProvider(Chunk chunk, BiomeAccess biomeAccess) {
+  @SuppressWarnings("unchecked")
+  public FastBiomeProvider(Chunk chunk, Function<BlockPos, RegistryEntry<Biome>> posToBiome) {
 
-    this.biomeAccess = biomeAccess;
+    this.posToBiome = posToBiome;
     this.minY = chunk.getBottomY();
 
     var sections = chunk.getSectionArray();
-    this.speculativePosToBiomes = new SpeculativePosToBiome[sections.length];
+
+    this.singleBiomes = new RegistryEntry[sections.length];
+    for (int i = 0; i < sections.length; i++) {
+      var container = (PalettedContainer<RegistryEntry<Biome>>) sections[i].biomeContainer;
+      if (container.data.palette() instanceof SingularPalette<RegistryEntry<Biome>> single) {
+        singleBiomes[i] = single.entry;
+      } else {
+        singleBiomes[i] = null;
+      }
+    }
   }
 
   @Override
@@ -35,35 +48,41 @@ public final class FastBiomeProvider implements BiomeProvider {
   }
 
   private RegistryEntry<Biome> compute() {
-    var speculatedBiome = speculateBiome();
-    if (speculatedBiome == null) {
-      return this.biomeAccess.getBiome(mutable.set(blockX, blockY, blockZ));
+    var single = getSingleBiome();
+    if (single == null) {
+      return this.posToBiome.apply(mutable.set(blockX, blockY, blockZ));
     }
-    return speculatedBiome;
+    return single;
   }
 
-  private RegistryEntry<Biome> speculateBiome() {
+  private RegistryEntry<Biome> getSingleBiome() {
+    if (!withinBounds || !withinBounds(blockY)) {
+      return null;
+    }
+
     var y = blockY - minY;
     var ly = y & 0xF;
     var cy = y >> 4;
 
-    if (this.speculativePosToBiomes[cy] == null) {
-      this.speculativePosToBiomes[cy] =
-          new SpeculativePosToBiome(
-              biomeAccess, blockX - (blockX & 0xF), blockY - ly, blockZ - (blockZ & 0xF));
+    var single = singleBiomes[cy];
+
+    if (single == null) return null;
+
+    if (ly < 2) {
+      if (cy == 0) return null;
+      if (singleBiomes[cy] != singleBiomes[cy - 1]) return null;
     }
 
-    return this.speculativePosToBiomes[cy].getBiome(
-        fromBlockToSpeculativePos(blockX),
-        fromBlockToSpeculativePos(blockY),
-        fromBlockToSpeculativePos(blockZ));
-  }
+    if (ly > 13) {
+      if (cy == (this.singleBiomes.length - 1)) return null;
+      if (singleBiomes[cy] != singleBiomes[cy + 1]) return null;
+    }
 
-  private int fromBlockToSpeculativePos(int pos) {
-    return (((pos & 0xF) - 2) >> 2) + 1;
+    return single;
   }
 
   public void updateXZ(int blockX, int blockZ) {
+    withinBounds = withinBounds(blockX) && withinBounds(blockZ);
     this.blockX = blockX;
     this.blockZ = blockZ;
   }
@@ -71,5 +90,9 @@ public final class FastBiomeProvider implements BiomeProvider {
   public void updateY(int blockY) {
     this.blockY = blockY;
     this.biome = null;
+  }
+
+  private boolean withinBounds(int i) {
+    return ((0x1 << (i & 0xF)) & ~0b0011_1111_1111_1100) == 0;
   }
 }
