@@ -48,3 +48,9 @@ config="zfastnoise.mixins.json"
   type="optional"
   reason="Provides faster chunk generation"
   referralUrl="https://modrinth.com/mod/c2me-neoforge"
+
+[[dependencies.zfastnoise]]
+  modId="lithium"
+  type="optional"
+  reason="accesswidener"
+  ordering="BEFORE"
