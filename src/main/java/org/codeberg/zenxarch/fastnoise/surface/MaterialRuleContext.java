@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.function.Function;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.HeightContext;
@@ -12,7 +13,7 @@ import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
-import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeProvider;
+import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeCache;
 
 public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
@@ -23,13 +24,14 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       ChunkNoiseSampler chunkNoiseSampler,
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
       HeightContext heightContext,
-      final Set<RegistryEntry<Biome>> includedBiomes) {
+      final Set<RegistryEntry<Biome>> includedBiomes,
+      final ChunkRegion region) {
     super(
         surfaceBuilder,
         noiseConfig,
         chunk,
         chunkNoiseSampler,
-        mapPosToBiome(chunk, posToBiome, includedBiomes),
+        mapPosToBiome(chunk, posToBiome, includedBiomes, region),
         heightContext,
         includedBiomes);
   }
@@ -37,14 +39,23 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   private static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
       Chunk chunk,
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
-      Set<RegistryEntry<Biome>> includedBiomes) {
+      Set<RegistryEntry<Biome>> includedBiomes,
+      ChunkRegion region) {
     if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) {
       if (includedBiomes.size() == 1) {
         for (var biome : includedBiomes) return (_) -> biome;
       }
-      return new FastBiomeProvider(chunk, posToBiome);
+      var cache = new FastBiomeCache(includedBiomes, region);
+      return (posz) -> getBiomeOr(cache, posz, posToBiome);
     }
     return posToBiome;
+  }
+
+  private static RegistryEntry<Biome> getBiomeOr(
+      FastBiomeCache cache, BlockPos pos, Function<BlockPos, RegistryEntry<Biome>> fallback) {
+    var cached = cache.getBiomeOrNull(pos.getX(), pos.getY(), pos.getZ());
+    if (cached == null) return fallback.apply(pos);
+    return cached;
   }
 
   @Override
