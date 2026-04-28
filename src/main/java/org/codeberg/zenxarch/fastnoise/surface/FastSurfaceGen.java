@@ -6,6 +6,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
@@ -48,7 +49,8 @@ public class FastSurfaceGen {
       final Chunk chunk,
       final ChunkNoiseSampler chunkNoiseSampler,
       final MaterialRules.MaterialRule materialRule,
-      final Set<RegistryEntry<Biome>> includedBiomes) {
+      final Set<RegistryEntry<Biome>> includedBiomes,
+      final ChunkRegion region) {
 
     final var defaultState = builder.zenxarch$getDefaultState();
 
@@ -68,7 +70,8 @@ public class FastSurfaceGen {
             chunkNoiseSampler,
             biomeAccess::getBiome,
             heightContext,
-            includedBiomes);
+            includedBiomes,
+            region);
     var rule = materialRule.apply(context);
     BlockPos.Mutable blockPos = new BlockPos.Mutable();
 
