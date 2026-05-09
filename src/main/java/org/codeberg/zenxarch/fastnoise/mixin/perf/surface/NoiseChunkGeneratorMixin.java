@@ -93,6 +93,18 @@ public abstract class NoiseChunkGeneratorMixin {
 
     var settings = this.settings.value();
 
+    final var centerPos = chunkRegion.getCenterPos();
+    final var cx = centerPos.x();
+    final var cz = centerPos.z();
+    final var chunks = new Chunk[9];
+
+    for (int z = -1; z <= 1; z++) {
+      for (int x = -1; x <= 1; x++) {
+        final var idx = ((z + 1) * 3) + (x + 1);
+        chunks[idx] = chunkRegion.getChunk(cx + x, cz + z);
+      }
+    }
+
     FastSurfaceGen.buildSurface(
         (SurfaceBuilderAccessor) noiseConfig.getSurfaceBuilder(),
         noiseConfig,
@@ -103,6 +115,6 @@ public abstract class NoiseChunkGeneratorMixin {
         sampler,
         settings.surfaceRule(),
         includedBiomes,
-        chunkRegion);
+        chunks);
   }
 }

@@ -4,7 +4,6 @@ import java.util.Set;
 import java.util.function.Function;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.HeightContext;
@@ -25,13 +24,13 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
       HeightContext heightContext,
       final Set<RegistryEntry<Biome>> includedBiomes,
-      final ChunkRegion region) {
+      final Chunk[] chunks) {
     super(
         surfaceBuilder,
         noiseConfig,
         chunk,
         chunkNoiseSampler,
-        mapPosToBiome(chunk, posToBiome, includedBiomes, region),
+        mapPosToBiome(chunk, posToBiome, includedBiomes, chunks),
         heightContext,
         includedBiomes);
   }
@@ -40,12 +39,12 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       Chunk chunk,
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
       Set<RegistryEntry<Biome>> includedBiomes,
-      ChunkRegion region) {
+      final Chunk[] chunks) {
     if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) {
       if (includedBiomes.size() == 1) {
         for (var biome : includedBiomes) return (_) -> biome;
       }
-      var cache = new FastBiomeCache(includedBiomes, region);
+      var cache = new FastBiomeCache(includedBiomes, chunks);
       return (posz) -> getBiomeOr(cache, posz, posToBiome);
     }
     return posToBiome;
