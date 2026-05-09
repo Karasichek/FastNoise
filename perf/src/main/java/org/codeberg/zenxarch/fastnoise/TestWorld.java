@@ -1,6 +1,10 @@
 package org.codeberg.zenxarch.fastnoise;
 
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSets;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -32,8 +36,12 @@ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes.Beardifying;
 import net.minecraft.world.gen.noise.NoiseConfig;
+import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.mixin.ChunkAccessor;
 import org.codeberg.zenxarch.fastnoise.mixin.NoiseChunkGeneratorAccessor;
+import org.codeberg.zenxarch.fastnoise.mixin.SurfaceBuilderAccessor;
+import org.codeberg.zenxarch.fastnoise.surface.FastSurfaceGen;
+import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeAccumulator;
 
 public final class TestWorld {
   public final ChunkGeneratorSettings settings;
@@ -133,6 +141,18 @@ public final class TestWorld {
 
   public void surface(ProtoChunk chunk, ChunkRegion biomeSource) {
     var registry = TestGlobals.getManager().getOrThrow(RegistryKeys.BIOME);
+
+    if (FastNoiseConfig.ENABLED) {
+      fastSurface(
+          chunk,
+          biomeSource,
+          new BiomeAccess(biomeSource, this.seed),
+          new HeightContext(generator, chunk),
+          chunk.getOrCreateChunkNoiseSampler(null),
+          biomeSource);
+      return;
+    }
+
     this.generator.buildSurface(
         chunk,
         new HeightContext(generator, chunk),
@@ -141,6 +161,69 @@ public final class TestWorld {
         new BiomeAccess(biomeSource, this.seed),
         Blender.getNoBlending(),
         getBiomesAround(biomeSource, chunk.getPos(), 1));
+  }
+
+  public static ReferenceSet<RegistryEntry<Biome>> accumulate(ChunkRegion region, ChunkPos cpos) {
+    var items = new ReferenceArraySet<RegistryEntry<Biome>>(8);
+
+    var sx = cpos.x();
+    var sz = cpos.z();
+
+    FastBiomeAccumulator.accumulate(region.getChunk(sx - 1, sz - 1), items);
+    FastBiomeAccumulator.accumulate(region.getChunk(sx, sz - 1), items);
+    FastBiomeAccumulator.accumulate(region.getChunk(sx + 1, sz - 1), items);
+
+    FastBiomeAccumulator.accumulate(region.getChunk(sx - 1, sz), items);
+    FastBiomeAccumulator.accumulate(region.getChunk(sx, sz), items);
+    FastBiomeAccumulator.accumulate(region.getChunk(sx + 1, sz), items);
+
+    FastBiomeAccumulator.accumulate(region.getChunk(sx - 1, sz + 1), items);
+    FastBiomeAccumulator.accumulate(region.getChunk(sx, sz + 1), items);
+    FastBiomeAccumulator.accumulate(region.getChunk(sx + 1, sz + 1), items);
+
+    if (items.size() == 1) {
+      for (var item : items) return ReferenceSets.singleton(item);
+    }
+
+    if (items.size() > 4) {
+      return new ReferenceOpenHashSet<>(items, Hash.VERY_FAST_LOAD_FACTOR);
+    }
+
+    return items;
+  }
+
+  private void fastSurface(
+      ProtoChunk chunk,
+      ChunkRegion biomeSource,
+      BiomeAccess biomeAccess,
+      HeightContext context,
+      ChunkNoiseSampler sampler,
+      ChunkRegion region) {
+    var includedBiomes = accumulate(region, chunk.getPos());
+
+    final var centerPos = chunk.getPos();
+    final var cx = centerPos.x();
+    final var cz = centerPos.z();
+    final var chunks = new Chunk[9];
+
+    for (int z = -1; z <= 1; z++) {
+      for (int x = -1; x <= 1; x++) {
+        final var idx = ((z + 1) * 3) + (x + 1);
+        chunks[idx] = region.getChunk(cx + x, cz + z);
+      }
+    }
+
+    FastSurfaceGen.buildSurface(
+        (SurfaceBuilderAccessor) noiseConfig.getSurfaceBuilder(),
+        noiseConfig,
+        biomeAccess,
+        settings.usesLegacyRandom(),
+        context,
+        chunk,
+        sampler,
+        settings.surfaceRule(),
+        includedBiomes,
+        chunks);
   }
 
   private static Set<RegistryEntry<Biome>> getBiomesAround(
