@@ -3,7 +3,6 @@ package org.codeberg.zenxarch.fastnoise.surface.biome;
 import java.util.Set;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 
@@ -18,19 +17,7 @@ public final class FastBiomeCache {
 
   // b/c we can't be using generics for arrays, why java why
   @SuppressWarnings("unchecked")
-  public FastBiomeCache(Set<RegistryEntry<Biome>> biomes, ChunkRegion region) {
-    final var centerPos = region.getCenterPos();
-    final var cx = centerPos.x();
-    final var cz = centerPos.z();
-    final var chunks = new Chunk[9];
-
-    for (int z = -1; z <= 1; z++) {
-      for (int x = -1; x <= 1; x++) {
-        final var idx = ((z + 1) * 3) + (x + 1);
-        chunks[idx] = region.getChunk(cx + x, cz + z);
-      }
-    }
-
+  public FastBiomeCache(Set<RegistryEntry<Biome>> biomes, final Chunk[] chunks) {
     var biomeArr = new RegistryEntry[biomes.size()];
     int idx = 0;
     for (var biome : biomes) biomeArr[idx++] = biome;
