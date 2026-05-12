@@ -41,7 +41,7 @@ public final class FastBiomeCache {
   }
 
   public RegistryEntry<Biome> getBiomeOrNull(int blockX, int blockY, int blockZ) {
-    final var bitIdx = ((blockX + 2) >> 2) + (((blockZ + 2) >> 2) * 5);
+    final var bitIdx = (((blockX & 0xF) + 2) >> 2) + ((((blockZ & 0xF) + 2) >> 2) * 5);
     final var biomeY = (blockY + 2) >> 2;
 
     final var lowerBiomeY = MathHelper.clamp(biomeY, minYInBiomes, maxYInBiomes);
