@@ -6,6 +6,9 @@ build:
 run:
     ./gradlew runClient
 
+dap:
+    ./gradlew runDap
+
 sources:
     ./gradlew genSources
 
