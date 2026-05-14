@@ -61,13 +61,17 @@ public class FastSurfaceGen {
     int minBlockX = chunkPos.getStartX();
     int minBlockZ = chunkPos.getStartZ();
     var column = new FastBlockColumn(chunk);
+
+    var posToBiome =
+        MaterialRuleContext.mapPosToBiome(biomeAccess::getBiome, includedBiomes, chunks);
+
     var context =
         new MaterialRuleContext(
             (SurfaceBuilder) (Object) builder,
             noiseConfig,
             chunk,
             chunkNoiseSampler,
-            biomeAccess::getBiome,
+            posToBiome,
             heightContext,
             includedBiomes,
             chunks);
@@ -88,7 +92,7 @@ public class FastSurfaceGen {
         int startingHeight = chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, x, z) + 1;
         var surfaceBiome =
             surfaceBiomes[(x * 16) + z] =
-                biomeAccess.getBiome(
+                posToBiome.apply(
                     blockPos.set(blockX, useLegacyRandom ? 0 : startingHeight, blockZ));
         if (surfaceBiome.matchesKey(BiomeKeys.ERODED_BADLANDS)) {
           column.updateXZ(x, z);

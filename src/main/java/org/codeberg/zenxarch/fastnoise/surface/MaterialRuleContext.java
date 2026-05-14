@@ -30,13 +30,12 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
         noiseConfig,
         chunk,
         chunkNoiseSampler,
-        mapPosToBiome(chunk, posToBiome, includedBiomes, chunks),
+        posToBiome,
         heightContext,
         includedBiomes);
   }
 
-  private static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
-      Chunk chunk,
+  public static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
       Set<RegistryEntry<Biome>> includedBiomes,
       final Chunk[] chunks) {
