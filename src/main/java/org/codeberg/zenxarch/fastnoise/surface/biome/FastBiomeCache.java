@@ -32,43 +32,59 @@ public final class FastBiomeCache {
     // get height params from center chunk to avoid retrogen stuff
     var heightView = chunks[4].getHeightLimitView();
 
-    this.minYInBiomes = heightView.getBottomY() >> 4;
+    this.minYInBiomes = heightView.getBottomY() >> 2;
 
     this.cache = new FastChunkBiomeCache[chunks[4].getSectionArray().length];
 
     this.heightInBiomes = this.cache.length << 2;
-    this.maxYInBiomes = this.minYInBiomes + this.heightInBiomes;
+    this.maxYInBiomes = this.minYInBiomes + this.heightInBiomes - 1;
+  }
+
+  private static int getBit(int bits, int bitIdx) {
+    return (bits >> bitIdx) & 0x1;
+  }
+
+  private static int findIdx(int[] cache, int bitIdx) {
+    for (int i = 1; i < cache.length; i++) if (getBit(cache[i], bitIdx) == 0x1) return i;
+    return 0;
+  }
+
+  private static int getBitIdx(int blockX, int blockZ) {
+    final int mbx = ((blockX & 0xF) - 2) >> 2;
+    final int mbz = ((blockZ & 0xF) - 2) >> 2;
+    return (mbx + 1) + ((mbz + 1) * 5);
   }
 
   public RegistryEntry<Biome> getBiomeOrNull(int blockX, int blockY, int blockZ) {
-    final var bitIdx = ((blockX + 2) >> 2) + (((blockZ + 2) >> 2) * 5);
-    final var biomeY = (blockY + 2) >> 2;
+    final int mby = (blockY - 2) >> 2;
+    final var bitIdx = getBitIdx(blockX, blockZ);
 
-    final var lowerBiomeY = MathHelper.clamp(biomeY, minYInBiomes, maxYInBiomes);
-    final var localLowerBiomeY = lowerBiomeY & 0x3;
-    final var lowerCache = getForSectionY(lowerBiomeY).cache[localLowerBiomeY];
+    return getBiomeOrNull(mby, bitIdx);
+  }
 
-    if (((lowerCache[0] >> bitIdx) & 0x1) == 0) return null;
+  private RegistryEntry<Biome> getBiomeOrNull(int minBiomeY, int bitIdx) {
+    final var lowerCache = getCacheForY(minBiomeY);
 
-    final var upperBiomeY = MathHelper.clamp(biomeY + 1, minYInBiomes, maxYInBiomes);
-    final var localUpperBiomeY = upperBiomeY & 0x3;
-    final var upperCache = getForSectionY(upperBiomeY).cache[localUpperBiomeY];
+    if (getBit(lowerCache[0], bitIdx) == 0x0) return null;
+
+    final var upperCache = getCacheForY(minBiomeY + 1);
 
     // too much work, leaving here b/c I like symmetry
-    // if (((upperCache[0] >> bitIdx) & 0x1) == 0) return null;
-    if ((((upperCache[0] & lowerCache[0]) >> bitIdx) & 0x1) == 0) return null;
+    // if (getBit(upperCache[0], bitIdx) == 0x0) return null;
+    if (getBit(lowerCache[0] & upperCache[0], bitIdx) == 0x0) return null;
 
-    var idxInUpper = 0;
-    for (int i = 1; i < upperCache.length; i++) {
-      if (((upperCache[i] >> bitIdx) & 0x1) == 0x1) {
-        idxInUpper = i;
-        break;
-      }
-    }
-    if (idxInUpper == 0) return null;
+    int idxInUpper;
+    if ((idxInUpper = findIdx(upperCache, bitIdx)) == 0) return null;
 
-    if ((((upperCache[idxInUpper] & lowerCache[idxInUpper]) >> bitIdx) & 0x1) == 0) return null;
+    if (getBit(upperCache[idxInUpper] & lowerCache[idxInUpper], bitIdx) == 0x0) return null;
+
     return this.biomes[idxInUpper - 1];
+  }
+
+  private int[] getCacheForY(int by) {
+    final var cby = MathHelper.clamp(by, minYInBiomes, maxYInBiomes);
+    final var lby = cby & 0x3;
+    return getForSectionY(cby).cache[lby];
   }
 
   private FastChunkBiomeCache getForSectionY(int biomeY) {
