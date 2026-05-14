@@ -2,6 +2,7 @@ package org.codeberg.zenxarch.fastnoise.surface;
 
 import java.util.Set;
 import java.util.function.Function;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
@@ -22,6 +23,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       Chunk chunk,
       ChunkNoiseSampler chunkNoiseSampler,
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
+      Registry<Biome> registry,
       HeightContext heightContext,
       final Set<RegistryEntry<Biome>> includedBiomes,
       final Chunk[] chunks) {
@@ -31,8 +33,8 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
         chunk,
         chunkNoiseSampler,
         mapPosToBiome(chunk, posToBiome, includedBiomes, chunks),
-        heightContext,
-        includedBiomes);
+        registry,
+        heightContext);
   }
 
   private static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
@@ -64,8 +66,14 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
   @Override
   public void initVerticalContext(
-      int stoneDepthAbove, int stoneDepthBelow, int fluidHeight, int blockY) {
-    super.initVerticalContext(stoneDepthAbove, stoneDepthBelow, fluidHeight, blockY);
+      int stoneDepthAbove,
+      int stoneDepthBelow,
+      int fluidHeight,
+      int blockX,
+      int blockY,
+      int blockZ) {
+    super.initVerticalContext(
+        stoneDepthAbove, stoneDepthBelow, fluidHeight, blockX, blockY, blockZ);
   }
 
   @Override

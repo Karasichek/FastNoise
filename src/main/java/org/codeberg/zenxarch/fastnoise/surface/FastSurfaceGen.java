@@ -3,6 +3,7 @@ package org.codeberg.zenxarch.fastnoise.surface;
 import java.util.Set;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -49,7 +50,8 @@ public class FastSurfaceGen {
       final ChunkNoiseSampler chunkNoiseSampler,
       final MaterialRules.MaterialRule materialRule,
       final Set<RegistryEntry<Biome>> includedBiomes,
-      final Chunk[] chunks) {
+      final Chunk[] chunks,
+      final Registry<Biome> registry) {
 
     final var defaultState = builder.zenxarch$getDefaultState();
 
@@ -68,6 +70,7 @@ public class FastSurfaceGen {
             chunk,
             chunkNoiseSampler,
             biomeAccess::getBiome,
+            registry,
             heightContext,
             includedBiomes,
             chunks);
@@ -148,7 +151,8 @@ public class FastSurfaceGen {
 
               stoneAboveDepth++;
               int stoneBelowDepth = y - nextCeilingStoneY + 1;
-              context.initVerticalContext(stoneAboveDepth, stoneBelowDepth, waterHeight, y);
+              context.initVerticalContext(
+                  stoneAboveDepth, stoneBelowDepth, waterHeight, blockX, y, blockZ);
             }
             case STONE -> {
               if (nextCeilingStoneY >= y)
@@ -157,7 +161,8 @@ public class FastSurfaceGen {
 
               stoneAboveDepth++;
               int stoneBelowDepth = y - nextCeilingStoneY + 1;
-              context.initVerticalContext(stoneAboveDepth, stoneBelowDepth, waterHeight, y);
+              context.initVerticalContext(
+                  stoneAboveDepth, stoneBelowDepth, waterHeight, blockX, y, blockZ);
               setBlockState(section, x, y, z, rule.tryApply(blockX, y, blockZ), column, chunk);
             }
           }
@@ -209,7 +214,7 @@ public class FastSurfaceGen {
       int lx,
       int lz,
       FastChunkCache chunkCache) {
-    final int wayBelowMinY = DimensionType.BELOW_MIN_HEIGHT;
+    final int wayBelowMinY = DimensionType.field_35479;
     if (startY <= minY) {
       if (!builder.zenxarch$isDefaultBlock(VOID_AIR)) return minY - 1;
       return wayBelowMinY;

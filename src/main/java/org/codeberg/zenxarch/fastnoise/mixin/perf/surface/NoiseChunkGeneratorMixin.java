@@ -3,7 +3,7 @@ package org.codeberg.zenxarch.fastnoise.mixin.perf.surface;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import java.util.Set;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.biome.Biome;
@@ -27,20 +27,6 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(NoiseChunkGenerator.class)
 public abstract class NoiseChunkGeneratorMixin {
 
-  @WrapOperation(
-      method =
-          "buildSurface(Lnet/minecraft/world/ChunkRegion;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/chunk/Chunk;)V",
-      at =
-          @At(
-              value = "INVOKE",
-              target =
-                  "Lnet/minecraft/world/gen/chunk/NoiseChunkGenerator;getBiomesAround(Lnet/minecraft/world/ChunkRegion;I)Ljava/util/Set;"))
-  private Set<RegistryEntry<Biome>> zenxarch$getBiomesAround(
-      ChunkRegion region, int radius, Operation<Set<RegistryEntry<Biome>>> op) {
-    if (radius != 1) return op.call(region, radius);
-    return FastBiomeAccumulator.accumulate(region);
-  }
-
   @Shadow @Final private RegistryEntry<ChunkGeneratorSettings> settings;
 
   @Shadow
@@ -59,7 +45,7 @@ public abstract class NoiseChunkGeneratorMixin {
           @At(
               value = "INVOKE",
               target =
-                  "Lnet/minecraft/world/gen/chunk/NoiseChunkGenerator;buildSurface(Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/HeightContext;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/biome/source/BiomeAccess;Lnet/minecraft/world/gen/chunk/Blender;Ljava/util/Set;)V"))
+                  "Lnet/minecraft/world/gen/chunk/NoiseChunkGenerator;buildSurface(Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/HeightContext;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/biome/source/BiomeAccess;Lnet/minecraft/registry/Registry;Lnet/minecraft/world/gen/chunk/Blender;)V"))
   private void zenxarch$buildSurface(
       final NoiseChunkGenerator chunkGenerator,
       final Chunk chunk,
@@ -67,8 +53,8 @@ public abstract class NoiseChunkGeneratorMixin {
       final NoiseConfig noiseConfig,
       final StructureAccessor structureAccessor,
       final BiomeAccess biomeAccess,
+      final Registry<Biome> registry,
       final Blender blender,
-      final Set<RegistryEntry<Biome>> includedBiomes,
       Operation<Void> op,
       @Local final ChunkRegion chunkRegion) {
 
@@ -80,10 +66,12 @@ public abstract class NoiseChunkGeneratorMixin {
           noiseConfig,
           structureAccessor,
           biomeAccess,
-          blender,
-          includedBiomes);
+          registry,
+          blender);
       return;
     }
+
+    var includedBiomes = FastBiomeAccumulator.accumulate(chunkRegion);
 
     var sampler =
         chunk.getOrCreateChunkNoiseSampler(
@@ -114,6 +102,7 @@ public abstract class NoiseChunkGeneratorMixin {
         sampler,
         settings.surfaceRule(),
         includedBiomes,
-        chunks);
+        chunks,
+        registry);
   }
 }
