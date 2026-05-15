@@ -39,6 +39,12 @@ loom {
       vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
       client()
     }
+
+    hotswapDap {
+      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+      vmArgs '-XX:+AllowEnhancedClassRedefinition'
+      client()
+    }
   }
 }
 
