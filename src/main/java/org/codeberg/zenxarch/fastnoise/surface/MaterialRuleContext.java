@@ -1,8 +1,10 @@
 package org.codeberg.zenxarch.fastnoise.surface;
 
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import java.util.Set;
 import java.util.function.Function;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
@@ -16,6 +18,8 @@ import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeCache;
 
 public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
+
+  public final Set<RegistryKey<Biome>> includedBiomeKeys;
 
   public MaterialRuleContext(
       SurfaceBuilder surfaceBuilder,
@@ -35,6 +39,9 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
         mapPosToBiome(chunk, posToBiome, includedBiomes, chunks),
         registry,
         heightContext);
+
+    this.includedBiomeKeys = new ObjectArraySet<>(includedBiomes.size());
+    includedBiomes.forEach(biome -> includedBiomeKeys.add(biome.getKey().get()));
   }
 
   private static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
