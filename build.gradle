@@ -29,11 +29,18 @@ loom {
   }
 
   useIntermediateMappings = true
+
+  runs {
+    dap {
+      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+      client()
+    }
+  }
 }
 
 test {
   useJUnitPlatform()
-  workingDir = mkdir("run")
+  workingDir = mkdir(layout.buildDirectory.dir("testrun"))
 }
 
 dependencies {

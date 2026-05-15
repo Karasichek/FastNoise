@@ -1,5 +1,6 @@
 package org.codeberg.zenxarch.fastnoise.surface;
 
+import java.util.Set;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.registry.Registry;
@@ -43,12 +44,14 @@ public class FastSurfaceGen {
       SurfaceBuilderAccessor builder,
       final NoiseConfig noiseConfig,
       final BiomeAccess biomeAccess,
-      final Registry<Biome> biomeRegistry,
       final boolean useLegacyRandom,
       final HeightContext heightContext,
       final Chunk chunk,
       final ChunkNoiseSampler chunkNoiseSampler,
-      final MaterialRules.MaterialRule materialRule) {
+      final MaterialRules.MaterialRule materialRule,
+      final Set<RegistryEntry<Biome>> includedBiomes,
+      final Chunk[] chunks,
+      final Registry<Biome> registry) {
 
     final var defaultState = builder.zenxarch$getDefaultState();
 
@@ -67,8 +70,10 @@ public class FastSurfaceGen {
             chunk,
             chunkNoiseSampler,
             biomeAccess::getBiome,
-            biomeRegistry,
-            heightContext);
+            registry,
+            heightContext,
+            includedBiomes,
+            chunks);
     var rule = materialRule.apply(context);
     BlockPos.Mutable blockPos = new BlockPos.Mutable();
 
