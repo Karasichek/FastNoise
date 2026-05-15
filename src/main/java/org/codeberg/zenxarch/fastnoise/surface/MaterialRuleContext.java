@@ -44,7 +44,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       final Chunk[] chunks) {
     if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) {
       if (includedBiomes.size() == 1) {
-        for (var biome : includedBiomes) return (_) -> biome;
+        for (var biome : includedBiomes) return (unused) -> biome;
       }
       var cache = new FastBiomeCache(includedBiomes, chunks);
       return (posz) -> getBiomeOr(cache, posz, posToBiome);

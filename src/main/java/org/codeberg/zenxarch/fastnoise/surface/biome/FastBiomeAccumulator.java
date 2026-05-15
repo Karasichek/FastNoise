@@ -16,8 +16,8 @@ public final class FastBiomeAccumulator {
     var items = new ReferenceArraySet<RegistryEntry<Biome>>(8);
 
     var cpos = region.getCenterPos();
-    var sx = cpos.x();
-    var sz = cpos.z();
+    var sx = cpos.x;
+    var sz = cpos.z;
 
     accumulate(region.getChunk(sx - 1, sz - 1), items);
     accumulate(region.getChunk(sx, sz - 1), items);

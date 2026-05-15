@@ -18,11 +18,7 @@ public final class FastBiomeCache {
   // b/c we can't be using generics for arrays, why java why
   @SuppressWarnings("unchecked")
   public FastBiomeCache(Set<RegistryEntry<Biome>> biomes, final Chunk[] chunks) {
-    var biomeArr = new RegistryEntry[biomes.size()];
-    int idx = 0;
-    for (var biome : biomes) biomeArr[idx++] = biome;
-
-    this((RegistryEntry<Biome>[]) biomeArr, chunks);
+    this((RegistryEntry<Biome>[]) biomes.toArray(RegistryEntry[]::new), chunks);
   }
 
   private FastBiomeCache(RegistryEntry<Biome>[] biomes, Chunk[] chunks) {

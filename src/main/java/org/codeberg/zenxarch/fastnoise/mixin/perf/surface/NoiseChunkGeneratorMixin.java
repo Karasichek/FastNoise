@@ -81,8 +81,8 @@ public abstract class NoiseChunkGeneratorMixin {
     var settings = this.settings.value();
 
     final var centerPos = chunkRegion.getCenterPos();
-    final var cx = centerPos.x();
-    final var cz = centerPos.z();
+    final var cx = centerPos.x;
+    final var cz = centerPos.z;
     final var chunks = new Chunk[9];
 
     for (int z = -1; z <= 1; z++) {
