@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(targets = "net.minecraft.world.gen.surfacebuilder.MaterialRules$BiomeMaterialCondition")
 public abstract class BiomeMaterialConditionMixin {
@@ -21,14 +22,14 @@ public abstract class BiomeMaterialConditionMixin {
   @Final private Set<RegistryKey<Biome>> zenxarch$biomes;
 
   @Inject(method = "<init>", at = @At("TAIL"))
-  private void zenxarch$init(final List<RegistryKey<Biome>> biomes) {
+  private void zenxarch$init(final List<RegistryKey<Biome>> biomes, CallbackInfo ci) {
     this.zenxarch$biomes = ObjectArraySet.of();
     biomes.forEach(this.zenxarch$biomes::add);
   }
 
   @WrapMethod(
       method =
-          "apply(net.minecraft.world.gen.surfacebuilder.MaterialRules$MaterialRuleContext);Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;")
+          "apply(Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext;)Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;")
   public MaterialRules.BooleanSupplier zenxarch$apply(
       MaterialRuleContext context, Operation<MaterialRules.BooleanSupplier> op) {
     if (context instanceof org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext ctx) {
