@@ -147,6 +147,7 @@ modrinth {
   loaders = ["fabric", "quilt"]
   dependencies {
     incompatible.project "moonrise-opt"
+    incompatible.project "anti-xray"
   }
 }
 
