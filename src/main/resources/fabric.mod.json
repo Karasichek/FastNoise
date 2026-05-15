@@ -30,7 +30,8 @@
 		"java": ">=25"
 	},
 	"breaks": {
-		"moonrise": "*"
+		"moonrise": "*",
+		"antixray": "*"
 	},
 	"recommends": {
 		"c2me": "*"
