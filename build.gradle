@@ -154,7 +154,7 @@ task curseforge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge) {
 
   mainFile.releaseType = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
   mainFile.addModLoader("Quilt")
-  mainFile.addJavaVersion("Java 25")
+  mainFile.addJavaVersion("Java 21")
 
   mainFile.addGameVersion("Client")
   mainFile.addGameVersion("Server")
