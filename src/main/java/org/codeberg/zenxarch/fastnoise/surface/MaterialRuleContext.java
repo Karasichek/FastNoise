@@ -16,6 +16,9 @@ import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeCache;
 
 public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
+  public final RegistryEntry<Biome>[] biomes;
+
+  @SuppressWarnings("unchecked")
   public MaterialRuleContext(
       SurfaceBuilder surfaceBuilder,
       NoiseConfig noiseConfig,
@@ -25,23 +28,31 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       HeightContext heightContext,
       final Set<RegistryEntry<Biome>> includedBiomes,
       final Chunk[] chunks) {
+    var biomes = includedBiomes.toArray(RegistryEntry[]::new);
+
     super(
         surfaceBuilder,
         noiseConfig,
         chunk,
         chunkNoiseSampler,
-        posToBiome,
+        mapPosToBiome(posToBiome, biomes, chunks),
         heightContext,
         includedBiomes);
+
+    this.biomes = biomes;
   }
 
-  public static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
+  public RegistryEntry<Biome> mapPosToBiome(BlockPos pos) {
+    return this.posToBiome.apply(pos);
+  }
+
+  private static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
-      Set<RegistryEntry<Biome>> includedBiomes,
+      RegistryEntry<Biome>[] includedBiomes,
       final Chunk[] chunks) {
     if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) {
-      if (includedBiomes.size() == 1) {
-        for (var biome : includedBiomes) return (_) -> biome;
+      if (includedBiomes.length == 1) {
+        return (_) -> includedBiomes[0];
       }
       var cache = new FastBiomeCache(includedBiomes, chunks);
       return (posz) -> getBiomeOr(cache, posz, posToBiome);
@@ -70,5 +81,15 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   @Override
   public int estimateSurfaceHeight() {
     return super.estimateSurfaceHeight();
+  }
+
+  public int getCurrentBiomeIdx() {
+    var biome = getCurrentBiome();
+    return indexOf(biomes, biome);
+  }
+
+  private static int indexOf(RegistryEntry<Biome>[] biomes, RegistryEntry<Biome> biome) {
+    for (int i = 0; i < biomes.length; i++) if (biomes[i] == biome) return i;
+    throw new IllegalStateException("Impossible biome returned, possible mod incompatibility");
   }
 }
