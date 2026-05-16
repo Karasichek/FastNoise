@@ -143,9 +143,19 @@ public class FastSurfaceGen {
           y = topY;
         }
 
+        var lastSy = column.getSectionIndex(y);
+        var section = sections[lastSy];
+        var lastIdx = -1;
+        var lastState = (BlockState) null;
+
         for (; y >= endY; y--) {
           final int sy = column.getSectionIndex(y);
-          final var section = sections[sy];
+          if (sy != lastSy) {
+            lastSy = sy;
+            section = sections[sy];
+            lastIdx = -1;
+            lastState = null;
+          }
           if (chunkCache.isEmpty(x, y, z)) { // skip whole section
             y = y - (y & 0xF); // lowest y in current section;
             stoneAboveDepth = 0;
@@ -180,8 +190,24 @@ public class FastSurfaceGen {
               stoneAboveDepth++;
               int stoneBelowDepth = y - nextCeilingStoneY + 1;
               context.initVerticalContext(stoneAboveDepth, stoneBelowDepth, waterHeight, y);
-              setBlockState(
-                  section, x, y, z, rule.tryApply(blockX, y, blockZ), column, chunk, sy, dirty);
+
+              var state = rule.tryApply(blockX, y, blockZ);
+              if (state == null) continue;
+              dirty[sy] = true;
+
+              var idx =
+                  state == lastState
+                      ? lastIdx
+                      : section
+                          .blockStateContainer
+                          .data
+                          .palette()
+                          .index(state, section.blockStateContainer);
+
+              setBlockState(section, x, y, z, state, idx, column, chunk, sy);
+
+              lastIdx = idx;
+              lastState = state;
             }
           }
         }
@@ -215,16 +241,13 @@ public class FastSurfaceGen {
       int y,
       int z,
       BlockState state,
+      int pidx,
       FastBlockColumn column,
       Chunk chunk,
-      int sy,
-      boolean[] dirty) {
-    if (state == null) return;
+      int sy) {
     final int ly = y & 0xF;
-    dirty[sy] = true;
-    var idx = section.blockStateContainer.data.palette().index(state, section.blockStateContainer);
-    section.blockStateContainer.data.storage().set((((ly << 4) | z) << 4) | x, idx);
-    // section.setBlockState(x, ly, z, state, false);
+    section.blockStateContainer.data.storage().set((((ly << 4) | z) << 4) | x, pidx);
+
     column.fastUpdateHeightmap(x, z, y, state);
     if (state.getFluidState().isEmpty()) return;
 
