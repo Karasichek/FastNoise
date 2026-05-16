@@ -123,6 +123,8 @@ public class FastSurfaceGen {
     final var chunkCache = new FastChunkCache(chunk, defaultState);
     var sections = chunk.getSectionArray();
 
+    var dirty = new boolean[sections.length];
+
     for (int x = 0; x < 16; x++) {
       for (int z = 0; z < 16; z++) {
         int blockX = minBlockX + x;
@@ -142,7 +144,8 @@ public class FastSurfaceGen {
         }
 
         for (; y >= endY; y--) {
-          final var section = column.getSection(y);
+          final int sy = column.getSectionIndex(y);
+          final var section = sections[sy];
           if (chunkCache.isEmpty(x, y, z)) { // skip whole section
             y = y - (y & 0xF); // lowest y in current section;
             stoneAboveDepth = 0;
@@ -177,7 +180,8 @@ public class FastSurfaceGen {
               stoneAboveDepth++;
               int stoneBelowDepth = y - nextCeilingStoneY + 1;
               context.initVerticalContext(stoneAboveDepth, stoneBelowDepth, waterHeight, y);
-              setBlockState(section, x, y, z, rule.tryApply(blockX, y, blockZ), column, chunk);
+              setBlockState(
+                  section, x, y, z, rule.tryApply(blockX, y, blockZ), column, chunk, sy, dirty);
             }
           }
         }
@@ -199,6 +203,10 @@ public class FastSurfaceGen {
         }
       }
     }
+
+    for (int i = 0; i < dirty.length; i++) {
+      if (dirty[i]) sections[i].calculateCounts();
+    }
   }
 
   private static void setBlockState(
@@ -208,15 +216,19 @@ public class FastSurfaceGen {
       int z,
       BlockState state,
       FastBlockColumn column,
-      Chunk chunk) {
+      Chunk chunk,
+      int sy,
+      boolean[] dirty) {
     if (state == null) return;
     final int ly = y & 0xF;
-    section.setBlockState(x, ly, z, state, false);
+    dirty[sy] = true;
+    var idx = section.blockStateContainer.data.palette().index(state, section.blockStateContainer);
+    section.blockStateContainer.data.storage().set((((ly << 4) | z) << 4) | x, idx);
+    // section.setBlockState(x, ly, z, state, false);
     column.fastUpdateHeightmap(x, z, y, state);
     if (state.getFluidState().isEmpty()) return;
 
-    Chunk.getList(chunk.getPostProcessingLists(), column.getSectionIndex(y))
-        .add((short) (x | ly << 4 | z << 8));
+    Chunk.getList(chunk.getPostProcessingLists(), sy).add((short) (x | ly << 4 | z << 8));
   }
 
   private static final BlockState VOID_AIR = Blocks.VOID_AIR.getDefaultState();
