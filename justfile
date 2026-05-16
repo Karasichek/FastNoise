@@ -63,6 +63,10 @@ perfNoise +args="":
 perfBiomes +args="":
     ./gradlew :perf:runServer -Pzperfbenchmark="biomegen" {{args}}
 
+# Available props zperfbenchmark zuseasync zworldname zbenchmode zwarmuptime zmeasuretime zwarmups zmeasures zforks zthreads zseed zworldradius zendcenter zworldcenter
+perfSurfaceAsync +args="":
+    ./gradlew :perf:runServer -Pzuseasync="/opt/async-profiler/lib/libasyncProfiler.so" -Pzperfbenchmark="surface" {{args}}
+
 # Available props zperfbenchmark zuseasync zworldname zbenchmode zwarmuptime zmeasuretime zwarmups zforks zthreads zseed zworldradius zendcenter zworldcenter
 perfNoiseAsync +args="":
     ./gradlew :perf:runServer -Pzuseasync="/opt/async-profiler/lib/libasyncProfiler.so" -Pzperfbenchmark="noisgen" {{args}}
