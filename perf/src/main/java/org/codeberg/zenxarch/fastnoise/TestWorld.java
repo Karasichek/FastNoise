@@ -223,7 +223,8 @@ public final class TestWorld {
         sampler,
         settings.surfaceRule(),
         includedBiomes,
-        chunks);
+        chunks,
+        TestGlobals.getManager().getOrThrow(RegistryKeys.BIOME));
   }
 
   private static Set<RegistryEntry<Biome>> getBiomesAround(
