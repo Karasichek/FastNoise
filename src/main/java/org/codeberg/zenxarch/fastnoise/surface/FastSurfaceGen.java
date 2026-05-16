@@ -27,8 +27,14 @@ import org.codeberg.zenxarch.fastnoise.surface.cache.FastChunkCache;
 
 public class FastSurfaceGen {
 
-  public static boolean canUseSurfaceBuilder(Chunk chunk) {
+  public static boolean canUseSurfaceBuilder(
+      Chunk chunk, Set<RegistryEntry<Biome>> includedBiomes) {
     if (chunk.hasBelowZeroRetrogen()) return false;
+    if (includedBiomes.size() > 64) return false;
+    return sanityCheck(chunk);
+  }
+
+  private static boolean sanityCheck(Chunk chunk) {
     var sections = chunk.getSectionArray();
     for (int i = 0; i < sections.length; i++) {
       var config = sections[i].blockStateContainer.data.configuration();
@@ -64,19 +70,17 @@ public class FastSurfaceGen {
     int minBlockZ = chunkPos.getStartZ();
     var column = new FastBlockColumn(chunk);
 
-    var posToBiome =
-        MaterialRuleContext.mapPosToBiome(biomeAccess::getBiome, includedBiomes, chunks);
-
     var context =
         new MaterialRuleContext(
             (SurfaceBuilder) (Object) builder,
             noiseConfig,
             chunk,
             chunkNoiseSampler,
-            posToBiome,
+            biomeAccess::getBiome,
             heightContext,
             includedBiomes,
             chunks);
+
     var rule = materialRule.apply(context);
     BlockPos.Mutable blockPos = new BlockPos.Mutable();
 
@@ -101,7 +105,7 @@ public class FastSurfaceGen {
           int startingHeight = chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, x, z) + 1;
           var surfaceBiome =
               surfaceBiomes[(x * 16) + z] =
-                  posToBiome.apply(
+                  context.mapPosToBiome(
                       blockPos.set(blockX, useLegacyRandom ? 0 : startingHeight, blockZ));
 
           if (containsErodedBadlands && surfaceBiome.matchesKey(BiomeKeys.ERODED_BADLANDS)) {
@@ -112,12 +116,14 @@ public class FastSurfaceGen {
       }
     }
 
-    if (!canUseSurfaceBuilder(chunk)) {
+    if (!sanityCheck(chunk)) {
       throw new IllegalStateException("Some mod has made unexpected changes to chunk gen");
     }
 
     final var chunkCache = new FastChunkCache(chunk, defaultState);
     var sections = chunk.getSectionArray();
+
+    var dirty = new boolean[sections.length];
 
     for (int x = 0; x < 16; x++) {
       for (int z = 0; z < 16; z++) {
@@ -137,8 +143,19 @@ public class FastSurfaceGen {
           y = topY;
         }
 
+        var lastSy = column.getSectionIndex(y);
+        var section = sections[lastSy];
+        var lastIdx = -1;
+        var lastState = (BlockState) null;
+
         for (; y >= endY; y--) {
-          final var section = column.getSection(y);
+          final int sy = column.getSectionIndex(y);
+          if (sy != lastSy) {
+            lastSy = sy;
+            section = sections[sy];
+            lastIdx = -1;
+            lastState = null;
+          }
           if (chunkCache.isEmpty(x, y, z)) { // skip whole section
             y = y - (y & 0xF); // lowest y in current section;
             stoneAboveDepth = 0;
@@ -173,7 +190,24 @@ public class FastSurfaceGen {
               stoneAboveDepth++;
               int stoneBelowDepth = y - nextCeilingStoneY + 1;
               context.initVerticalContext(stoneAboveDepth, stoneBelowDepth, waterHeight, y);
-              setBlockState(section, x, y, z, rule.tryApply(blockX, y, blockZ), column, chunk);
+
+              var state = rule.tryApply(blockX, y, blockZ);
+              if (state == null) continue;
+              dirty[sy] = true;
+
+              var idx =
+                  state == lastState
+                      ? lastIdx
+                      : section
+                          .blockStateContainer
+                          .data
+                          .palette()
+                          .index(state, section.blockStateContainer);
+
+              setBlockState(section, x, y, z, state, idx, column, chunk, sy);
+
+              lastIdx = idx;
+              lastState = state;
             }
           }
         }
@@ -195,6 +229,10 @@ public class FastSurfaceGen {
         }
       }
     }
+
+    for (int i = 0; i < dirty.length; i++) {
+      if (dirty[i]) sections[i].calculateCounts();
+    }
   }
 
   private static void setBlockState(
@@ -203,16 +241,17 @@ public class FastSurfaceGen {
       int y,
       int z,
       BlockState state,
+      int pidx,
       FastBlockColumn column,
-      Chunk chunk) {
-    if (state == null) return;
+      Chunk chunk,
+      int sy) {
     final int ly = y & 0xF;
-    section.setBlockState(x, ly, z, state, false);
+    section.blockStateContainer.data.storage().set((((ly << 4) | z) << 4) | x, pidx);
+
     column.fastUpdateHeightmap(x, z, y, state);
     if (state.getFluidState().isEmpty()) return;
 
-    Chunk.getList(chunk.getPostProcessingLists(), column.getSectionIndex(y))
-        .add((short) (x | ly << 4 | z << 8));
+    Chunk.getList(chunk.getPostProcessingLists(), sy).add((short) (x | ly << 4 | z << 8));
   }
 
   private static final BlockState VOID_AIR = Blocks.VOID_AIR.getDefaultState();

@@ -34,6 +34,14 @@ public class FastBlockColumn implements BlockColumn {
   private final Predicate<BlockState>[] predicates =
       Stream.of(heightmaps).map(type -> type.getBlockPredicate()).toArray(Predicate[]::new);
 
+  private static final long completedMask = getCompletedMask(heightmaps);
+
+  private static long getCompletedMask(Heightmap.Type[] heightmaps) {
+    return (0x1L << heightmaps.length) - 1;
+  }
+
+  private long mask;
+
   public FastBlockColumn(final Chunk chunk) {
     this.chunk = chunk;
     this.minY = this.chunk.getBottomY();
@@ -45,11 +53,13 @@ public class FastBlockColumn implements BlockColumn {
     }
 
     this.sections = chunk.getSectionArray();
+    this.mask = 0x0L;
   }
 
   public void updateXZ(int x, int z) {
     this.lx = x;
     this.lz = z;
+    this.mask = 0x0L;
   }
 
   public int getSectionIndex(int y) {
@@ -91,9 +101,14 @@ public class FastBlockColumn implements BlockColumn {
   }
 
   public void fastUpdateHeightmap(int lx, int lz, int iy, BlockState state) {
+    if (this.mask == completedMask) return;
     final int y = iy - minY;
     for (int i = 0; i < heightmapData.length; i++) {
-      HeightmapUtil.updateHeightmap(lx, lz, heightmapData[i], predicates[i], state, y, sections);
+      if ((mask & (0x1L << i)) != 0) continue;
+      if (HeightmapUtil.updateHeightmap(
+          lx, lz, heightmapData[i], predicates[i], state, y, sections)) {
+        mask |= (0x1L << i);
+      }
     }
   }
 }

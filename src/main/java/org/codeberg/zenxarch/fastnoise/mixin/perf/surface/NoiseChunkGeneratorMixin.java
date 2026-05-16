@@ -74,7 +74,7 @@ public abstract class NoiseChunkGeneratorMixin {
       Operation<Void> op,
       @Local final ChunkRegion chunkRegion) {
 
-    if (!FastNoiseConfig.ENABLED || !FastSurfaceGen.canUseSurfaceBuilder(chunk)) {
+    if (!FastNoiseConfig.ENABLED || !FastSurfaceGen.canUseSurfaceBuilder(chunk, includedBiomes)) {
       op.call(
           chunkGenerator,
           chunk,

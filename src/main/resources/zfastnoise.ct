@@ -61,3 +61,11 @@ accessible method net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTre
 accessible method net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode getResultingNode ([JLnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode;Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction;)Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode;
 
 accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction
+
+## optimize surface rules
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BiomeMaterialRule
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext includedBiomes Ljava/util/Set;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext posToBiome Ljava/util/function/Function;
