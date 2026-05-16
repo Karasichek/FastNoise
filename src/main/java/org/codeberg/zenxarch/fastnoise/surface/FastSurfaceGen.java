@@ -3,6 +3,7 @@ package org.codeberg.zenxarch.fastnoise.surface;
 import java.util.Set;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -49,7 +50,8 @@ public class FastSurfaceGen {
       final ChunkNoiseSampler chunkNoiseSampler,
       final MaterialRules.MaterialRule materialRule,
       final Set<RegistryEntry<Biome>> includedBiomes,
-      final Chunk[] chunks) {
+      final Chunk[] chunks,
+      final Registry<Biome> registry) {
 
     final var defaultState = builder.zenxarch$getDefaultState();
 
@@ -61,13 +63,17 @@ public class FastSurfaceGen {
     int minBlockX = chunkPos.getStartX();
     int minBlockZ = chunkPos.getStartZ();
     var column = new FastBlockColumn(chunk);
+
+    var posToBiome =
+        MaterialRuleContext.mapPosToBiome(biomeAccess::getBiome, includedBiomes, chunks);
+
     var context =
         new MaterialRuleContext(
             (SurfaceBuilder) (Object) builder,
             noiseConfig,
             chunk,
             chunkNoiseSampler,
-            biomeAccess::getBiome,
+            posToBiome,
             heightContext,
             includedBiomes,
             chunks);
@@ -80,19 +86,28 @@ public class FastSurfaceGen {
     @SuppressWarnings("unchecked")
     RegistryEntry<Biome>[] surfaceBiomes = new RegistryEntry[256];
 
+    var containsErodedBadlands =
+        !includedBiomes.contains(registry.getOrThrow(BiomeKeys.ERODED_BADLANDS));
+    var containsIceberg =
+        includedBiomes.contains(registry.getOrThrow(BiomeKeys.FROZEN_OCEAN))
+            || includedBiomes.contains(registry.getOrThrow(BiomeKeys.DEEP_FROZEN_OCEAN));
+
     // TODO: just update the chunk cache instead
-    for (int x = 0; x < 16; x++) {
-      for (int z = 0; z < 16; z++) {
-        int blockX = minBlockX + x;
-        int blockZ = minBlockZ + z;
-        int startingHeight = chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, x, z) + 1;
-        var surfaceBiome =
-            surfaceBiomes[(x * 16) + z] =
-                biomeAccess.getBiome(
-                    blockPos.set(blockX, useLegacyRandom ? 0 : startingHeight, blockZ));
-        if (surfaceBiome.matchesKey(BiomeKeys.ERODED_BADLANDS)) {
-          column.updateXZ(x, z);
-          builder.zenxarch$placeBadlandsPillar(column, blockX, blockZ, startingHeight, chunk);
+    if (containsErodedBadlands || containsIceberg) {
+      for (int x = 0; x < 16; x++) {
+        for (int z = 0; z < 16; z++) {
+          int blockX = minBlockX + x;
+          int blockZ = minBlockZ + z;
+          int startingHeight = chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, x, z) + 1;
+          var surfaceBiome =
+              surfaceBiomes[(x * 16) + z] =
+                  posToBiome.apply(
+                      blockPos.set(blockX, useLegacyRandom ? 0 : startingHeight, blockZ));
+
+          if (containsErodedBadlands && surfaceBiome.matchesKey(BiomeKeys.ERODED_BADLANDS)) {
+            column.updateXZ(x, z);
+            builder.zenxarch$placeBadlandsPillar(column, blockX, blockZ, startingHeight, chunk);
+          }
         }
       }
     }
@@ -165,8 +180,9 @@ public class FastSurfaceGen {
 
         // can't have it both be frozen ocean and eroded badlands
         var surfaceBiome = surfaceBiomes[(x * 16) + z];
-        if (surfaceBiome.matchesKey(BiomeKeys.FROZEN_OCEAN)
-            || surfaceBiome.matchesKey(BiomeKeys.DEEP_FROZEN_OCEAN)) {
+        if (containsIceberg
+            && (surfaceBiome.matchesKey(BiomeKeys.FROZEN_OCEAN)
+                || surfaceBiome.matchesKey(BiomeKeys.DEEP_FROZEN_OCEAN))) {
           column.updateXZ(x, z);
           builder.zenxarch$placeIceberg(
               context.estimateSurfaceHeight(),

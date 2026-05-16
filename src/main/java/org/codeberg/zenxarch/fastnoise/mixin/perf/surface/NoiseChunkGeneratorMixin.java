@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import java.util.Set;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.biome.Biome;
@@ -115,6 +116,7 @@ public abstract class NoiseChunkGeneratorMixin {
         sampler,
         settings.surfaceRule(),
         includedBiomes,
-        chunks);
+        chunks,
+        chunkRegion.getRegistryManager().getOrThrow(RegistryKeys.BIOME));
   }
 }
