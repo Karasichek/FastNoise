@@ -41,6 +41,8 @@ public final class FastChunkCache {
   }
 
   public int nextNonSolidBlockY(int x, int startY, int z) {
+    if (startY <= minY) return minY - 1;
+
     var y = startY - 1;
     var cy = (y - minY) >> 4;
 

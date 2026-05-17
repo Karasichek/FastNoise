@@ -2,7 +2,6 @@ package org.codeberg.zenxarch.fastnoise.surface;
 
 import java.util.Set;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
@@ -15,7 +14,6 @@ import net.minecraft.world.chunk.ArrayPalette;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.SingularPalette;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.noise.NoiseConfig;
@@ -132,20 +130,14 @@ public class FastSurfaceGen {
 
         int height = chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, x, z) + 1;
         context.initHorizontalContext(blockX, blockZ);
-        int stoneAboveDepth = 0;
-        int waterHeight = Integer.MIN_VALUE;
-        int nextCeilingStoneY = Integer.MAX_VALUE;
 
         int y = height;
-        if (y >= topY) { // assuming void air is air
-          stoneAboveDepth = 0;
-          waterHeight = Integer.MIN_VALUE;
-          y = topY;
-        }
+        if (y > topY) y = topY; // assuming void air is air
 
         var lastSy = column.getSectionIndex(y);
         var section = sections[lastSy];
-        var lastIdx = -1;
+
+        int lastIdx = -1;
         var lastState = (BlockState) null;
 
         for (; y >= endY; y--) {
@@ -158,39 +150,16 @@ public class FastSurfaceGen {
           }
           if (chunkCache.isEmpty(x, y, z)) { // skip whole section
             y = y - (y & 0xF); // lowest y in current section;
-            stoneAboveDepth = 0;
-            waterHeight = Integer.MIN_VALUE;
+            context.air();
             continue;
           }
 
           switch (chunkCache.getState(x, y, z)) {
-            case AIR -> {
-              stoneAboveDepth = 0;
-              waterHeight = Integer.MIN_VALUE;
-            }
-            case WATER -> {
-              if (waterHeight == Integer.MIN_VALUE) {
-                waterHeight = y + 1;
-              }
-            }
-            case ORE -> {
-              if (nextCeilingStoneY >= y)
-                nextCeilingStoneY =
-                    nextNonDefaultBlock(builder, sections, y, endY, x, z, chunkCache) + 1;
-
-              stoneAboveDepth++;
-              int stoneBelowDepth = y - nextCeilingStoneY + 1;
-              context.initVerticalContext(stoneAboveDepth, stoneBelowDepth, waterHeight, y);
-            }
+            case AIR -> context.air();
+            case WATER -> context.water(y);
+            case ORE -> context.oreOrStone(chunkCache, x, y, z);
             case STONE -> {
-              if (nextCeilingStoneY >= y)
-                nextCeilingStoneY =
-                    nextNonDefaultBlock(builder, sections, y, endY, x, z, chunkCache) + 1;
-
-              stoneAboveDepth++;
-              int stoneBelowDepth = y - nextCeilingStoneY + 1;
-              context.initVerticalContext(stoneAboveDepth, stoneBelowDepth, waterHeight, y);
-
+              context.oreOrStone(chunkCache, x, y, z);
               var state = rule.tryApply(blockX, y, blockZ);
               if (state == null) continue;
               dirty[sy] = true;
@@ -252,29 +221,6 @@ public class FastSurfaceGen {
     if (state.getFluidState().isEmpty()) return;
 
     Chunk.getList(chunk.getPostProcessingLists(), sy).add((short) (x | ly << 4 | z << 8));
-  }
-
-  private static final BlockState VOID_AIR = Blocks.VOID_AIR.getDefaultState();
-
-  private static int nextNonDefaultBlock(
-      SurfaceBuilderAccessor builder,
-      ChunkSection[] sections,
-      int startY,
-      int minY,
-      int lx,
-      int lz,
-      FastChunkCache chunkCache) {
-    final int wayBelowMinY = DimensionType.BELOW_MIN_HEIGHT;
-    if (startY <= minY) {
-      if (!builder.zenxarch$isDefaultBlock(VOID_AIR)) return minY - 1;
-      return wayBelowMinY;
-    }
-
-    var y = chunkCache.nextNonSolidBlockY(lx, startY, lz);
-    if (y >= minY) return y;
-
-    if (!builder.zenxarch$isDefaultBlock(VOID_AIR)) return minY - 1;
-    return wayBelowMinY;
   }
 
   private static boolean canSkipSurfaceBuilder(

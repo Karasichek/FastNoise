@@ -13,10 +13,12 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeCache;
+import org.codeberg.zenxarch.fastnoise.surface.cache.FastChunkCache;
 
 public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
   public final RegistryEntry<Biome>[] biomes;
+  public int nextCeilingStoneY;
 
   @SuppressWarnings("unchecked")
   public MaterialRuleContext(
@@ -40,6 +42,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
         includedBiomes);
 
     this.biomes = biomes;
+    this.nextCeilingStoneY = Integer.MAX_VALUE;
   }
 
   public RegistryEntry<Biome> mapPosToBiome(BlockPos pos) {
@@ -70,6 +73,10 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   @Override
   public void initHorizontalContext(int blockX, int blockZ) {
     super.initHorizontalContext(blockX, blockZ);
+
+    this.stoneDepthAbove = 0;
+    this.fluidHeight = Integer.MIN_VALUE;
+    this.nextCeilingStoneY = Integer.MAX_VALUE;
   }
 
   @Override
@@ -91,5 +98,23 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   private static int indexOf(RegistryEntry<Biome>[] biomes, RegistryEntry<Biome> biome) {
     for (int i = 0; i < biomes.length; i++) if (biomes[i] == biome) return i;
     throw new IllegalStateException("Impossible biome returned, possible mod incompatibility");
+  }
+
+  public void air() {
+    this.stoneDepthAbove = 0;
+    this.fluidHeight = Integer.MIN_VALUE;
+  }
+
+  public void water(final int y) {
+    if (fluidHeight == Integer.MIN_VALUE) fluidHeight = y + 1;
+  }
+
+  public void oreOrStone(FastChunkCache cache, final int x, final int y, final int z) {
+    if (nextCeilingStoneY >= y) nextCeilingStoneY = cache.nextNonSolidBlockY(x, y, z) + 1;
+
+    stoneDepthAbove++;
+    stoneDepthBelow = y - nextCeilingStoneY + 1;
+
+    initVerticalContext(stoneDepthAbove, stoneDepthBelow, fluidHeight, y);
   }
 }
