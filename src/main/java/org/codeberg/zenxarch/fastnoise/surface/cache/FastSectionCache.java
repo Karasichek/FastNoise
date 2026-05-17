@@ -24,8 +24,8 @@ public final class FastSectionCache {
 
     for (int i = 0; i < palette.size; i++) {
       var state = fromBlockState(palette.get(i), defaultState);
-      if (state == STATE.STONE || state == STATE.AIR) isDefault = setBit(isDefault, i);
-      if (state == STATE.STONE || state == STATE.ORE) isSolid = setBit(isSolid, i);
+      if (state == 0x3 || state == 0x1) isDefault = setBit(isDefault, i);
+      if (state == 0x3 || state == 0x2) isSolid = setBit(isSolid, i);
     }
 
     for (int z = 0; z < 16; z++) {
@@ -65,11 +65,11 @@ public final class FastSectionCache {
     IS_DEFAULT[index] = risDefault;
   }
 
-  private static STATE fromBlockState(BlockState state, BlockState defaultState) {
-    if (state.isAir()) return STATE.AIR;
-    if (!state.getFluidState().isEmpty()) return STATE.WATER;
-    if (state == defaultState) return STATE.STONE;
-    return STATE.ORE;
+  private static int fromBlockState(BlockState state, BlockState defaultState) {
+    if (state.isAir()) return 0x1;
+    if (!state.getFluidState().isEmpty()) return 0x0;
+    if (state == defaultState) return 0x3;
+    return 0x2;
   }
 
   private static short setBit(short in, int bitIdx) {
@@ -80,13 +80,13 @@ public final class FastSectionCache {
     return ((in >> bitIdx) & 0x1) != 0x0;
   }
 
-  public STATE getState(int x, int y, int z) {
+  private int getBitAt(short in, int bitIdx) {
+    return (in >> bitIdx) & 0x1;
+  }
+
+  public int getState(int x, int y, int z) {
     var index = index(x, z);
-    if (getBit(IS_SOLID[index], y)) {
-      return getBit(IS_DEFAULT[index], y) ? STATE.STONE : STATE.ORE;
-    } else {
-      return getBit(IS_DEFAULT[index], y) ? STATE.AIR : STATE.WATER;
-    }
+    return (getBitAt(IS_SOLID[index], y) << 1) | getBitAt(IS_DEFAULT[index], y);
   }
 
   public void setStateToDefault(int x, int y, int z) {
@@ -110,12 +110,5 @@ public final class FastSectionCache {
 
   public int nextNonSolidBlock(int x, int z) {
     return 31 - Integer.numberOfLeadingZeros(~IS_SOLID[index(x, z)]);
-  }
-
-  public static enum STATE {
-    AIR,
-    WATER,
-    STONE,
-    ORE
   }
 }

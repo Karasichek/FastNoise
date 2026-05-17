@@ -154,30 +154,24 @@ public class FastSurfaceGen {
             continue;
           }
 
-          switch (chunkCache.getState(x, y, z)) {
-            case AIR -> context.air();
-            case WATER -> context.water(y);
-            case ORE -> context.oreOrStone(chunkCache, x, y, z);
-            case STONE -> {
-              context.oreOrStone(chunkCache, x, y, z);
-              var state = rule.tryApply(blockX, y, blockZ);
-              if (state == null) continue;
-              dirty[sy] = true;
+          if (chunkCache.updateAndIsStone(context, x, y, z)) {
+            var state = rule.tryApply(blockX, y, blockZ);
+            if (state == null) continue;
+            dirty[sy] = true;
 
-              var idx =
-                  state == lastState
-                      ? lastIdx
-                      : section
-                          .blockStateContainer
-                          .data
-                          .palette()
-                          .index(state, section.blockStateContainer);
+            var idx =
+                state == lastState
+                    ? lastIdx
+                    : section
+                        .blockStateContainer
+                        .data
+                        .palette()
+                        .index(state, section.blockStateContainer);
 
-              setBlockState(section, x, y, z, state, idx, column, chunk, sy);
+            setBlockState(section, x, y, z, state, idx, column, chunk, sy);
 
-              lastIdx = idx;
-              lastState = state;
-            }
+            lastIdx = idx;
+            lastState = state;
           }
         }
 

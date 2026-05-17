@@ -4,6 +4,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.world.chunk.ArrayPalette;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.SingularPalette;
+import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
 
 public final class FastChunkCache {
   private final FastSectionCache[] caches;
@@ -30,9 +31,22 @@ public final class FastChunkCache {
     return caches[sy].isEmpty(x, z);
   }
 
-  public FastSectionCache.STATE getState(int x, int y, int z) {
+  public int getState(int x, int y, int z) {
     var sy = (y - minY) >> 4;
     return caches[sy].getState(x, y & 0xF, z);
+  }
+
+  public boolean updateAndIsStone(MaterialRuleContext context, int x, int y, int z) {
+    final int state = getState(x, y, z);
+    if (state > 1) {
+      context.oreOrStone(this, x, y, z);
+      return state == 0x3;
+    }
+
+    if (state == 0x0) context.water(y);
+    else context.air();
+
+    return false;
   }
 
   public void setStateToDefaultBlock(int x, int y, int z) {
