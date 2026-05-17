@@ -9,6 +9,9 @@ run:
 dap:
     ./gradlew runDap
 
+hotswapDap:
+    JAVA_HOME=/usr/lib/jvm/jre-jetbrains ./gradlew runHotswapDap
+
 sources:
     ./gradlew genSources
 

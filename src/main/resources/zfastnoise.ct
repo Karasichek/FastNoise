@@ -61,3 +61,6 @@ accessible method net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTre
 accessible method net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode getResultingNode ([JLnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode;Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction;)Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode;
 
 accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction
+
+# mojang surface rule optimization backport
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier
