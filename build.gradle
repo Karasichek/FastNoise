@@ -35,6 +35,12 @@ loom {
       vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
       client()
     }
+
+    hotswapDap {
+      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+      vmArgs '-XX:+AllowEnhancedClassRedefinition'
+      client()
+    }
   }
 }
 
@@ -137,6 +143,7 @@ modrinth {
   loaders = ["fabric", "quilt"]
   dependencies {
     incompatible.project "moonrise-opt"
+    incompatible.project "anti-xray"
   }
 }
 
