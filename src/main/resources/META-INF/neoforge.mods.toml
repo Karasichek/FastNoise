@@ -42,6 +42,10 @@ config="zfastnoise.mixins.json"
   type="incompatible"
 
 [[dependencies.zfastnoise]]
+  modId="antixray"
+  type="incompatible"
+
+[[dependencies.zfastnoise]]
   modId="c2me"
   type="optional"
   reason="Provides faster chunk generation"
