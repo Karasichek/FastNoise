@@ -33,6 +33,19 @@ loom {
 
   intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
   useIntermediateMappings = true
+
+  runs {
+    dap {
+      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+      client()
+    }
+
+    hotswapDap {
+      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+      vmArgs '-XX:+AllowEnhancedClassRedefinition'
+      client()
+    }
+  }
 }
 
 remapJar {
@@ -42,7 +55,7 @@ remapJar {
 // TODO: fix after neo-loom fixes it
 // test {
 //  useJUnitPlatform()
-//  workingDir = mkdir("run")
+//  workingDir = mkdir(layout.buildDirectory.dir("testrun"))
 // }
 
 dependencies {
@@ -141,6 +154,7 @@ modrinth {
   loaders = ["neoforge"]
   dependencies {
     incompatible.project "moonrise-opt"
+    incompatible.project "anti-xray"
   }
 }
 
