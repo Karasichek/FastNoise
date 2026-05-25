@@ -13,12 +13,10 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeCache;
-import org.codeberg.zenxarch.fastnoise.surface.cache.FastChunkCache;
 
 public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
   public final RegistryEntry<Biome>[] biomes;
-  public int nextCeilingStoneY;
 
   @SuppressWarnings("unchecked")
   public MaterialRuleContext(
@@ -42,7 +40,6 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
         includedBiomes);
 
     this.biomes = biomes;
-    this.nextCeilingStoneY = Integer.MAX_VALUE;
   }
 
   public RegistryEntry<Biome> mapPosToBiome(BlockPos pos) {
@@ -76,7 +73,6 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
     this.stoneDepthAbove = 0;
     this.fluidHeight = Integer.MIN_VALUE;
-    this.nextCeilingStoneY = Integer.MAX_VALUE;
   }
 
   @Override
@@ -109,12 +105,8 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
     if (fluidHeight == Integer.MIN_VALUE) fluidHeight = y + 1;
   }
 
-  public void oreOrStone(FastChunkCache cache, final int x, final int y, final int z) {
-    if (nextCeilingStoneY >= y) nextCeilingStoneY = cache.nextNonSolidBlockY(x, y, z) + 1;
-
+  public void oreOrStone(final int y, final int stoneDepthBelow) {
     stoneDepthAbove++;
-    stoneDepthBelow = y - nextCeilingStoneY + 1;
-
     initVerticalContext(stoneDepthAbove, stoneDepthBelow, fluidHeight, y);
   }
 }
