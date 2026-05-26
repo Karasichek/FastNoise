@@ -127,9 +127,9 @@ public class FastSurfaceGen {
           final var state = rule.tryApply(blockX, y, blockZ);
           if (state == null) continue;
 
-          var idx = indexCache.getIdx(sy, sections[sy].blockStateContainer, state);
+          indexCache.updateBlock(sy, sections[sy].blockStateContainer, x, y & 0xF, z, state);
 
-          setBlockState(section, x, y & 0xF, z, state, idx, column, chunk, sy);
+          updateExtras(section, x, y & 0xF, z, state, column, chunk, sy);
         }
       }
     }
@@ -137,21 +137,18 @@ public class FastSurfaceGen {
     indexCache.finish(sections);
   }
 
-  private static void setBlockState(
+  private static void updateExtras(
       ChunkSection section,
       int x,
       int y,
       int z,
       BlockState state,
-      int pidx,
       FastBlockColumn column,
       Chunk chunk,
       int sy) {
-    section.blockStateContainer.data.storage().set((((y << 4) | z) << 4) | x, pidx);
-
     column.fastUpdateHeightmap(x, z, y, state);
-    if (state.getFluidState().isEmpty()) return;
 
+    if (state.getFluidState().isEmpty()) return;
     Chunk.getList(chunk.getPostProcessingLists(), sy).add((short) (x | y << 4 | z << 8));
   }
 
