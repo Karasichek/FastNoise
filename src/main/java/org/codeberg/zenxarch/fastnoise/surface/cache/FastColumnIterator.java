@@ -64,6 +64,7 @@ public final class FastColumnIterator {
 
   private int localY;
   private int globalY;
+  private int solidBlocksBelow;
   private FastColumnBitMask isAir;
   private FastColumnBitMask isLiquid;
   private FastColumnBitMask isSolid;
@@ -78,24 +79,21 @@ public final class FastColumnIterator {
 
     globalY = highestY;
     localY = 0;
-  }
 
-  private boolean hasFinished() {
-    return localY >= size;
+    recalculateSolidBlocksBelowAtStart();
   }
 
   public boolean hasNext() {
-    if (hasFinished()) return false;
+    if (solidBlocksBelow == 0) {
+      recalculateSolidBlocksBelow();
+    }
 
-    if (skipAllAirAndWater()) return false;
+    if (solidBlocksBelow == 0) return false;
 
-    var noOfSolidBlocks = (localY + 1) == size ? 0 : this.isSolid.numberOfTrailingOnes(localY + 1);
-
-    while (noOfSolidBlocks >= 0) {
-      context.oreOrStone(globalY, noOfSolidBlocks);
+    while (solidBlocksBelow > 0) {
       if (this.isDefault.isSet(localY)) return true;
-      step();
-      noOfSolidBlocks--;
+      context.oreOrStone(globalY, solidBlocksBelow - 1);
+      stepStone();
     }
 
     return hasNext();
@@ -103,7 +101,8 @@ public final class FastColumnIterator {
 
   public int nextY() {
     var result = globalY;
-    step();
+    context.oreOrStone(result, solidBlocksBelow - 1);
+    stepStone();
     return result;
   }
 
@@ -112,15 +111,27 @@ public final class FastColumnIterator {
     globalY--;
   }
 
+  private void stepStone() {
+    solidBlocksBelow--;
+    step();
+  }
+
   private void step(int count) {
     localY += count;
     globalY -= count;
   }
 
-  // returns true if has finished
-  private boolean skipAllAirAndWater() {
-    if (this.isSolid.isSet(localY)) return false;
+  private void recalculateSolidBlocksBelowAtStart() {
+    if (this.isSolid.isSet(localY)) {
+      solidBlocksBelow = computeSolidBlocksBelow();
+      return;
+    }
 
+    recalculateSolidBlocksBelow();
+  }
+
+  // returns true if has finished
+  private void recalculateSolidBlocksBelow() {
     var isAir = this.isAir.isSet(localY);
     var isLiquid = isAir ? false : this.isLiquid.isSet(localY);
 
@@ -133,11 +144,19 @@ public final class FastColumnIterator {
         step(this.isLiquid.numberOfTrailingOnes(localY));
       }
 
-      if (this.hasFinished()) return true;
+      if (localY >= size) {
+        solidBlocksBelow = 0;
+        return;
+      }
 
       isAir = this.isAir.isSet(localY);
       isLiquid = isAir ? false : this.isLiquid.isSet(localY);
     }
-    return false;
+
+    solidBlocksBelow = computeSolidBlocksBelow();
+  }
+
+  private int computeSolidBlocksBelow() {
+    return this.isSolid.numberOfTrailingOnes(localY);
   }
 }

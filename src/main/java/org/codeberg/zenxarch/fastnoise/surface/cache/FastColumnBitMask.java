@@ -20,7 +20,7 @@ public final class FastColumnBitMask {
   }
 
   public int numberOfTrailingOnes(int idx) {
-    var result = numberOfTrailingOnes(data[idx >> 6] >>> (idx & 0x3f));
+    var result = numberOfTrailingOnes(data[idx >> 6] >>> idx);
     if (result == 0) return 0;
 
     if (((result + idx) & 0x3f) != 0x0) return result;
@@ -43,7 +43,7 @@ public final class FastColumnBitMask {
   public static FastColumnBitMask nor(FastColumnBitMask a, FastColumnBitMask b, int size) {
     final long[] data = new long[a.data.length];
     for (int i = 0; i < data.length; i++) data[i] = ~(a.data[i] | b.data[i]);
-    if (data.length > 0) data[data.length - 1] &= (-1L >>> (64 - size));
+    if (data.length > 0) data[data.length - 1] &= ~(-1L << size);
     return new FastColumnBitMask(data);
   }
 
@@ -63,7 +63,6 @@ public final class FastColumnBitMask {
     }
 
     public FastColumnBitMask build() {
-      // reverse(data, size);
       return new FastColumnBitMask(data);
     }
   }
