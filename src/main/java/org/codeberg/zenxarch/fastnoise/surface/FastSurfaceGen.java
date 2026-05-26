@@ -21,6 +21,7 @@ import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.mixin.SurfaceBuilderAccessor;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastColumnIterator;
+import org.codeberg.zenxarch.fastnoise.surface.cache.FastIsFluidCache;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastPaletteIndexCache;
 
 public class FastSurfaceGen {
@@ -110,6 +111,7 @@ public class FastSurfaceGen {
 
     final var iterator =
         new FastColumnIterator(sections, defaultState, minY, context, indexCache.size());
+    final var isFluidCache = new FastIsFluidCache();
 
     for (int x = 0; x < 16; x++) {
       for (int z = 0; z < 16; z++) {
@@ -129,7 +131,7 @@ public class FastSurfaceGen {
 
           indexCache.updateBlock(sy, sections[sy].blockStateContainer, x, y & 0xF, z, state);
 
-          updateExtras(section, x, y & 0xF, z, state, column, chunk, sy);
+          updateExtras(section, x, y & 0xF, z, state, column, chunk, sy, isFluidCache);
         }
       }
     }
@@ -145,11 +147,12 @@ public class FastSurfaceGen {
       BlockState state,
       FastBlockColumn column,
       Chunk chunk,
-      int sy) {
+      int sy,
+      FastIsFluidCache isFluidCache) {
     column.fastUpdateHeightmap(x, z, y, state);
 
-    if (state.getFluidState().isEmpty()) return;
-    Chunk.getList(chunk.getPostProcessingLists(), sy).add((short) (x | y << 4 | z << 8));
+    if (isFluidCache.isFluid(state))
+      Chunk.getList(chunk.getPostProcessingLists(), sy).add((short) (x | y << 4 | z << 8));
   }
 
   private static boolean canSkipSurfaceBuilder(
