@@ -24,26 +24,24 @@ public final class FastColumnIterator {
       final ChunkSection[] sections,
       BlockState defaultState,
       final int minY,
-      MaterialRuleContext context) {
-    int highestNonEmptySection = sections.length - 1;
-    for (; highestNonEmptySection >= 0; highestNonEmptySection--)
-      if (!sections[highestNonEmptySection].isEmpty()) break;
+      MaterialRuleContext context,
+      int numSections) {
 
-    this.highestY = minY + (highestNonEmptySection << 4) + 0xf;
+    this.highestY = minY + (numSections << 4) - 0x1;
     this.context = context;
 
     this.isAirPrefetch = new FastColumnBitMask[256];
     this.isLiquidPrefetch = new FastColumnBitMask[256];
     this.isSolidPrefetch = new FastColumnBitMask[256];
     this.isDefaultPrefetch = new FastColumnBitMask[256];
-    this.size = (highestNonEmptySection + 1) * 16;
+    this.size = numSections << 4;
     for (int i = 0; i < 256; i++) {
-      int ly = size - 1;
+      int ly = this.size - 1;
       var isAir = FastColumnBitMask.builder(this.size);
       var isLiquid = FastColumnBitMask.builder(this.size);
       var isDefault = FastColumnBitMask.builder(this.size);
 
-      for (int sy = 0; sy <= highestNonEmptySection; sy++) {
+      for (int sy = 0; sy < numSections; sy++) {
         final var section = sections[sy];
         for (int y = 0; y < 16; y++) {
           var state = section.getBlockState(i & 0xf, y, i >> 4);

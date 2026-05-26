@@ -21,6 +21,7 @@ import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.mixin.SurfaceBuilderAccessor;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastColumnIterator;
+import org.codeberg.zenxarch.fastnoise.surface.cache.FastPaletteIndexCache;
 
 public class FastSurfaceGen {
 
@@ -103,9 +104,12 @@ public class FastSurfaceGen {
     }
 
     var sections = chunk.getSectionArray();
-    final var iterator = new FastColumnIterator(sections, defaultState, minY, context);
+    final var indexCache = new FastPaletteIndexCache(sections);
 
-    var dirty = new boolean[sections.length];
+    if (indexCache.size() == 0) return;
+
+    final var iterator =
+        new FastColumnIterator(sections, defaultState, minY, context, indexCache.size());
 
     for (int x = 0; x < 16; x++) {
       for (int z = 0; z < 16; z++) {
@@ -123,19 +127,14 @@ public class FastSurfaceGen {
           final var state = rule.tryApply(blockX, y, blockZ);
           if (state == null) continue;
 
-          dirty[sy] = true;
-
-          var idx =
-              section.blockStateContainer.data.palette().index(state, section.blockStateContainer);
+          var idx = indexCache.getIdx(sy, sections[sy].blockStateContainer, state);
 
           setBlockState(section, x, y & 0xF, z, state, idx, column, chunk, sy);
         }
       }
     }
 
-    for (int i = 0; i < dirty.length; i++) {
-      if (dirty[i]) sections[i].calculateCounts();
-    }
+    indexCache.finish(sections);
   }
 
   private static void setBlockState(
@@ -148,13 +147,12 @@ public class FastSurfaceGen {
       FastBlockColumn column,
       Chunk chunk,
       int sy) {
-    final int ly = y & 0xF;
-    section.blockStateContainer.data.storage().set((((ly << 4) | z) << 4) | x, pidx);
+    section.blockStateContainer.data.storage().set((((y << 4) | z) << 4) | x, pidx);
 
     column.fastUpdateHeightmap(x, z, y, state);
     if (state.getFluidState().isEmpty()) return;
 
-    Chunk.getList(chunk.getPostProcessingLists(), sy).add((short) (x | ly << 4 | z << 8));
+    Chunk.getList(chunk.getPostProcessingLists(), sy).add((short) (x | y << 4 | z << 8));
   }
 
   private static boolean canSkipSurfaceBuilder(
