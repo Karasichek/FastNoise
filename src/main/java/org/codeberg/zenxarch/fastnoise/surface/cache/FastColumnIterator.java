@@ -2,6 +2,7 @@ package org.codeberg.zenxarch.fastnoise.surface.cache;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.Palette;
 import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
 
 /*
@@ -35,6 +36,34 @@ public final class FastColumnIterator {
     this.isSolidPrefetch = new FastColumnBitMask[256];
     this.isDefaultPrefetch = new FastColumnBitMask[256];
     this.size = numSections << 4;
+
+    int[] airMask = new int[numSections];
+    int[] liquidMask = new int[numSections];
+    int[] defaultIdx = new int[numSections];
+
+    for (int i = 0; i < numSections; i++) {
+      if (sections[i].isEmpty()) {
+        airMask[i] = -1;
+        liquidMask[i] = 0x0;
+        defaultIdx[i] = -1;
+      } else {
+        var palette = sections[i].blockStateContainer.data.palette();
+        if (sections[i].hasFluids()) {
+          airMask[i] = air(palette);
+          liquidMask[i] = liquid(palette);
+          defaultIdx[i] = defaultIdx(palette, defaultState);
+        } else {
+          airMask[i] = air(palette);
+          liquidMask[i] = 0;
+          defaultIdx[i] = defaultIdx(palette, defaultState);
+        }
+      }
+    }
+
+    long[][] data = new long[numSections][];
+    for (int i = 0; i < numSections; i++)
+      data[i] = sections[i].blockStateContainer.data.storage().getData();
+
     for (int i = 0; i < 256; i++) {
       int ly = this.size - 1;
       var isAir = FastColumnBitMask.builder(this.size);
@@ -42,14 +71,15 @@ public final class FastColumnIterator {
       var isDefault = FastColumnBitMask.builder(this.size);
 
       for (int sy = 0; sy < numSections; sy++) {
-        final var section = sections[sy];
-        for (int y = 0; y < 16; y++) {
-          var state = section.getBlockState(i & 0xf, y, i >> 4);
-          if (state.isAir()) isAir.set(ly);
-          else if (!state.getFluidState().isEmpty()) isLiquid.set(ly);
-          else if (state == defaultState) isDefault.set(ly);
-          ly--;
-        }
+        if (airMask[sy] == -1) for (int y = 0; y < 16; y++) isAir.set(ly--);
+        else
+          for (int y = 0; y < 16; y++) {
+            var stateIdx = data[sy][y << 4 | (i >> 4)] >>> (i << 2) & 0xf;
+            if ((airMask[sy] >>> stateIdx & 0x1) == 0x1) isAir.set(ly);
+            else if ((liquidMask[sy] >>> stateIdx & 0x1) == 0x1) isLiquid.set(ly);
+            else if (stateIdx == defaultIdx[sy]) isDefault.set(ly);
+            ly--;
+          }
       }
 
       this.isAirPrefetch[i] = isAir.build();
@@ -58,6 +88,26 @@ public final class FastColumnIterator {
           FastColumnBitMask.nor(this.isAirPrefetch[i], this.isLiquidPrefetch[i], this.size);
       this.isDefaultPrefetch[i] = isDefault.build();
     }
+  }
+
+  private int air(Palette<BlockState> palette) {
+    short result = 0x0;
+    for (int i = 0; i < palette.getSize(); i++) if (palette.get(i).isAir()) result |= 0x1 << i;
+    return result;
+  }
+
+  private int liquid(Palette<BlockState> palette) {
+    short result = 0x0;
+    for (int i = 0; i < palette.getSize(); i++)
+      if (!palette.get(i).getFluidState().isEmpty()) result |= 0x1 << i;
+    return result;
+  }
+
+  private int defaultIdx(Palette<BlockState> palette, BlockState state) {
+    for (int i = 0; i < palette.getSize(); i++) {
+      if (palette.get(i) == state) return i;
+    }
+    return -1;
   }
 
   private int localY;
