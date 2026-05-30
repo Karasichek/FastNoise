@@ -12,5 +12,6 @@
   "overwrites": {
     "requireAnnotations": true
   },
-  "plugin": "org.codeberg.zenxarch.fastnoise.mixin.FastNoiseMixinPlugin"
+  "plugin": "org.codeberg.zenxarch.fastnoise.mixin.FastNoiseMixinPlugin",
+  "mixinextras": {"minVersion": "0.5.0"}
 }
