@@ -43,7 +43,7 @@ public final class FastColumnBitMask {
   public static FastColumnBitMask nor(FastColumnBitMask a, FastColumnBitMask b, int size) {
     final long[] data = new long[a.data.length];
     for (int i = 0; i < data.length; i++) data[i] = ~(a.data[i] | b.data[i]);
-    if (data.length > 0) data[data.length - 1] &= ~(-1L << size);
+    if (data.length > 0) data[data.length - 1] &= -1L >>> -size;
     return new FastColumnBitMask(data);
   }
 
