@@ -180,6 +180,7 @@ public final class FastColumnIterator {
 
   // returns true if has finished
   private void recalculateSolidBlocksBelow() {
+    if (localY >= size) return;
     var isAir = this.isAir.isSet(localY);
     var isLiquid = isAir ? false : this.isLiquid.isSet(localY);
 
