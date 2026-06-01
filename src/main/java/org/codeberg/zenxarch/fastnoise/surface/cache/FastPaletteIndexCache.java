@@ -8,7 +8,6 @@ import net.minecraft.world.chunk.PalettedContainer;
 public class FastPaletteIndexCache {
   private final BlockState[] states;
   private final int[] indices;
-  private final boolean[] dirty;
   private final boolean[] stillArray;
 
   public FastPaletteIndexCache(ChunkSection[] sections) {
@@ -16,7 +15,6 @@ public class FastPaletteIndexCache {
 
     this.indices = new int[size];
     this.states = new BlockState[size];
-    this.dirty = new boolean[size];
     this.stillArray = new boolean[size];
     Arrays.fill(this.stillArray, true);
   }
@@ -38,7 +36,6 @@ public class FastPaletteIndexCache {
     var index = container.data.palette().index(state, container);
     states[sy] = state;
     indices[sy] = index;
-    dirty[sy] = true;
     if (stillArray[sy]) stillArray[sy] = container.data.configuration().bitsInMemory() == 4;
     return index;
   }
@@ -57,8 +54,8 @@ public class FastPaletteIndexCache {
   }
 
   public void finish(ChunkSection[] sections) {
-    for (int i = 0; i < dirty.length; i++) {
-      if (dirty[i]) sections[i].calculateCounts();
+    for (int i = 0; i < states.length; i++) {
+      if (states[i] != null) sections[i].calculateCounts();
     }
   }
 }
