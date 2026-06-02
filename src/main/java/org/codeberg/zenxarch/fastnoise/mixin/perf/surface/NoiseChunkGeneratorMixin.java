@@ -75,7 +75,8 @@ public abstract class NoiseChunkGeneratorMixin {
       @Local final ChunkRegion chunkRegion) {
 
     final var registry = chunkRegion.getRegistryManager().getOrThrow(RegistryKeys.BIOME);
-    if (!FastNoiseConfig.ENABLED || !FastSurfaceGen.canUseSurfaceBuilder(chunk, includedBiomes, registry)) {
+    if (!FastNoiseConfig.ENABLED
+        || !FastSurfaceGen.canUseSurfaceBuilder(chunk, includedBiomes, registry)) {
       op.call(
           chunkGenerator,
           chunk,

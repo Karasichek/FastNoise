@@ -20,10 +20,22 @@ public record BenchmarkSettings(
     }
   }
 
-  private static final long defaultSeed = getIntProperty("zseed", 100, 0);
+  private static long getLongProperty(String name, int def, int min) {
+    var value = System.getProperty(name);
+    if (value == null) return def;
+    try {
+      return Math.max(Long.parseLong(value), min);
+    } catch (Exception e) {
+      return def;
+    }
+  }
+
+  public static final long defaultSeed = getLongProperty("zseed", 100, 0);
   private static final int WorldRadiusInChunks = getIntProperty("zworldradius", 16, 0);
   private static final int endCenter = getIntProperty("zendcenter", 128, Integer.MIN_VALUE);
   private static final int worldCenter = getIntProperty("zworldcenter", 0, Integer.MIN_VALUE);
+
+  public static final long seedCount = getLongProperty("zseedcount", 16, 1);
 
   private static ChunkRegion overworldRegion() {
     return ChunkRegion.of(worldCenter - WorldRadiusInChunks, worldCenter + WorldRadiusInChunks);
@@ -43,17 +55,29 @@ public record BenchmarkSettings(
   }
 
   public static BenchmarkSettings overworld() {
-    return new BenchmarkSettings(
-        overworldRegion(), overworldBiomeRegion(), defaultSeed, DimensionOptions.OVERWORLD);
+    return overworld(defaultSeed);
   }
 
   public static BenchmarkSettings nether() {
-    return new BenchmarkSettings(
-        overworldRegion(), overworldBiomeRegion(), defaultSeed, DimensionOptions.NETHER);
+    return nether(defaultSeed);
   }
 
   public static BenchmarkSettings end() {
-    return new BenchmarkSettings(endRegion(), endBiomeRegion(), defaultSeed, DimensionOptions.END);
+    return end(defaultSeed);
+  }
+
+  public static BenchmarkSettings overworld(long seed) {
+    return new BenchmarkSettings(
+        overworldRegion(), overworldBiomeRegion(), seed, DimensionOptions.OVERWORLD);
+  }
+
+  public static BenchmarkSettings nether(long seed) {
+    return new BenchmarkSettings(
+        overworldRegion(), overworldBiomeRegion(), seed, DimensionOptions.NETHER);
+  }
+
+  public static BenchmarkSettings end(long seed) {
+    return new BenchmarkSettings(endRegion(), endBiomeRegion(), seed, DimensionOptions.END);
   }
 
   public static record ChunkRegion(ChunkPos min, ChunkPos max) {

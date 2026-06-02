@@ -19,7 +19,7 @@ loom {
     runs {
         server {
             server()
-            def props = ["zperfbenchmark","zuseasync","zworldname","zbenchmode","zwarmuptime","zmeasuretime","zwarmups","zmeasures","zmod","zforks", "zthreads", "zparity", "zseed", "zworldradius", "zendcenter", "zworldcenter"]
+            def props = ["zperfbenchmark","zuseasync","zworldname","zbenchmode","zwarmuptime","zmeasuretime","zwarmups","zmeasures","zmod","zforks", "zthreads", "zparity", "zseed", "zworldradius", "zendcenter", "zworldcenter", "zseedcount"]
             for (def prop in props) {
                 if (project.hasProperty(prop)) {
                     property(prop, project.getProperty(prop))

@@ -10,9 +10,12 @@ public final class ParityTest {
 
   public static void doParityTest() {
     LOGGER.info("Starting parity test");
-    doParityTest(BenchmarkSettings.overworld());
-    doParityTest(BenchmarkSettings.nether());
-    doParityTest(BenchmarkSettings.end());
+    for (long i = 0; i < BenchmarkSettings.seedCount; i++) {
+      LOGGER.info("Testing seed: {}", BenchmarkSettings.defaultSeed + i);
+      doParityTest(BenchmarkSettings.overworld(BenchmarkSettings.defaultSeed + i));
+      doParityTest(BenchmarkSettings.nether(BenchmarkSettings.defaultSeed + i));
+      doParityTest(BenchmarkSettings.end(BenchmarkSettings.defaultSeed + i));
+    }
   }
 
   private static void doParityTest(BenchmarkSettings settings) {
