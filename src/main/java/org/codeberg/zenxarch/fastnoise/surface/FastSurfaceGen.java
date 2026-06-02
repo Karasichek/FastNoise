@@ -131,7 +131,7 @@ public class FastSurfaceGen {
 
           indexCache.updateBlock(sy, sections[sy].blockStateContainer, x, y & 0xF, z, state);
 
-          updateExtras(section, x, y & 0xF, z, state, column, chunk, sy, isFluidCache);
+          updateExtras(section, x, y, z, state, column, chunk, sy, isFluidCache);
         }
       }
     }
@@ -142,15 +142,16 @@ public class FastSurfaceGen {
   private static void updateExtras(
       ChunkSection section,
       int x,
-      int y,
+      int iy,
       int z,
       BlockState state,
       FastBlockColumn column,
       Chunk chunk,
       int sy,
       FastIsFluidCache isFluidCache) {
-    column.fastUpdateHeightmap(x, z, y, state);
+    column.fastUpdateHeightmap(x, z, iy, state);
 
+    final var y = iy & 0xF;
     if (isFluidCache.isFluid(state))
       Chunk.getList(chunk.getPostProcessingLists(), sy).add((short) (x | y << 4 | z << 8));
   }
