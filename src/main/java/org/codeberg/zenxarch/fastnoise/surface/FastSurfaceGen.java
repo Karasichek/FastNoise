@@ -110,7 +110,7 @@ public class FastSurfaceGen {
     if (indexCache.size() == 0) return;
 
     final var iterator =
-        new FastColumnIterator(sections, defaultState, minY, context, indexCache.size());
+        FastColumnIterator.getIterator(sections, defaultState, minY, context, indexCache.size());
     final var isFluidCache = new FastIsFluidCache();
 
     for (int x = 0; x < 16; x++) {
