@@ -140,7 +140,7 @@ public final class FastColumnIterator {
 
     while (solidBlocksBelow > 0) {
       if (this.isDefault.isSet(localY)) return true;
-      context.oreOrStone(globalY, solidBlocksBelow - 1);
+      context.oreOrStone(globalY, solidBlocksBelow);
       stepStone();
     }
 
@@ -149,7 +149,7 @@ public final class FastColumnIterator {
 
   public int nextY() {
     var result = globalY;
-    context.oreOrStone(result, solidBlocksBelow - 1);
+    context.oreOrStone(result, solidBlocksBelow);
     stepStone();
     return result;
   }
