@@ -22,7 +22,7 @@ public final class HeightmapUtil {
     return status.getHeightmapTypes().toArray(result);
   }
 
-  public static void updateHeightmap(
+  public static boolean updateHeightmap(
       int lx,
       int lz,
       PaletteStorage storage,
@@ -37,8 +37,10 @@ public final class HeightmapUtil {
         if (y >= current) storage.set(idx, y + 1);
       } else { // go down the whole chunk till we hit something
         storage.set(idx, getHeightmapY(idx, sections, y - 1, predicate));
+        return false;
       }
     }
+    return true;
   }
 
   private static int getHeightmapY(
