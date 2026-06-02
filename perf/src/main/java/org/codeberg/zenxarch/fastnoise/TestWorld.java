@@ -142,16 +142,14 @@ public final class TestWorld {
   public void surface(ProtoChunk chunk, ChunkRegion biomeSource) {
     var registry = TestGlobals.getManager().getOrThrow(RegistryKeys.BIOME);
 
-    if (FastNoiseConfig.ENABLED) {
-      fastSurface(
-          chunk,
-          biomeSource,
-          new BiomeAccess(biomeSource, this.seed),
-          new HeightContext(generator, chunk),
-          chunk.getOrCreateChunkNoiseSampler(null),
-          biomeSource);
-      return;
-    }
+    if (FastNoiseConfig.ENABLED
+        && fastSurface(
+            chunk,
+            biomeSource,
+            new BiomeAccess(biomeSource, this.seed),
+            new HeightContext(generator, chunk),
+            chunk.getOrCreateChunkNoiseSampler(null),
+            biomeSource)) return;
 
     this.generator.buildSurface(
         chunk,
@@ -192,7 +190,7 @@ public final class TestWorld {
     return items;
   }
 
-  private void fastSurface(
+  private boolean fastSurface(
       ProtoChunk chunk,
       ChunkRegion biomeSource,
       BiomeAccess biomeAccess,
@@ -200,6 +198,9 @@ public final class TestWorld {
       ChunkNoiseSampler sampler,
       ChunkRegion region) {
     var includedBiomes = accumulate(region, chunk.getPos());
+    final var registry = TestGlobals.getManager().getOrThrow(RegistryKeys.BIOME);
+
+    if (!FastSurfaceGen.canUseSurfaceBuilder(chunk, includedBiomes, registry)) return false;
 
     final var centerPos = chunk.getPos();
     final var cx = centerPos.x();
@@ -224,7 +225,8 @@ public final class TestWorld {
         settings.surfaceRule(),
         includedBiomes,
         chunks,
-        TestGlobals.getManager().getOrThrow(RegistryKeys.BIOME));
+        registry);
+    return true;
   }
 
   private static Set<RegistryEntry<Biome>> getBiomesAround(
