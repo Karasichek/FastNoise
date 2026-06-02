@@ -119,7 +119,7 @@ public class FastSurfaceGen {
         int blockZ = minBlockZ + z;
 
         context.initHorizontalContext(blockX, blockZ);
-
+        column.updateXZ(x, z);
         iterator.start(x, z);
 
         while (iterator.hasNext()) {
