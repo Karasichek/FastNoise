@@ -70,6 +70,9 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   @Override
   public void initHorizontalContext(int blockX, int blockZ) {
     super.initHorizontalContext(blockX, blockZ);
+
+    this.stoneDepthAbove = 0;
+    this.fluidHeight = Integer.MIN_VALUE;
   }
 
   @Override
@@ -91,5 +94,19 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   private static int indexOf(RegistryEntry<Biome>[] biomes, RegistryEntry<Biome> biome) {
     for (int i = 0; i < biomes.length; i++) if (biomes[i] == biome) return i;
     throw new IllegalStateException("Impossible biome returned, possible mod incompatibility");
+  }
+
+  public void air() {
+    this.stoneDepthAbove = 0;
+    this.fluidHeight = Integer.MIN_VALUE;
+  }
+
+  public void water(final int y) {
+    if (fluidHeight == Integer.MIN_VALUE) fluidHeight = y + 1;
+  }
+
+  public void oreOrStone(final int y, final int stoneDepthBelow) {
+    stoneDepthAbove++;
+    initVerticalContext(stoneDepthAbove, stoneDepthBelow, fluidHeight, y);
   }
 }
