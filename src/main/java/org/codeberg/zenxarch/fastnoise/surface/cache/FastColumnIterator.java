@@ -71,7 +71,7 @@ public final class FastColumnIterator {
       var isDefault = FastColumnBitMask.builder(this.size);
 
       for (int sy = 0; sy < numSections; sy++) {
-        if (airMask[sy] == -1) for (int y = 0; y < 16; y++) isAir.set(ly--);
+        if (data[sy].length == 0) for (int y = 0; y < 16; y++) isAir.set(ly--);
         else
           for (int y = 0; y < 16; y++) {
             var stateIdx = data[sy][y << 4 | (i >> 4)] >>> (i << 2) & 0xf;
