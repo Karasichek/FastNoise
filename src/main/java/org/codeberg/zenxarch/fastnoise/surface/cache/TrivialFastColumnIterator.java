@@ -37,10 +37,8 @@ public class TrivialFastColumnIterator implements FastColumnIterator {
       var isDefault = FastColumnBitMask.builder(this.size);
 
       for (int sy = 0; sy < numSections; sy++) {
-        if (sections[sy].isEmpty()) for (int y = 0; y < 16; y++) isAir.set(ly--);
-        else
-          for (int y = 0; y < 16; y++)
-            ((data[sy][y << 4 | (i >> 4)] >>> (i << 2) & 0xf) == 0 ? isAir : isDefault).set(ly--);
+        for (int y = 0; y < 16; y++)
+          ((data[sy][y << 4 | (i >> 4)] >>> (i << 2) & 0xf) == 0 ? isAir : isDefault).set(ly--);
       }
 
       this.isAirPrefetch[i] = isAir.build();
