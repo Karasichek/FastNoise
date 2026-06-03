@@ -71,15 +71,22 @@ public final class GenericFastColumnIterator implements FastColumnIterator {
       var isDefault = FastColumnBitMask.builder(this.size);
 
       for (int sy = 0; sy < numSections; sy++) {
-        if (airMask[sy] == -1) for (int y = 0; y < 16; y++) isAir.set(ly--);
+        if (data[sy].length == 0)
+          for (int y = 0; y < 16; y++)
+            updateBuilders(
+                0L, airMask, liquidMask, defaultIdx, isAir, isLiquid, isDefault, sy, ly--);
         else
-          for (int y = 0; y < 16; y++) {
-            var stateIdx = data[sy][y << 4 | (i >> 4)] >>> (i << 2) & 0xf;
-            if ((airMask[sy] >>> stateIdx & 0x1) == 0x1) isAir.set(ly);
-            else if ((liquidMask[sy] >>> stateIdx & 0x1) == 0x1) isLiquid.set(ly);
-            else if (stateIdx == defaultIdx[sy]) isDefault.set(ly);
-            ly--;
-          }
+          for (int y = 0; y < 16; y++)
+            updateBuilders(
+                data[sy][y << 4 | (i >> 4)] >>> (i << 2) & 0xFL,
+                airMask,
+                liquidMask,
+                defaultIdx,
+                isAir,
+                isLiquid,
+                isDefault,
+                sy,
+                ly--);
       }
 
       this.isAirPrefetch[i] = isAir.build();
@@ -88,6 +95,21 @@ public final class GenericFastColumnIterator implements FastColumnIterator {
           FastColumnBitMask.nor(this.isAirPrefetch[i], this.isLiquidPrefetch[i], this.size);
       this.isDefaultPrefetch[i] = isDefault.build();
     }
+  }
+
+  private static void updateBuilders(
+      long stateIdx,
+      int[] airMask,
+      int[] liquidMask,
+      int[] defaultIdx,
+      FastColumnBitMask.Builder isAir,
+      FastColumnBitMask.Builder isLiquid,
+      FastColumnBitMask.Builder isDefault,
+      int sy,
+      int ly) {
+    if ((airMask[sy] >>> stateIdx & 0x1) == 0x1) isAir.set(ly);
+    else if ((liquidMask[sy] >>> stateIdx & 0x1) == 0x1) isLiquid.set(ly);
+    else if (stateIdx == defaultIdx[sy]) isDefault.set(ly);
   }
 
   private int air(Palette<BlockState> palette) {

@@ -124,10 +124,11 @@ public class FastSurfaceGen {
 
         while (iterator.hasNext()) {
           final var y = iterator.nextY();
+          final var state = rule.tryApply(blockX, y, blockZ);
+          if (state == null || state == defaultState) continue;
+
           final var sy = (y - minY) >> 4;
           final var section = sections[sy];
-          final var state = rule.tryApply(blockX, y, blockZ);
-          if (state == null) continue;
 
           indexCache.updateBlock(sy, sections[sy].blockStateContainer, x, y & 0xF, z, state);
 
