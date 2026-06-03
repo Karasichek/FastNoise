@@ -47,6 +47,13 @@ public final class FastColumnBitMask {
     return new FastColumnBitMask(data);
   }
 
+  public static FastColumnBitMask not(FastColumnBitMask a, int size) {
+    final long[] data = new long[a.data.length];
+    for (int i = 0; i < data.length; i++) data[i] = ~a.data[i];
+    if (data.length > 0) data[data.length - 1] &= -1L >>> -size;
+    return new FastColumnBitMask(data);
+  }
+
   public static Builder builder(int bits) {
     return new Builder(bits);
   }
