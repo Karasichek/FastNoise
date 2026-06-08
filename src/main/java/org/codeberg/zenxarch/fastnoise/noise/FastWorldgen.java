@@ -11,11 +11,21 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeSupplier;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil.MultiNoiseSampler;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.SingularPalette;
 import net.minecraft.world.gen.chunk.AquiferSampler;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 
 public class FastWorldgen {
   public static final BlockState AIR = Blocks.AIR.getDefaultState();
+
+  public static boolean isEmpty(Chunk chunk) {
+    var sections = chunk.getSectionArray();
+    for (int i = 0; i < sections.length; i++) {
+      if (sections[i].blockStateContainer.data.palette() instanceof SingularPalette) continue;
+      return false;
+    }
+    return true;
+  }
 
   public static void populateNoise(
       ChunkNoiseSampler chunkNoiseSampler,
@@ -23,7 +33,8 @@ public class FastWorldgen {
       Chunk chunk,
       int minimumCellY,
       int cellHeight,
-      FastChunkSection[] fastSections) {
+      FastChunkSection[] fastSections,
+      int minimumY) {
     ChunkPos chunkPos = chunk.getPos();
     int chunkStartX = chunkPos.getStartX();
     int chunkStartZ = chunkPos.getStartZ();
@@ -34,9 +45,7 @@ public class FastWorldgen {
     int verticalCellBlockCount = chunkNoiseSampler.getVerticalCellBlockCount();
     int cellWidth = 16 / horizontalCellBlockCount;
 
-    final boolean skipDefaultBlock = defaultBlockState == AIR;
-
-    FastChunkSection fastSection = fastSections[fastSections.length - 1];
+    final var sections = chunk.getSectionArray();
 
     for (int cellX = 0; cellX < cellWidth; cellX++) {
       chunkNoiseSampler.sampleEndDensity(cellX);
@@ -55,7 +64,7 @@ public class FastWorldgen {
                 (double) verticalCellBlock / (double) verticalCellBlockCount;
             chunkNoiseSampler.interpolateY(blockY, verticalCellProgress);
 
-            fastSection = fastSections[chunk.getSectionIndex(blockY)];
+            final var sectionIdx = (blockY - minimumY) >> 4;
 
             for (int cellBlockX = 0; cellBlockX < horizontalCellBlockCount; cellBlockX++) {
               int blockX = chunkStartX + cellX * horizontalCellBlockCount + cellBlockX;
@@ -71,13 +80,18 @@ public class FastWorldgen {
                 chunkNoiseSampler.interpolateZ(blockZ, cellZProgress);
 
                 var state = chunkNoiseSampler.sampleBlockState();
+                if (state == AIR) continue;
+
+                final var fastSection =
+                    fastSections[sectionIdx] != null
+                        ? fastSections[sectionIdx]
+                        : (fastSections[sectionIdx] = new FastChunkSection(sections[sectionIdx]));
+
                 if (state == null) {
-                  if (skipDefaultBlock) continue;
                   fastSection.setDefaultBlockState(
                       blockXInSection, blockYInSection, blockZInSection, defaultBlockState);
                   continue;
-                } else if (state == AIR) continue;
-                else
+                } else
                   fastSection.setBlockState(
                       blockXInSection, blockYInSection, blockZInSection, state);
 
