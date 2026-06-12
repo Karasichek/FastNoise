@@ -5,7 +5,7 @@ issueTrackerURL="https://codeberg.org/ZenXArch/FastNoise/issues"
 [[mods]]
 modId="zfastnoise"
 version="${mod_version}"
-displayName="Fast Noise Mod"
+displayName="Fast Noise"
 displayURL="https://modrinth.com/mod/zfastnoise"
 
 logoFile="assets/zfastnoise/icon.png"
@@ -13,7 +13,7 @@ logoFile="assets/zfastnoise/icon.png"
 authors="ZenXArch"
 
 description='''
-This mod makes improvements to noise gen
+Vanilla worldgen optimization mod
 '''
 
 [[mixins]]
