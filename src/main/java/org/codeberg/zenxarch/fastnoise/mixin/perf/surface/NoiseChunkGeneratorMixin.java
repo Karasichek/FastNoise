@@ -58,7 +58,9 @@ public abstract class NoiseChunkGeneratorMixin {
       Operation<Void> op,
       @Local final ChunkRegion chunkRegion) {
 
-    if (!FastSurfaceGen.canUseSurfaceBuilder(chunk)) {
+    var includedBiomes = FastBiomeAccumulator.accumulate(chunkRegion);
+
+    if (!FastSurfaceGen.canUseSurfaceBuilder(chunk, includedBiomes, registry)) {
       op.call(
           chunkGenerator,
           chunk,
@@ -70,8 +72,6 @@ public abstract class NoiseChunkGeneratorMixin {
           blender);
       return;
     }
-
-    var includedBiomes = FastBiomeAccumulator.accumulate(chunkRegion);
 
     var sampler =
         chunk.getOrCreateChunkNoiseSampler(

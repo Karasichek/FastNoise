@@ -21,6 +21,9 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
   public final Set<RegistryKey<Biome>> includedBiomeKeys;
 
+  public final RegistryEntry<Biome>[] biomes;
+
+  @SuppressWarnings("unchecked")
   public MaterialRuleContext(
       SurfaceBuilder surfaceBuilder,
       NoiseConfig noiseConfig,
@@ -31,27 +34,34 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       HeightContext heightContext,
       final Set<RegistryEntry<Biome>> includedBiomes,
       final Chunk[] chunks) {
+    var biomes = includedBiomes.toArray(RegistryEntry[]::new);
+
     super(
         surfaceBuilder,
         noiseConfig,
         chunk,
         chunkNoiseSampler,
-        mapPosToBiome(chunk, posToBiome, includedBiomes, chunks),
+        mapPosToBiome(posToBiome, biomes, chunks),
         registry,
         heightContext);
 
     this.includedBiomeKeys = new ObjectArraySet<>(includedBiomes.size());
     includedBiomes.forEach(biome -> includedBiomeKeys.add(biome.getKey().get()));
+
+    this.biomes = biomes;
+  }
+
+  public RegistryEntry<Biome> mapPosToBiome(BlockPos pos) {
+    return this.posToBiome.apply(pos);
   }
 
   private static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
-      Chunk chunk,
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
-      Set<RegistryEntry<Biome>> includedBiomes,
+      RegistryEntry<Biome>[] includedBiomes,
       final Chunk[] chunks) {
     if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) {
-      if (includedBiomes.size() == 1) {
-        for (var biome : includedBiomes) return (_) -> biome;
+      if (includedBiomes.length == 1) {
+        return (_) -> includedBiomes[0];
       }
       var cache = new FastBiomeCache(includedBiomes, chunks);
       return (posz) -> getBiomeOr(cache, posz, posToBiome);
@@ -69,6 +79,9 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   @Override
   public void initHorizontalContext(int blockX, int blockZ) {
     super.initHorizontalContext(blockX, blockZ);
+
+    this.stoneDepthAbove = 0;
+    this.fluidHeight = Integer.MIN_VALUE;
   }
 
   @Override
@@ -86,5 +99,29 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   @Override
   public int estimateSurfaceHeight() {
     return super.estimateSurfaceHeight();
+  }
+
+  public int getCurrentBiomeIdx() {
+    var biome = this.biomeSupplier.get();
+    return indexOf(biomes, biome);
+  }
+
+  private static int indexOf(RegistryEntry<Biome>[] biomes, RegistryEntry<Biome> biome) {
+    for (int i = 0; i < biomes.length; i++) if (biomes[i] == biome) return i;
+    throw new IllegalStateException("Impossible biome returned, possible mod incompatibility");
+  }
+
+  public void air() {
+    this.stoneDepthAbove = 0;
+    this.fluidHeight = Integer.MIN_VALUE;
+  }
+
+  public void water(final int y) {
+    if (fluidHeight == Integer.MIN_VALUE) fluidHeight = y + 1;
+  }
+
+  public void oreOrStone(final int y, final int stoneDepthBelow) {
+    stoneDepthAbove++;
+    initVerticalContext(stoneDepthAbove, stoneDepthBelow, fluidHeight, this.blockX, y, this.blockZ);
   }
 }
