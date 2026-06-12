@@ -6,6 +6,12 @@ build:
 run:
     ./gradlew runClient
 
+dap:
+    ./gradlew runDap
+
+hotswapDap:
+    JAVA_HOME=/usr/lib/jvm/jre-jetbrains ./gradlew runHotswapDap
+
 sources:
     ./gradlew genSources
 
@@ -60,3 +66,8 @@ publish ptype="alpha":
 
 task taskName:
     ./gradlew {{taskName}}
+bytecode:
+    ./bytecode.sh
+
+asprof:
+    ./asprof.sh
