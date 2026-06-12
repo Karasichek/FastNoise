@@ -1,5 +1,5 @@
 plugins {
-  id 'dev.architectury.loom' version "${loom_version}"
+  id 'org.relativitymc.neo-loom-remap' version "${loom_version}"
   id 'maven-publish'
   id 'me.champeau.jmh' version "${jmh_version}"
   id "com.modrinth.minotaur" version "${minotaur_version}"
@@ -23,6 +23,7 @@ repositories {
     name = 'NeoForged'
     url = 'https://maven.neoforged.net/releases'
   }
+  maven { url = 'https://maven.architectury.dev/' }
 }
 
 loom {
@@ -40,7 +41,7 @@ remapJar {
 dependencies {
   // To change the versions see the gradle.properties file
   minecraft "com.mojang:minecraft:${project.minecraft_version}"
-  neoForge "net.neoforged:neoforge:${project.neo_version}"
+  forgeUserdev "net.neoforged:neoforge:${project.neo_version}:userdev"
   mappings loom.layered {
     it.mappings("net.fabricmc:yarn:$project.yarn_mappings:v2")
     it.mappings("dev.architectury:yarn-mappings-patch-neoforge:$project.yarn_mappings_patch_version")
@@ -127,7 +128,8 @@ modrinth {
 
   changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
 
-  gameVersions = [project.minecraft_version,"1.21.1","1.21.2","1.21.3","1.21.4","1.21.5","1.21.6","1.21.7","1.21.8"]
+  gameVersions = [project.minecraft_version,"1.21.2","1.21.3","1.21.4","1.21.5","1.21.6","1.21.7","1.21.8"]
+  // gameVersions = ["1.21.1"]
   loaders = ["neoforge"]
   dependencies {
     incompatible.project "noisiumforked"
@@ -155,7 +157,7 @@ task curseforge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge) {
   mainFile.addGameVersion("Server")
 
   mainFile.addGameVersion(project.cf_mc_version)
-  mainFile.addGameVersion("1.21.1")
+  // mainFile.addGameVersion("1.21.1")
   mainFile.addGameVersion("1.21.2")
   mainFile.addGameVersion("1.21.3")
   mainFile.addGameVersion("1.21.4")
