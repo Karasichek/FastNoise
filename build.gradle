@@ -53,7 +53,7 @@ processResources {
     minecraft_version      : min_minecraft_version,
     minecraft_version_range: minecraft_version_range,
     neo_version            : neo_version,
-    mod_version            : mod_version,
+    mod_version            : version,
   ]
   inputs.properties replaceProperties
 
