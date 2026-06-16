@@ -1,12 +1,12 @@
 plugins {
-  id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+  id 'org.relativitymc.neo-loom-remap' version "${loom_version}"
   id 'maven-publish'
   id 'me.champeau.jmh' version "${jmh_version}"
   id "com.modrinth.minotaur" version "${minotaur_version}"
   id "net.darkhax.curseforgegradle" version "${cf_gradle_version}"
 }
 
-version = project.mod_version + "+" + project.minecraft_version
+version = project.mod_version + "+" + project.minecraft_version + "+neoforge"
 group = project.maven_group
 
 base {
@@ -48,32 +48,39 @@ loom {
   }
 }
 
-test {
-  useJUnitPlatform()
-  workingDir = mkdir(layout.buildDirectory.dir("testrun"))
+remapJar {
+  atAccessWideners.add("zfastnoise.ct")
 }
+
+// TODO: fix after neo-loom fixes it
+// test {
+//  useJUnitPlatform()
+//  workingDir = mkdir(layout.buildDirectory.dir("testrun"))
+// }
 
 dependencies {
   // To change the versions see the gradle.properties file
   minecraft "com.mojang:minecraft:${project.minecraft_version}"
-  mappings "org.relativitymc:modern-yarn:${project.yarn_mappings}:v2"
-  modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+  forgeUserdev "net.neoforged:neoforge:${project.neo_version}:userdev"
+  mappings loom.layered {
+    it.mappings "org.relativitymc:modern-yarn:${project.yarn_mappings}:v2"
+    it.mappings "org.relativitymc:modern-yarn-mappings-patch-neoforge:${project.yarn_mappings_patch}"
+  }
 
-  // Fabric API. This is technically optional, but you probably want it anyway.
-
-  testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
-
-  include implementation("com.electronwill.night-config:toml:${project.night_config_version}")
-  include implementation("com.electronwill.night-config:core:${project.night_config_version}")
+  include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${project.mixinextras_version}")))
 }
 
 processResources {
-  inputs.property "version", project.version
-  inputs.property "loader_version", project.loader_version
-  inputs.property "minecraft_version", project.min_minecraft_version
+  var replaceProperties = [
+    minecraft_version      : min_minecraft_version,
+    minecraft_version_range: minecraft_version_range,
+    neo_version            : neo_version,
+    mod_version            : mod_version,
+  ]
+  inputs.properties replaceProperties
 
-  filesMatching("fabric.mod.json") {
-    expand(inputs.properties)
+  filesMatching(['META-INF/neoforge.mods.toml']) {
+    expand replaceProperties
   }
 }
 
@@ -145,7 +152,7 @@ modrinth {
   changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
 
   gameVersions = [project.minecraft_version]
-  loaders = ["fabric", "quilt"]
+  loaders = ["neoforge"]
   dependencies {
     incompatible.project "moonrise-opt"
     incompatible.project "anti-xray"
@@ -165,7 +172,7 @@ task curseforge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge) {
   mainFile.changelogType = "markdown"
 
   mainFile.releaseType = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
-  mainFile.addModLoader("Quilt")
+  mainFile.addModLoader("NeoForge")
   mainFile.addJavaVersion("Java 25")
 
   mainFile.addGameVersion("Client")
@@ -176,6 +183,7 @@ task curseforge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge) {
   mainFile.withAdditionalFile(sourcesJar)
 }
 
-tasks.register("prodClient", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
-  mods.from configurations.modImplementation
-}
+// TODO: Uncomment after it is implemented
+// tasks.register("prodClient", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+//   mods.from configurations.modImplementation
+// }

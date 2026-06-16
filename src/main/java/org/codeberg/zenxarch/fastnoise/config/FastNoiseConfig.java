@@ -5,71 +5,75 @@ import com.electronwill.nightconfig.core.UnmodifiableCommentedConfig;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.metadata.CustomValue.CvArray;
-import net.fabricmc.loader.api.metadata.CustomValue.CvObject;
-import net.fabricmc.loader.api.metadata.CustomValue.CvType;
-import net.fabricmc.loader.api.metadata.ModMetadata;
+import java.util.List;
+import java.util.Map;
+import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.fml.loading.moddiscovery.ModInfo;
 import org.codeberg.zenxarch.fastnoise.FastNoiseConstants;
 
 public class FastNoiseConfig {
   private static final String overridesKey = FastNoiseConstants.MOD_ID + ":overrides";
 
   private static void collectOverrides(
-      CommentedConfig config, ModMetadata meta, String key, boolean value) {
+      CommentedConfig config, ModInfo info, String key, boolean value) {
     if (!config.contains(key)) {
-      FastNoiseConstants.LOGGER.error("Mod {} tried to override unknown key {}", meta.getId(), key);
+      FastNoiseConstants.LOGGER.error(
+          "Mod {} tried to override unknown key {}", info.getModId(), key);
     } else {
       FastNoiseConstants.LOGGER.info(
-          "Mod {} override key {} with value {}", meta.getId(), key, value);
+          "Mod {} override key {} with value {}", info.getModId(), key, value);
       config.set(key, value);
     }
   }
 
-  private static void collectOverrides(CommentedConfig config, ModMetadata meta, CvArray array) {
+  private static void collectOverrides(CommentedConfig config, ModInfo meta, List<?> array) {
     for (var value : array) {
-      if (value.getType() != CvType.STRING) {
+      if (!(value instanceof String string)) {
         FastNoiseConstants.LOGGER.error(
-            "Mod {} has array of not strings as overrides", meta.getId());
+            "Mod {} has array of not strings as overrides", meta.getModId());
         continue;
       }
-      collectOverrides(config, meta, value.getAsString(), false);
+      collectOverrides(config, meta, string, false);
     }
   }
 
-  private static void collectOverrides(CommentedConfig config, ModMetadata meta, CvObject object) {
-    for (var value : object) {
-      if (value.getValue().getType() != CvType.BOOLEAN) {
+  private static void collectOverrides(CommentedConfig config, ModInfo meta, Map<?, ?> object) {
+    for (var value : object.keySet()) {
+      if (!(value instanceof String key)) continue;
+      if (!(object.get(value) instanceof Boolean bl)) {
         FastNoiseConstants.LOGGER.error(
-            "Mod {} has object of not booleans as overrides", meta.getId());
+            "Mod {} has object of not booleans as overrides", meta.getModId());
         continue;
       }
-      collectOverrides(config, meta, value.getKey(), value.getValue().getAsBoolean());
+      collectOverrides(config, meta, key, bl);
     }
   }
 
   private static void collectOverrides(CommentedConfig config) {
-    for (var container : FabricLoader.getInstance().getAllMods()) {
-      var meta = container.getMetadata();
-      if (!meta.containsCustomValue(overridesKey)) continue;
+    for (var container : FMLLoader.getCurrent().getLoadingModList().getMods()) {
+      var meta = container.getConfigElement(overridesKey);
+      if (meta.isEmpty()) continue;
 
-      var value = meta.getCustomValue(overridesKey);
-      switch (value.getType()) {
-        case CvType.OBJECT -> collectOverrides(config, meta, value.getAsObject());
-        case CvType.ARRAY -> collectOverrides(config, meta, value.getAsArray());
-        case CvType.STRING -> collectOverrides(config, meta, value.getAsString(), false);
+      var value = meta.get();
+      switch (value) {
+        case Map<?, ?> otherMap -> collectOverrides(config, container, otherMap);
+        case List<?> list -> collectOverrides(config, container, list);
+        case String string -> collectOverrides(config, container, string, false);
         default ->
             FastNoiseConstants.LOGGER.error(
-                "Mod {} has unsupported overrides of type {}", meta.getId(), value.getType());
+                "Mod {} has unsupported overrides of type {}",
+                container.getModId(),
+                value.getClass().getSimpleName());
       }
     }
   }
 
   private static void collectIncompats(CommentedConfig config) {
-    var loader = FabricLoader.getInstance();
+    var loader = FMLLoader.getCurrent();
     for (var entry : FastNoiseConfigEntries.ENTRIES) {
       for (var modId : entry.incompats()) {
-        if (loader.isModLoaded(modId)) config.set(entry.key(), false);
+        if (loader.getLoadingModList().getMods().stream()
+            .anyMatch(mod -> mod.getModId().equals(modId))) config.set(entry.key(), false);
       }
     }
   }

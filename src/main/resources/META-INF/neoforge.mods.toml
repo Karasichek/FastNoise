@@ -1,0 +1,52 @@
+license="Mozilla Public License 2.0"
+
+issueTrackerURL="https://codeberg.org/ZenXArch/FastNoise/issues"
+
+[[mods]]
+modId="zfastnoise"
+version="${mod_version}"
+displayName="Fast Noise"
+displayURL="https://modrinth.com/mod/zfastnoise"
+
+logoFile="assets/zfastnoise/icon.png"
+
+authors="ZenXArch"
+
+description='''
+Vanilla worldgen optimization mod
+'''
+
+[[mixins]]
+config="zfastnoise.mixins.json"
+
+# zfastnoise.ct gets transformed and renamed to default file
+#[[accessTransformers]]
+#file="META-INF/accesstransformer.cfg"
+
+[[dependencies.zfastnoise]] #optional
+  modId="neoforge"
+  type="required"
+  versionRange="[${neo_version},)"
+  ordering="NONE"
+  side="BOTH"
+
+[[dependencies.zfastnoise]]
+  modId="minecraft"
+  type="required"
+  versionRange="${minecraft_version_range}"
+  ordering="NONE"
+  side="BOTH"
+
+[[dependencies.zfastnoise]]
+  modId="moonrise"
+  type="incompatible"
+
+[[dependencies.zfastnoise]]
+  modId="antixray"
+  type="incompatible"
+
+[[dependencies.zfastnoise]]
+  modId="c2me"
+  type="optional"
+  reason="Provides faster chunk generation"
+  referralUrl="https://modrinth.com/mod/c2me-neoforge"

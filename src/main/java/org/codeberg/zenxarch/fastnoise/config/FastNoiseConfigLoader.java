@@ -2,7 +2,7 @@ package org.codeberg.zenxarch.fastnoise.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import java.util.Optional;
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.loading.FMLPaths;
 import org.codeberg.zenxarch.fastnoise.FastNoiseConstants;
 
 public final class FastNoiseConfigLoader {
@@ -17,8 +17,7 @@ public final class FastNoiseConfigLoader {
   }
 
   private static CommentedFileConfig getConfig() {
-    return CommentedFileConfig.of(
-        FabricLoader.getInstance().getConfigDir().resolve(configFileName));
+    return CommentedFileConfig.of(FMLPaths.CONFIGDIR.get().resolve(configFileName));
   }
 
   private static void loadBoolean(BooleanConfigEntry entry) {

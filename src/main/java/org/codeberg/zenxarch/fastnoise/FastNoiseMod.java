@@ -1,12 +1,19 @@
 package org.codeberg.zenxarch.fastnoise;
 
-import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
-public class FastNoiseMod implements ModInitializer {
+@Mod(FastNoiseConstants.MOD_ID)
+public class FastNoiseMod {
 
-  @Override
-  public void onInitialize() {
+  public FastNoiseMod(IEventBus modEventBus, ModContainer modContainer) {
+    modEventBus.addListener(this::commonSetup);
+  }
+
+  private void commonSetup(FMLCommonSetupEvent event) {
     // This code runs as soon as Minecraft is in a mod-load-ready state.
     // However, some things (like resources) may still be uninitialized.
     // Proceed with mild caution.
