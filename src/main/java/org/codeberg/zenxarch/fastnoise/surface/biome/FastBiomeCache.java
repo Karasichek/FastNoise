@@ -1,6 +1,5 @@
 package org.codeberg.zenxarch.fastnoise.surface.biome;
 
-import java.util.Set;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.biome.Biome;
@@ -15,13 +14,7 @@ public final class FastBiomeCache {
   private final int maxYInBiomes;
   private final int heightInBiomes;
 
-  // b/c we can't be using generics for arrays, why java why
-  @SuppressWarnings("unchecked")
-  public FastBiomeCache(Set<RegistryEntry<Biome>> biomes, final Chunk[] chunks) {
-    this((RegistryEntry<Biome>[]) biomes.toArray(RegistryEntry[]::new), chunks);
-  }
-
-  private FastBiomeCache(RegistryEntry<Biome>[] biomes, Chunk[] chunks) {
+  public FastBiomeCache(RegistryEntry<Biome>[] biomes, final Chunk[] chunks) {
     this.chunks = chunks;
     this.biomes = biomes;
 

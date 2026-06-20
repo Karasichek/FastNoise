@@ -126,6 +126,7 @@ jmh {
   // profilers = ['async']
 
   zip64 = true
+  includes = ['NumberOfTrailingOnes']
 }
 
 modrinth {
