@@ -1,7 +1,5 @@
 package org.codeberg.zenxarch.fastnoise.ocl;
 
-import com.ishland.c2me.opts.accel.opencl.common.gen.CLServerBatchedBiomeNoiseContext;
-import com.ishland.c2me.opts.dfc.common.gen.opencl.CLBlockStateMappings;
 import java.nio.ByteBuffer;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -18,17 +16,16 @@ import org.codeberg.zenxarch.fastnoise.noise.FastChunkSection;
 public final class FastCopyBufferDataIntoChunks {
   public static void copyData(
       BoundedRegionArray<ProtoChunk> chunks,
-      CLBlockStateMappings clBlockStateMappings,
+      BlockState[] clBlockStateMappings,
       int verticalSize,
       ChunkGeneratorSettings settings,
       int horizontalSize,
       ByteBuffer blockOutBufferData,
-      ChunkPos startingPos) {
+      ChunkPos startingPos,
+      int batchSize) {
 
-    for (int chunkOffZ = 0; chunkOffZ < CLServerBatchedBiomeNoiseContext.BATCH_SIZE; chunkOffZ++) {
-      for (int chunkOffX = 0;
-          chunkOffX < CLServerBatchedBiomeNoiseContext.BATCH_SIZE;
-          chunkOffX++) {
+    for (int chunkOffZ = 0; chunkOffZ < batchSize; chunkOffZ++) {
+      for (int chunkOffX = 0; chunkOffX < batchSize; chunkOffX++) {
         var chunk = chunks.get(startingPos.x() + chunkOffX, startingPos.z() + chunkOffZ);
         if (chunk.getStatus().isAtLeast(ChunkStatus.NOISE)) continue;
         copyDataIntoChunk(
@@ -48,7 +45,7 @@ public final class FastCopyBufferDataIntoChunks {
       int chunkOffX,
       int chunkOffZ,
       ProtoChunk chunk,
-      CLBlockStateMappings mappings,
+      BlockState[] mappings,
       int verticalSize,
       ByteBuffer rawData,
       int horizontalSize) {
@@ -61,7 +58,7 @@ public final class FastCopyBufferDataIntoChunks {
 
     final var postProcessingLists = chunk.getPostProcessingLists();
 
-    var defaultState = mappings.getBlockState(2);
+    var defaultState = mappings[2];
 
     for (int y = 0; y < verticalSize; y++) {
       var sy = y >> 4;
@@ -96,7 +93,7 @@ public final class FastCopyBufferDataIntoChunks {
       byte value,
       FastChunkSection section,
       BlockState defaultState,
-      CLBlockStateMappings mappings) {
+      BlockState[] mappings) {
     var blockIdx = value & ((byte) 0x7F);
 
     if (blockIdx == 1) return false;
@@ -105,7 +102,7 @@ public final class FastCopyBufferDataIntoChunks {
       return false;
     }
 
-    var state = mappings.getBlockState(blockIdx);
+    var state = mappings[blockIdx];
     section.setBlockState(x, y, z, state);
 
     return (value & (byte) 0x80) != 0;

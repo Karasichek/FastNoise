@@ -65,15 +65,6 @@ dependencies {
 
   include implementation("com.electronwill.night-config:toml:${project.night_config_version}")
   include implementation("com.electronwill.night-config:core:${project.night_config_version}")
-
-  // ocl
-
-  for (lib in (new File('./libs').list())) {
-    modImplementation files("libs/$lib")
-    modImplementation zipTree("libs/$lib").matching {
-      include '**/*.jar'
-    }
-  }
 }
 
 processResources {
