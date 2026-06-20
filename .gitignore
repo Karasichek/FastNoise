@@ -47,5 +47,3 @@ logs/
 *.log
 
 summary-cpu.txt
-
-*.jar

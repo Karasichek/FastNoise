@@ -14,6 +14,15 @@ import org.codeberg.zenxarch.fastnoise.heightmap.HeightmapUtil;
 import org.codeberg.zenxarch.fastnoise.noise.FastChunkSection;
 
 public final class FastCopyBufferDataIntoChunks {
+  /**
+   * Copy byte data to startingPos + [0 ..< batchSize,0 ..< batchSize] chunks
+   * @param chunks
+   * @param clBlockStateMappings
+   * length must be no more than 17, where 1 is AIR, 2 is default block state, 0 is invalid data 
+   * @param blockOutBufferData
+   * each byte represents a block with a stride of horizontalSize with indices [y][z][x]
+   * has repr [0..6 -> block idx,7 -> post processing flag]
+   */
   public static void copyData(
       BoundedRegionArray<ProtoChunk> chunks,
       BlockState[] clBlockStateMappings,
