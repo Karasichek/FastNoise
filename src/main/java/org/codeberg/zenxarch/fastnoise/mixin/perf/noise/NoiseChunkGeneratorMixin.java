@@ -46,6 +46,16 @@ public abstract class NoiseChunkGeneratorMixin {
       NoiseConfig noiseConfig,
       int minimumCellY,
       Operation<Chunk> op) {
+    if (((Object) this.getClass()) != NoiseChunkGenerator.class)
+      return op.call(
+          chunk,
+          cellHeight,
+          generationShapeConfig,
+          minimumY,
+          blender,
+          structureAccessor,
+          noiseConfig,
+          minimumCellY);
     if (SharedConstants.isOutsideGenerationArea(chunk.getPos())) return chunk;
 
     var defaultBlock = settings.value().defaultBlock();
