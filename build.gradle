@@ -33,11 +33,24 @@ loom {
 
   intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
   useIntermediateMappings = true
+
+  runs {
+    dap {
+      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+      client()
+    }
+
+    hotswapDap {
+      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+      vmArgs '-XX:+AllowEnhancedClassRedefinition'
+      client()
+    }
+  }
 }
 
 test {
   useJUnitPlatform()
-  workingDir = mkdir("run")
+  workingDir = mkdir(layout.buildDirectory.dir("testrun"))
 }
 
 dependencies {
@@ -126,6 +139,7 @@ jmh {
   // profilers = ['async']
 
   zip64 = true
+  includes = ['NumberOfTrailingOnes']
 }
 
 modrinth {
@@ -143,6 +157,7 @@ modrinth {
   loaders = ["fabric", "quilt"]
   dependencies {
     incompatible.project "moonrise-opt"
+    incompatible.project "anti-xray"
   }
 }
 
