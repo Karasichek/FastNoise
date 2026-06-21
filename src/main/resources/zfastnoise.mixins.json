@@ -4,7 +4,8 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "perf.noise.NoiseChunkGeneratorMixin",
-    "perf.biome.NoiseChunkGeneratorMixin"
+    "perf.biome.NoiseChunkGeneratorMixin",
+    "HeightmapAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
