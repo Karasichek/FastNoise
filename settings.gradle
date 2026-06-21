@@ -1,13 +1,13 @@
 pluginManagement {
-	repositories {
-		maven {
-			name = 'Fabric'
-			url = 'https://maven.fabricmc.net/'
-		}
+  repositories {
+    maven {
+      name = 'Fabric'
+      url = 'https://maven.fabricmc.net/'
+    }
     maven {
       url = "https://repo.codemc.io/repository/relativitymc/"
     }
-		mavenCentral()
-		gradlePluginPortal()
-	}
+    mavenCentral()
+    gradlePluginPortal()
+  }
 }
