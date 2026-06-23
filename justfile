@@ -6,6 +6,9 @@ build:
 run:
     ./gradlew runClient
 
+server:
+    ./gradlew runServer
+
 dap:
     ./gradlew runDap
 
