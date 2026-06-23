@@ -29,7 +29,7 @@ public final class FastBiomeGen {
       NoiseConfig config,
       RegistryEntry<ChunkGeneratorSettings> settings) {
     return ((ChunkNoiseSamplerAccessor) sampler)
-        .zenxarch$createMultiNoiseSampler(config.getNoiseRouter(), settings.value().spawnTarget());
+        .zenxarch$createMultiNoiseSampler(config.getNoiseRouter());
   }
 
   public static void populateBiomes(
