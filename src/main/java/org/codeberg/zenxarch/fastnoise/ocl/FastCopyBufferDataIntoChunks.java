@@ -1,5 +1,7 @@
 package org.codeberg.zenxarch.fastnoise.ocl;
 
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -33,6 +35,10 @@ public final class FastCopyBufferDataIntoChunks {
       ChunkPos startingPos,
       int batchSize) {
 
+    var blockDataSegment =
+        MemorySegment.ofBuffer(blockOutBufferData)
+            .reinterpret(horizontalSize * horizontalSize * verticalSize);
+
     for (int chunkOffZ = 0; chunkOffZ < batchSize; chunkOffZ++) {
       for (int chunkOffX = 0; chunkOffX < batchSize; chunkOffX++) {
         var chunk = chunks.get(startingPos.x() + chunkOffX, startingPos.z() + chunkOffZ);
@@ -43,7 +49,7 @@ public final class FastCopyBufferDataIntoChunks {
             chunk,
             clBlockStateMappings,
             verticalSize,
-            blockOutBufferData,
+            blockDataSegment,
             horizontalSize);
         chunk.setStatus(ChunkStatus.NOISE);
       }
@@ -56,7 +62,7 @@ public final class FastCopyBufferDataIntoChunks {
       ProtoChunk chunk,
       BlockState[] mappings,
       int verticalSize,
-      ByteBuffer rawData,
+      MemorySegment rawData,
       int horizontalSize) {
     var rawSections = chunk.getSectionArray();
     var sections = new FastChunkSection[rawSections.length];
@@ -74,8 +80,7 @@ public final class FastCopyBufferDataIntoChunks {
       var section = sections[sy];
       for (int z = 0; z < 16; z++) {
         for (int x = 0; x < 16; x++) {
-
-          var value = getData(rawData, chunkOffX, chunkOffZ, x, y, z, horizontalSize);
+          var value = getByte(rawData, getIndex(chunkOffX, chunkOffZ, x, y, z, horizontalSize));
           if (putBlock(x, y & 0xF, z, value, section, defaultState, mappings)) {
             Chunk.getList(postProcessingLists, sy).add((short) (x | (y & 0xF) << 4 | z << 8));
           }
@@ -86,13 +91,17 @@ public final class FastCopyBufferDataIntoChunks {
     finalizeChunks(sections, chunk, defaultState);
   }
 
-  private static byte getData(
-      ByteBuffer rawData, int chunkOffX, int chunkOffZ, int x, int y, int z, int horizontalSize) {
-    var idx =
-        (y * horizontalSize * horizontalSize)
-            + (((chunkOffZ * 16) + z) * horizontalSize)
-            + ((chunkOffX * 16) + x);
-    return rawData.get(idx);
+  private static int getIndex(
+      int chunkOffX, int chunkOffZ, int x, int y, int z, int horizontalSize) {
+    return (chunkOffX * 16 + x) + (horizontalSize * ((chunkOffZ * 16 + z) + (horizontalSize * y)));
+  }
+
+  private static byte getByte(MemorySegment rawData, int idx) {
+    return rawData.get(ValueLayout.JAVA_BYTE, idx);
+  }
+
+  private static long getLong(MemorySegment rawData, int idx) {
+    return rawData.get(ValueLayout.JAVA_LONG, idx);
   }
 
   private static boolean putBlock(
