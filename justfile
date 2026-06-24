@@ -3,6 +3,9 @@ default: build
 build:
     ./gradlew build
 
+serverBuild:
+    ./gradlew -PserverCompile=true build
+
 run:
     ./gradlew runClient
 
