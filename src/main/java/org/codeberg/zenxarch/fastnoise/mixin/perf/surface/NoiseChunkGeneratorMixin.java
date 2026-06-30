@@ -117,7 +117,7 @@ public abstract class NoiseChunkGeneratorMixin {
         context,
         chunk,
         sampler,
-        settings.materialRule().value(),
+        settings.surfaceRule(),
         includedBiomes,
         chunks,
         registry);
