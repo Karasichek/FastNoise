@@ -101,13 +101,6 @@ public final class FastCopyBufferDataIntoChunks {
             defaultState,
             mappings,
             getLong(rawData, zidx + 8));
-
-        // for (int x = 0; x < 16; x++) {
-        //   var value = getByte(rawData, getIndex(chunkOffX, chunkOffZ, x, y, z, horizontalSize));
-        //   if (putBlock(x, y & 0xF, z, value, section, defaultState, mappings)) {
-        //     Chunk.getList(postProcessingLists, sy).add((short) (x | (y & 0xF) << 4 | z << 8));
-        //   }
-        // }
       }
 
       idx += yStep;
