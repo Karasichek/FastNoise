@@ -37,9 +37,12 @@ public abstract class NoiseChunkGeneratorMixin {
               target =
                   "Lnet/minecraft/world/gen/chunk/NoiseChunkGenerator;getBiomesAround(Lnet/minecraft/world/ChunkRegion;I)Ljava/util/Set;"))
   private Set<RegistryEntry<Biome>> zenxarch$getBiomesAround(
-      ChunkRegion region, int radius, Operation<Set<RegistryEntry<Biome>>> op) {
+      ChunkRegion region,
+      int radius,
+      Operation<Set<RegistryEntry<Biome>>> op,
+      @Local Chunk protoChunk) {
     if (radius != 1) return op.call(region, radius);
-    return FastBiomeAccumulator.accumulate(region);
+    return FastBiomeAccumulator.accumulate(region, protoChunk.getPos());
   }
 
   @Shadow @Final private RegistryEntry<ChunkGeneratorSettings> settings;
@@ -94,7 +97,7 @@ public abstract class NoiseChunkGeneratorMixin {
 
     var settings = this.settings.value();
 
-    final var centerPos = chunkRegion.getCenterPos();
+    final var centerPos = chunk.getPos();
     final var cx = centerPos.x();
     final var cz = centerPos.z();
     final var chunks = new Chunk[9];
