@@ -26,6 +26,10 @@ public class BlockCountingPalettedContainer<T> extends PalettedContainer<T> {
     this.blockCounts[value]++;
   }
 
+  public void updateCount(int value, int amt) {
+    this.blockCounts[value] += amt;
+  }
+
   @Override
   public void count(Counter<T> output) {
     short airCount = 4096;
