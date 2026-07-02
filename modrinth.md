@@ -10,8 +10,6 @@ Fast Noise is a modern optimization mod to improve world generation times. I reg
 
 **Can I use custom worldgen mods with this?** Yes, I try my best to maintain mod compatibility, and only modify safe code. Specific optimizations that may affect mod compatibility are disabled by default.
 
-**Forge / Neoforge?** Versions for minecraft 1.19.x - 1.21.8 are compatible with sinytra connector.
-
 <center>
   
   [![Available on codeberg](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/codeberg_vector.svg)](https://codeberg.org/ZenXArch/FastNoise) [![Available on curseforge](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/curseforge_vector.svg)](https://www.curseforge.com/minecraft/mc-mods/zfastnoise) [![Available on modrinth](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_vector.svg)](https://modrinth.com/mod/zfastnoise) [![Support me on Ko-Fi](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/donate/kofi-singular_vector.svg)](https://ko-fi.com/I2I31KW58I)
@@ -37,11 +35,6 @@ Some key methods used to achieve that are, **reducing allocations**, **avoiding 
 
   
 </details>
-
-## Why this over noisium?
-
-Noisium is archived and didn't had any noticable benefits.
-Fast Noise provides consistent improvements to worldgen speed.
 
 ## How fast is it?
 
@@ -163,19 +156,19 @@ A- No backports are planned, current backports were a one time thing.
 Q- What other mods/dependencies do I need?  
 A- No dependencies are required.
 
-Q- Will there be a neoforge version?  
-A- Yes, a NeoForge variant is planned post 26.1.
-
-Versions for 1.19.x,1.20.x,1.21 - 1.21.8 works with sinytra connector
-
-![Works with Sinytra Connector](https://raw.githubusercontent.com/Sinytra/.github/main/badges/connector/cozy.svg)
+Q- Will there be a forge backports for 1.19.x 1.20.x?  
+A- Not planned.
 
 Q- XYZ mod crashes, or generates incorrectly with Fast Noise?  
 A- Report the issue on codeberg or my socials.
 
 ## Incompatible mods
 Moonrise is incompatible, as It changes minecraft internals drastically  
-Noisium is incompatible, as Fast Noise is intended as a replacement for noisium.
+Noisium is incompatible, as Fast Noise is intended as a replacement for noisium.  
+Anti-Xray is incompatible for now, as it needs to put extra data in minecraft block storage, which breaks fastnoise
+
+End gen crashes unless biome optimisations in fastnoise are disabled.  
+Distant horizons crashes unless full save chunks is used on 1.21.9 and up.
 
 ## Credits
 - Stevenplays, for developing noisium mod, I started developing fast noise while trying to port noisium to latest minecraft.
