@@ -80,7 +80,51 @@ Here is a [Jmh Benchmark Software](https://codeberg.org/ZenXArch/FastNoise/src/b
 </details>
 
 <details>
-<summary> Jmh Benchmark </summary>
+<summary> Jmh benchmark </summary>
+
+
+```
+Mods used: FastNoise 1.0.37+26.2 on 26.2
+ChunkPos: -16,-16 -> 16,16
+End ChunkPos: 112,112 -> 144,144
+Chunks: 1089
+Mods used: c2me-fabric-mc26.2-0.4.2-alpha.0.9.jar
+
+Benchmark                 (worldName)  Mode  Cnt      Score     Error  Units
+BiomesBenchmark.biomegen    overworld  avgt    5   3058.005 ± 256.587  ms/op
+BiomesBenchmark.biomegen       nether  avgt    5    188.188 ±   3.156  ms/op
+BiomesBenchmark.biomegen          end  avgt    5     31.560 ±   4.200  ms/op
+NoiseBenchmark.noisegen     overworld  avgt    5  12332.480 ± 364.223  ms/op
+NoiseBenchmark.noisegen        nether  avgt    5   2447.385 ±  20.773  ms/op
+NoiseBenchmark.noisegen           end  avgt    5   6420.598 ± 195.649  ms/op
+SurfaceBenchmark.surface    overworld  avgt    5  14948.653 ± 333.900  ms/op
+SurfaceBenchmark.surface       nether  avgt    5   9330.611 ± 243.701  ms/op
+SurfaceBenchmark.surface          end  avgt    5   3485.872 ±   8.225  ms/op
+
+Benchmark                 (worldName)  Mode  Cnt      Score     Error  Units
+BiomesBenchmark.biomegen    overworld  avgt    5   2980.699 ±  98.824  ms/op
+BiomesBenchmark.biomegen       nether  avgt    5    177.827 ±   2.815  ms/op
+BiomesBenchmark.biomegen          end  avgt    5     14.990 ±   0.575  ms/op
+NoiseBenchmark.noisegen     overworld  avgt    5   9419.623 ± 317.746  ms/op
+NoiseBenchmark.noisegen        nether  avgt    5   1253.599 ±  15.977  ms/op
+NoiseBenchmark.noisegen           end  avgt    5   5424.879 ±  81.860  ms/op
+SurfaceBenchmark.surface    overworld  avgt    5  10490.488 ± 901.258  ms/op
+SurfaceBenchmark.surface       nether  avgt    5   3361.448 ±  53.809  ms/op
+SurfaceBenchmark.surface          end  avgt    5      1.723 ±   0.289  ms/op
+```
+
+## Speedup:
+
+| Stage/Dimension | Overworld | Nether | The End | 
+|-----------------|-----------|--------|---------|
+| Biome           | 1.025x    | 1.058x | 2.105x  |
+| Noise           | 1.309x    | 1.952x | 1.183x  |
+| Surface         | 1.424x    | 2.775x | 2023.14x|
+
+</details>
+
+<details>
+<summary> Old Jmh Benchmark </summary>
 
 
 ```
