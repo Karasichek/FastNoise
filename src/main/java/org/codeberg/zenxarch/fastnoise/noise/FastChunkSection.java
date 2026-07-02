@@ -61,7 +61,7 @@ public final class FastChunkSection {
   }
 
   private void setBlockState(int x, int y, int z, long value) {
-    this.storage[(y << 4) | z] |= value << (x * 4);
+    this.storage[(y << 4) | z] |= value << (x << 2);
   }
 
   public void recalculateCounts() {

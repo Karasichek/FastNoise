@@ -25,6 +25,10 @@ repositories {
 }
 
 loom {
+  if (project.hasProperty("serverCompile")) {
+    serverOnlyMinecraftJar()
+  }
+
   accessWidenerPath = file("src/main/resources/zfastnoise.ct")
 
   decompilerOptions.named("vineflower") {
@@ -51,6 +55,7 @@ loom {
 test {
   useJUnitPlatform()
   workingDir = mkdir(layout.buildDirectory.dir("testrun"))
+  jvmArgs += '-Dfabric.side=server'
 }
 
 dependencies {
