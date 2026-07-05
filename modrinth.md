@@ -10,8 +10,6 @@ Fast Noise is a modern optimization mod to improve world generation times. I reg
 
 **Can I use custom worldgen mods with this?** Yes, I try my best to maintain mod compatibility, and only modify safe code. Specific optimizations that may affect mod compatibility are disabled by default.
 
-**Forge / Neoforge?** Versions for minecraft 1.19.x - 1.21.8 are compatible with sinytra connector.
-
 <center>
   
   [![Available on codeberg](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/codeberg_vector.svg)](https://codeberg.org/ZenXArch/FastNoise) [![Available on curseforge](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/curseforge_vector.svg)](https://www.curseforge.com/minecraft/mc-mods/zfastnoise) [![Available on modrinth](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_vector.svg)](https://modrinth.com/mod/zfastnoise) [![Support me on Ko-Fi](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/donate/kofi-singular_vector.svg)](https://ko-fi.com/I2I31KW58I)
@@ -37,11 +35,6 @@ Some key methods used to achieve that are, **reducing allocations**, **avoiding 
 
   
 </details>
-
-## Why this over noisium?
-
-Noisium is archived and didn't had any noticable benefits.
-Fast Noise provides consistent improvements to worldgen speed.
 
 ## How fast is it?
 
@@ -87,7 +80,51 @@ Here is a [Jmh Benchmark Software](https://codeberg.org/ZenXArch/FastNoise/src/b
 </details>
 
 <details>
-<summary> Jmh Benchmark </summary>
+<summary> Jmh benchmark </summary>
+
+
+```
+Mods used: FastNoise 1.0.37+26.2 on 26.2
+ChunkPos: -16,-16 -> 16,16
+End ChunkPos: 112,112 -> 144,144
+Chunks: 1089
+Mods used: c2me-fabric-mc26.2-0.4.2-alpha.0.9.jar
+
+Benchmark                 (worldName)  Mode  Cnt      Score     Error  Units
+BiomesBenchmark.biomegen    overworld  avgt    5   3058.005 ± 256.587  ms/op
+BiomesBenchmark.biomegen       nether  avgt    5    188.188 ±   3.156  ms/op
+BiomesBenchmark.biomegen          end  avgt    5     31.560 ±   4.200  ms/op
+NoiseBenchmark.noisegen     overworld  avgt    5  12332.480 ± 364.223  ms/op
+NoiseBenchmark.noisegen        nether  avgt    5   2447.385 ±  20.773  ms/op
+NoiseBenchmark.noisegen           end  avgt    5   6420.598 ± 195.649  ms/op
+SurfaceBenchmark.surface    overworld  avgt    5  14948.653 ± 333.900  ms/op
+SurfaceBenchmark.surface       nether  avgt    5   9330.611 ± 243.701  ms/op
+SurfaceBenchmark.surface          end  avgt    5   3485.872 ±   8.225  ms/op
+
+Benchmark                 (worldName)  Mode  Cnt      Score     Error  Units
+BiomesBenchmark.biomegen    overworld  avgt    5   2980.699 ±  98.824  ms/op
+BiomesBenchmark.biomegen       nether  avgt    5    177.827 ±   2.815  ms/op
+BiomesBenchmark.biomegen          end  avgt    5     14.990 ±   0.575  ms/op
+NoiseBenchmark.noisegen     overworld  avgt    5   9419.623 ± 317.746  ms/op
+NoiseBenchmark.noisegen        nether  avgt    5   1253.599 ±  15.977  ms/op
+NoiseBenchmark.noisegen           end  avgt    5   5424.879 ±  81.860  ms/op
+SurfaceBenchmark.surface    overworld  avgt    5  10490.488 ± 901.258  ms/op
+SurfaceBenchmark.surface       nether  avgt    5   3361.448 ±  53.809  ms/op
+SurfaceBenchmark.surface          end  avgt    5      1.723 ±   0.289  ms/op
+```
+
+## Speedup:
+
+| Stage/Dimension | Overworld | Nether | The End | 
+|-----------------|-----------|--------|---------|
+| Biome           | 1.025x    | 1.058x | 2.105x  |
+| Noise           | 1.309x    | 1.952x | 1.183x  |
+| Surface         | 1.424x    | 2.775x | 2023.14x|
+
+</details>
+
+<details>
+<summary> Old Jmh Benchmark </summary>
 
 
 ```
@@ -163,19 +200,19 @@ A- No backports are planned, current backports were a one time thing.
 Q- What other mods/dependencies do I need?  
 A- No dependencies are required.
 
-Q- Will there be a neoforge version?  
-A- Yes, a NeoForge variant is planned post 26.1.
-
-Versions for 1.19.x,1.20.x,1.21 - 1.21.8 works with sinytra connector
-
-![Works with Sinytra Connector](https://raw.githubusercontent.com/Sinytra/.github/main/badges/connector/cozy.svg)
+Q- Will there be a forge backports for 1.19.x 1.20.x?  
+A- Not planned.
 
 Q- XYZ mod crashes, or generates incorrectly with Fast Noise?  
 A- Report the issue on codeberg or my socials.
 
 ## Incompatible mods
 Moonrise is incompatible, as It changes minecraft internals drastically  
-Noisium is incompatible, as Fast Noise is intended as a replacement for noisium.
+Noisium is incompatible, as Fast Noise is intended as a replacement for noisium.  
+Anti-Xray is incompatible for now, as it needs to put extra data in minecraft block storage, which breaks fastnoise
+
+End gen crashes unless biome optimisations in fastnoise are disabled.  
+Distant horizons crashes unless full save chunks is used on 1.21.9 and up.
 
 ## Credits
 - Stevenplays, for developing noisium mod, I started developing fast noise while trying to port noisium to latest minecraft.

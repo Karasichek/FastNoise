@@ -6,16 +6,16 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSets;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.PalettedContainer;
 
 public final class FastBiomeAccumulator {
-  public static ReferenceSet<RegistryEntry<Biome>> accumulate(ChunkRegion region) {
+  public static ReferenceSet<RegistryEntry<Biome>> accumulate(ChunkRegion region, ChunkPos cpos) {
     var items = new ReferenceArraySet<RegistryEntry<Biome>>(8);
 
-    var cpos = region.getCenterPos();
     var sx = cpos.x();
     var sz = cpos.z();
 

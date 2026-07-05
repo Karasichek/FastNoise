@@ -6,12 +6,14 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.ArrayPalette;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.SingularPalette;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
@@ -37,6 +39,24 @@ public class FastSurfaceGen {
         BiomeKeys.FROZEN_OCEAN,
         BiomeKeys.DEEP_FROZEN_OCEAN)) return false;
     return sanityCheck(chunk);
+  }
+
+  public static Chunk[] collectChunks(ChunkRegion chunkRegion, Chunk center) {
+    final var centerPos = center.getPos();
+    final var cx = centerPos.x();
+    final var cz = centerPos.z();
+    final var chunks = new Chunk[9];
+
+    for (int z = -1; z <= 1; z++) {
+      for (int x = -1; x <= 1; x++) {
+        final var idx = ((z + 1) * 3) + (x + 1);
+        if ((chunks[idx] = chunkRegion.getChunk(cx + x, cz + z))
+            .getStatus()
+            .isEarlierThan(ChunkStatus.BIOMES)) return null;
+      }
+    }
+
+    return chunks;
   }
 
   @SafeVarargs
