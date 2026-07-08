@@ -58,7 +58,9 @@ public abstract class NoiseChunkGeneratorMixin {
       Operation<Void> op,
       @Local final ChunkRegion chunkRegion) {
 
-    if (!FastSurfaceGen.canUseSurfaceBuilder(chunk)) {
+    var includedBiomes = FastBiomeAccumulator.accumulate(chunkRegion, chunk.getPos());
+
+    if (!FastSurfaceGen.canUseSurfaceBuilder(chunk, includedBiomes, registry)) {
       op.call(
           chunkGenerator,
           chunk,
@@ -71,7 +73,20 @@ public abstract class NoiseChunkGeneratorMixin {
       return;
     }
 
-    var includedBiomes = FastBiomeAccumulator.accumulate(chunkRegion);
+    final var chunks = FastSurfaceGen.collectChunks(chunkRegion, chunk);
+
+    if (chunks == null) {
+      op.call(
+          chunkGenerator,
+          chunk,
+          context,
+          noiseConfig,
+          structureAccessor,
+          biomeAccess,
+          registry,
+          blender);
+      return;
+    }
 
     var sampler =
         chunk.getOrCreateChunkNoiseSampler(
@@ -79,18 +94,6 @@ public abstract class NoiseChunkGeneratorMixin {
                 this.createChunkNoiseSampler(chunkx, structureAccessor, blender, noiseConfig));
 
     var settings = this.settings.value();
-
-    final var centerPos = chunkRegion.getCenterPos();
-    final var cx = centerPos.x;
-    final var cz = centerPos.z;
-    final var chunks = new Chunk[9];
-
-    for (int z = -1; z <= 1; z++) {
-      for (int x = -1; x <= 1; x++) {
-        final var idx = ((z + 1) * 3) + (x + 1);
-        chunks[idx] = chunkRegion.getChunk(cx + x, cz + z);
-      }
-    }
 
     FastSurfaceGen.buildSurface(
         (SurfaceBuilderAccessor) noiseConfig.getSurfaceBuilder(),
