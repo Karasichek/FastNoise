@@ -72,7 +72,6 @@ dependencies {
     it.mappings "org.relativitymc:modern-yarn-mappings-patch-neoforge:${project.yarn_mappings_patch}"
   }
 
-  include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${project.mixinextras_version}")))
 }
 
 processResources {
