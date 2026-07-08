@@ -123,7 +123,6 @@ public class FastNoiseConfig {
             FastNoiseConstants.LOGGER.error(
                 "Mod {} has unsupported overrides of type {}", meta.getId(), value.getType());
       }
-      ;
     }
   }
 
