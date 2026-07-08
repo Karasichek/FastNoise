@@ -24,12 +24,19 @@ public final class FastBiomeGen {
   private static final Palette.Factory SINGULAR = PaletteProvider.SINGULAR;
 
   static final DataProvider<RegistryEntry<Biome>> SINGULAR_TYPE = new DataProvider<>(SINGULAR, 0);
-  private static final DataProvider<RegistryEntry<Biome>> ARRAY_1_TYPE = new DataProvider<>(ARRAY, 1);
-  private static final DataProvider<RegistryEntry<Biome>> ARRAY_2_TYPE = new DataProvider<>(ARRAY, 2);
-  private static final DataProvider<RegistryEntry<Biome>> ARRAY_3_TYPE = new DataProvider<>(ARRAY, 3);
-  private static final DataProvider<RegistryEntry<Biome>> ARRAY_4_TYPE = new DataProvider<>(ARRAY, 4);
-  private static final DataProvider<RegistryEntry<Biome>> ARRAY_5_TYPE = new DataProvider<>(ARRAY, 5);
-  private static final DataProvider<RegistryEntry<Biome>> ARRAY_6_TYPE = new DataProvider<>(ARRAY, 6);
+  private static final DataProvider<RegistryEntry<Biome>> ARRAY_1_TYPE =
+      new DataProvider<>(ARRAY, 1);
+  private static final DataProvider<RegistryEntry<Biome>> ARRAY_2_TYPE =
+      new DataProvider<>(ARRAY, 2);
+  private static final DataProvider<RegistryEntry<Biome>> ARRAY_3_TYPE =
+      new DataProvider<>(ARRAY, 3);
+  private static final DataProvider<RegistryEntry<Biome>> ARRAY_4_TYPE =
+      new DataProvider<>(ARRAY, 4);
+  private static final DataProvider<RegistryEntry<Biome>> ARRAY_5_TYPE =
+      new DataProvider<>(ARRAY, 5);
+  private static final DataProvider<RegistryEntry<Biome>> ARRAY_6_TYPE =
+      new DataProvider<>(ARRAY, 6);
+
   @SuppressWarnings("unchecked")
   private static final DataProvider<RegistryEntry<Biome>>[] types =
       new DataProvider[] {
