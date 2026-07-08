@@ -94,7 +94,7 @@ public final class FastBiomeGen {
       System.arraycopy(biomes, 0, downSizedBiomes, 0, size);
       container.data =
           new Data<RegistryEntry<Biome>>(
-              types[bits],
+              types[bits - 1],
               toStorage(biomes, bits, storage),
               new ArrayPalette<>(idList, downSizedBiomes, container, bits, size));
     }
