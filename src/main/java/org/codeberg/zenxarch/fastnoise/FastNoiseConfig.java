@@ -109,6 +109,14 @@ public class FastNoiseConfig {
     }
   }
 
+  private static void collectHardcodedIncompats(Object2BooleanArrayMap<String> map) {
+    if (FabricLoader.getInstance().isModLoaded("betterend")) {
+      map.put(keys[1], false);
+      FastNoiseConstants.LOGGER.info(
+          "{} disabled as betterend mod is loaded (hardcoded incompat override)", keys[1]);
+    }
+  }
+
   private static void collectOverrides(Object2BooleanArrayMap<String> map) {
     for (var container : FabricLoader.getInstance().getAllMods()) {
       var meta = container.getMetadata();
@@ -123,7 +131,6 @@ public class FastNoiseConfig {
             FastNoiseConstants.LOGGER.error(
                 "Mod {} has unsupported overrides of type {}", meta.getId(), value.getType());
       }
-      ;
     }
   }
 
@@ -142,6 +149,7 @@ public class FastNoiseConfig {
     }
 
     saveProperties(props);
+    collectHardcodedIncompats(result);
     collectOverrides(result);
     return Object2BooleanMaps.unmodifiable(result);
   }
