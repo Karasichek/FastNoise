@@ -3,8 +3,14 @@ default: build
 build:
     ./gradlew build
 
+serverBuild:
+    ./gradlew -PserverCompile=true build
+
 run:
     ./gradlew runClient
+
+server:
+    ./gradlew runServer
 
 dap:
     ./gradlew runDap
