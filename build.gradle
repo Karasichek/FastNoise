@@ -41,6 +41,8 @@ loom {
       client()
     }
   }
+
+  forgeExtraMixinConfigs.add('zfastnoise.mixins.json')
 }
 
 remapJar {
