@@ -57,6 +57,10 @@ dependencies {
   minecraft "com.mojang:minecraft:${project.minecraft_version}"
   forgeUserdev "net.minecraftforge:forge:$project.forge_version:userdev"
   mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+
+  // mixin extras
+  compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
+  implementation(include("io.github.llamalad7:mixinextras-forge:${mixin_extras_version}"))
 }
 
 processResources {
