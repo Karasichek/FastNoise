@@ -1,5 +1,5 @@
 plugins {
-  id 'dev.architectury.loom' version "${loom_version}"
+  id 'org.relativitymc.neo-loom-remap' version "${loom_version}"
   id 'maven-publish'
   id 'me.champeau.jmh' version "${jmh_version}"
   id "com.modrinth.minotaur" version "${minotaur_version}"
@@ -19,25 +19,25 @@ repositories {
   // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
   // See https://docs.gradle.org/current/userguide/declaring_repositories.html
   // for more information about repositories.
+  maven { url = 'https://files.minecraftforge.net/maven/' }
 }
 
 loom {
   accessWidenerPath = file("src/main/resources/zfastnoise.ct")
 
   decompilerOptions.named("vineflower") {
-        options.put("mark-corresponding-synthetics", "1")
-    }
-
-  forge {
-    mixinConfig 'zfastnoise.mixins.json'
-    convertAccessWideners = true
+    options.put("mark-corresponding-synthetics", "1")
   }
+}
+
+remapJar {
+  atAccessWideners.add("zfastnoise.ct")
 }
 
 dependencies {
   // To change the versions see the gradle.properties file
   minecraft "com.mojang:minecraft:${project.minecraft_version}"
-  forge "net.minecraftforge:forge:$project.forge_version"
+  forgeUserdev "net.minecraftforge:forge:$project.forge_version:userdev"
   mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 }
 
