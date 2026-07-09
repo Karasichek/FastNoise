@@ -17,6 +17,10 @@ This mod makes improvements to noise gen
 '''
 logoFile="assets/zfastnoise/icon.png"
 
+# zfastnoise.ct gets transformed and renamed to default file
+#[[accessTransformers]]
+#file="META-INF/accesstransformer.cfg"
+
 [[dependencies.zfastnoise]]
   modId = "forge"
   mandatory = true
