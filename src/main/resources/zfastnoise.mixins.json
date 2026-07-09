@@ -4,7 +4,8 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "perf.noise.NoiseChunkGeneratorMixin",
-    "perf.biome.NoiseChunkGeneratorMixin"
+    "perf.biome.NoiseChunkGeneratorMixin",
+    "HeightmapAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -12,5 +13,6 @@
   "overwrites": {
     "requireAnnotations": true
   },
-  "plugin": "org.codeberg.zenxarch.fastnoise.mixin.FastNoiseMixinPlugin"
+  "plugin": "org.codeberg.zenxarch.fastnoise.mixin.FastNoiseMixinPlugin",
+  "mixinextras": {"minVersion": "0.5.0"}
 }

@@ -28,11 +28,29 @@ loom {
   decompilerOptions.named("vineflower") {
     options.put("mark-corresponding-synthetics", "1")
   }
+
+  runs {
+    dap {
+      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+      client()
+    }
+
+    hotswapDap {
+      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+      vmArgs '-XX:+AllowEnhancedClassRedefinition'
+      client()
+    }
+  }
 }
 
 remapJar {
   atAccessWideners.add("zfastnoise.ct")
 }
+
+// test {
+//   useJUnitPlatform()
+//   workingDir = mkdir(layout.buildDirectory.dir("testrun"))
+// }
 
 dependencies {
   // To change the versions see the gradle.properties file
@@ -126,6 +144,7 @@ modrinth {
   dependencies {
     incompatible.project "noisiumforked"
     incompatible.project "moonrise-opt"
+    incompatible.project "anti-xray"
   }
 }
 

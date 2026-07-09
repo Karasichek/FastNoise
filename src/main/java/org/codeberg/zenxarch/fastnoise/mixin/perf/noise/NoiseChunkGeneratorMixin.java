@@ -1,13 +1,13 @@
 package org.codeberg.zenxarch.fastnoise.mixin.perf.noise;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import java.util.Set;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
@@ -18,9 +18,9 @@ import org.codeberg.zenxarch.fastnoise.noise.FastChunkSection;
 import org.codeberg.zenxarch.fastnoise.noise.FastWorldgen;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(NoiseChunkGenerator.class)
 public abstract class NoiseChunkGeneratorMixin {
@@ -31,7 +31,30 @@ public abstract class NoiseChunkGeneratorMixin {
   protected abstract ChunkNoiseSampler createChunkNoiseSampler(
       Chunk chunk, StructureAccessor world, Blender blender, NoiseConfig noiseConfig);
 
-  @Unique
+  @Shadow
+  protected abstract Chunk populateNoise(
+      Blender blender,
+      StructureAccessor structureAccessor,
+      NoiseConfig noiseConfig,
+      Chunk chunk,
+      int minimumCellY,
+      int cellHeight);
+
+  @Redirect(
+      method =
+          "populateNoise(Ljava/util/concurrent/Executor;Lnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;",
+      at = @At(target = "Lnet/minecraft/world/chunk/ChunkSection;lock()V", value = "INVOKE"))
+  private void zenxarch$cancelLock(ChunkSection section) {}
+
+  @Redirect(
+      method =
+          "populateNoise(Ljava/util/concurrent/Executor;Lnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;",
+      at = @At(target = "Ljava/util/Set;add(Ljava/lang/Object;)Z", value = "INVOKE"))
+  private boolean zenxarch$cancelAdd(Set<ChunkSection> set, Object section) {
+    return false;
+  }
+
+  @WrapMethod(method = "method_38332")
   private Chunk zenxarch$populateNoise(
       Blender blender,
       StructureAccessor structureAccessor,
@@ -39,7 +62,24 @@ public abstract class NoiseChunkGeneratorMixin {
       Chunk chunk,
       int minimumCellY,
       int cellHeight,
-      FastChunkSection[] fastSections) {
+      Operation<Chunk> op) {
+
+    if (((Object) this.getClass()) != NoiseChunkGenerator.class) {
+      return op.call(blender, structureAccessor, noiseConfig, chunk, minimumCellY, cellHeight);
+    }
+
+    if (SharedConstants.isOutsideGenerationArea(chunk.getPos())) return chunk;
+
+    var defaultBlock = settings.value().defaultBlock();
+
+    if (defaultBlock == FastWorldgen.AIR
+        || chunk.hasBelowZeroRetrogen()
+        || !FastWorldgen.isEmpty(chunk))
+      return this.populateNoise(
+          blender, structureAccessor, noiseConfig, chunk, minimumCellY, cellHeight);
+
+    var fastSections = new FastChunkSection[chunk.getSectionArray().length];
+
     var chunkNoiseSampler =
         chunk.getOrCreateChunkNoiseSampler(
             chunkx ->
@@ -47,62 +87,14 @@ public abstract class NoiseChunkGeneratorMixin {
     BlockState defaultBlockState = settings.value().defaultBlock();
 
     FastWorldgen.populateNoise(
-        chunkNoiseSampler, defaultBlockState, chunk, minimumCellY, cellHeight, fastSections);
+        chunkNoiseSampler,
+        defaultBlockState,
+        chunk,
+        minimumCellY,
+        cellHeight,
+        fastSections,
+        chunk.getBottomY());
 
     return chunk;
-  }
-
-  @Overwrite
-  public CompletableFuture<Chunk> populateNoise(
-      Executor executor,
-      Blender blender,
-      NoiseConfig noiseConfig,
-      StructureAccessor structureAccessor,
-      Chunk chunk) {
-    if (SharedConstants.isOutsideGenerationArea(chunk.getPos()))
-      return CompletableFuture.completedFuture(chunk);
-
-    var generationShapeConfig =
-        this.settings.value().generationShapeConfig().trimHeight(chunk.getHeightLimitView());
-    var minimumY = generationShapeConfig.minimumY();
-    var minimumCellY =
-        MathHelper.floorDiv(minimumY, generationShapeConfig.verticalCellBlockCount());
-    var cellHeight =
-        MathHelper.floorDiv(
-            generationShapeConfig.height(), generationShapeConfig.verticalCellBlockCount());
-
-    if (cellHeight <= 0) {
-      return CompletableFuture.completedFuture(chunk);
-    }
-
-    return CompletableFuture.supplyAsync(
-        Util.debugSupplier(
-            "wgen_fill_noise",
-            () -> {
-              var start = chunk.getSectionIndex(minimumY);
-              var end =
-                  chunk.getSectionIndex(
-                      cellHeight * generationShapeConfig.verticalCellBlockCount() - 1 + minimumY);
-
-              var fastSections = new FastChunkSection[end + 1];
-              for (int i = start; i <= end; i++)
-                fastSections[i] = new FastChunkSection(chunk.getSection(i));
-
-              var result = chunk;
-              try {
-                result =
-                    this.zenxarch$populateNoise(
-                        blender,
-                        structureAccessor,
-                        noiseConfig,
-                        chunk,
-                        minimumCellY,
-                        cellHeight,
-                        fastSections);
-              } finally {
-              }
-              return result;
-            }),
-        Util.getMainWorkerExecutor());
   }
 }
