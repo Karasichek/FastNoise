@@ -9,6 +9,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
 import org.codeberg.zenxarch.fastnoise.surface.BiomePredicate;
+import org.codeberg.zenxarch.fastnoise.surface.TernaryBlockStateRule;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -41,6 +42,8 @@ public abstract class SequenceMaterialRuleMixin {
     }
 
     if (builder.isEmpty()) return BiomePredicate.ALWAYS_NULL;
+    var ternary = TernaryBlockStateRule.tryApply(builder);
+    if (ternary != null) return ternary;
     return new SequenceBlockStateRule(new ObjectImmutableList<BlockStateRule>(builder));
   }
 }
