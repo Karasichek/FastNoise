@@ -38,9 +38,6 @@ extendable class net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule
 
-accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockMaterialRule
-
-
 # MaterialRuleContext
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext uniquePosValue J
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockY I
@@ -65,7 +62,25 @@ accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistan
 ## optimize surface rules
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier
+
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BiomeMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$NoiseThresholdMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$VerticalGradientMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$AboveYMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$WaterMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$TemperatureMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SteepMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$NotMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$HoleMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SurfaceMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$StoneDepthMaterialCondition
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$TerracottaBandsMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$ConditionMaterialRule
+
+
 
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext includedBiomes Ljava/util/Set;
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext posToBiome Ljava/util/function/Function;
