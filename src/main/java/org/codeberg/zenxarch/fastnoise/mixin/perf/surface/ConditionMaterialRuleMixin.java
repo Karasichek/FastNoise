@@ -23,6 +23,7 @@ public abstract class ConditionMaterialRuleMixin {
     var condition = ifTrue.apply(context);
     if (condition == BiomePredicate.ALWAYS_FALSE) return BiomePredicate.ALWAYS_NULL;
     var rule = thenRun.apply(context);
+    if (rule == BiomePredicate.ALWAYS_NULL) return rule;
     if (condition == BiomePredicate.ALWAYS_TRUE) return rule;
     return new ConditionalBlockStateRule(condition, rule);
   }
