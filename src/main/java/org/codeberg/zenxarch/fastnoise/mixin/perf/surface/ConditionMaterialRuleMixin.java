@@ -26,11 +26,6 @@ public abstract class ConditionMaterialRuleMixin {
     if (rule == BiomePredicate.ALWAYS_NULL) return rule;
     if (condition == BiomePredicate.ALWAYS_TRUE) return rule;
 
-    if (rule instanceof ConditionalBlockStateRule conditionalBlockStateRule) {
-      return new ConditionalBlockStateRule(
-          () -> condition.get() && conditionalBlockStateRule.condition().get(),
-          conditionalBlockStateRule.followup());
-    }
     return new ConditionalBlockStateRule(condition, rule);
   }
 }
