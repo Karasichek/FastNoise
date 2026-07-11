@@ -10,11 +10,9 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.BiomeMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import org.codeberg.zenxarch.fastnoise.surface.BiomePredicate;
 import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
-import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Debug(export = true)
 @Mixin(BiomeMaterialRule.class)
 public abstract class BiomeMaterialRuleMixin {
   @Shadow
