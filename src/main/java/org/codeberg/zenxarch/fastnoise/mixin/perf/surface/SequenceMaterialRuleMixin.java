@@ -33,7 +33,9 @@ public abstract class SequenceMaterialRuleMixin {
       if (rule instanceof SequenceBlockStateRule sequenceBlockStateRule) {
         var nsize = sequenceBlockStateRule.rules().size();
         for (int j = 0; j < nsize; j++) {
-          builder.add(sequenceBlockStateRule.rules().get(j));
+          var nrule = sequenceBlockStateRule.rules().get(j);
+          if (nrule == BiomePredicate.ALWAYS_NULL) continue;
+          builder.add(nrule);
         }
         continue;
       }
