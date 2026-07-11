@@ -37,9 +37,12 @@ public abstract class NoiseChunkGeneratorMixin {
               target =
                   "Lnet/minecraft/world/gen/chunk/NoiseChunkGenerator;getBiomesAround(Lnet/minecraft/world/ChunkRegion;I)Ljava/util/Set;"))
   private Set<RegistryEntry<Biome>> zenxarch$getBiomesAround(
-      ChunkRegion region, int radius, Operation<Set<RegistryEntry<Biome>>> op) {
+      ChunkRegion region,
+      int radius,
+      Operation<Set<RegistryEntry<Biome>>> op,
+      @Local Chunk protoChunk) {
     if (radius != 1) return op.call(region, radius);
-    return FastBiomeAccumulator.accumulate(region);
+    return FastBiomeAccumulator.accumulate(region, protoChunk.getPos());
   }
 
   @Shadow @Final private RegistryEntry<ChunkGeneratorSettings> settings;
@@ -87,24 +90,27 @@ public abstract class NoiseChunkGeneratorMixin {
       return;
     }
 
+    final var chunks = FastSurfaceGen.collectChunks(chunkRegion, chunk);
+
+    if (chunks == null) {
+      op.call(
+          chunkGenerator,
+          chunk,
+          context,
+          noiseConfig,
+          structureAccessor,
+          biomeAccess,
+          blender,
+          includedBiomes);
+      return;
+    }
+
     var sampler =
         chunk.getOrCreateChunkNoiseSampler(
             chunkx ->
                 this.createChunkNoiseSampler(chunkx, structureAccessor, blender, noiseConfig));
 
     var settings = this.settings.value();
-
-    final var centerPos = chunkRegion.getCenterPos();
-    final var cx = centerPos.x();
-    final var cz = centerPos.z();
-    final var chunks = new Chunk[9];
-
-    for (int z = -1; z <= 1; z++) {
-      for (int x = -1; x <= 1; x++) {
-        final var idx = ((z + 1) * 3) + (x + 1);
-        chunks[idx] = chunkRegion.getChunk(cx + x, cz + z);
-      }
-    }
 
     FastSurfaceGen.buildSurface(
         (SurfaceBuilderAccessor) noiseConfig.getSurfaceBuilder(),
@@ -114,7 +120,7 @@ public abstract class NoiseChunkGeneratorMixin {
         context,
         chunk,
         sampler,
-        settings.surfaceRule(),
+        settings.materialRule().value(),
         includedBiomes,
         chunks,
         registry);
