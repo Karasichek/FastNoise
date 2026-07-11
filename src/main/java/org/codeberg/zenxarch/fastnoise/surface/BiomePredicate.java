@@ -2,11 +2,13 @@ package org.codeberg.zenxarch.fastnoise.surface;
 
 import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 
 public final class BiomePredicate implements BooleanSupplier {
   public static final BooleanSupplier ALWAYS_TRUE = () -> true;
   public static final BooleanSupplier ALWAYS_FALSE = () -> false;
+  public static final BlockStateRule ALWAYS_NULL = (x, y, z) -> null;
 
   private final MaterialRuleContext context;
   private final long mask;
