@@ -8,6 +8,7 @@
     "perf.surface.NoiseChunkGeneratorMixin",
     "perf.surface.BiomeMaterialRuleMixin",
     "perf.surface.ConditionMaterialRuleMixin",
+    "perf.surface.SequenceMaterialRuleMixin",
     "HeightmapAccessor",
     "ChunkNoiseSamplerAccessor",
     "ChunkGeneratorAccessor",
