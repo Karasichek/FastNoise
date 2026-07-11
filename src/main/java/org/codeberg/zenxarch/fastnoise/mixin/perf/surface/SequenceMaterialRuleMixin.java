@@ -42,6 +42,7 @@ public abstract class SequenceMaterialRuleMixin {
     }
 
     if (builder.isEmpty()) return BiomePredicate.ALWAYS_NULL;
+    if (builder.size() == 1) return builder.getFirst();
     var ternary = TernaryBlockStateRule.tryApply(builder);
     if (ternary != null) return ternary;
     return new SequenceBlockStateRule(new ObjectImmutableList<BlockStateRule>(builder));
