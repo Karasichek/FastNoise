@@ -19,6 +19,7 @@ import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.mixin.SurfaceBuilderAccessor;
@@ -117,6 +118,9 @@ public class FastSurfaceGen {
             chunks);
 
     var rule = materialRule.apply(context);
+    if (rule instanceof SequenceBlockStateRule seq) {
+      rule = MaterialRuleInterpreter.of(seq);
+    }
 
     final int minY = chunk.getBottomY();
 
