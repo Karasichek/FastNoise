@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(SequenceMaterialRule.class)
+@Mixin(value = SequenceMaterialRule.class, priority = 2000)
 public abstract class SequenceMaterialRuleMixin {
   @Shadow @Final private List<MaterialRule> sequence;
 
