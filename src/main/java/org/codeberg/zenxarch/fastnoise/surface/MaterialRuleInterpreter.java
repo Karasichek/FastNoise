@@ -21,8 +21,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   private static final int JUMP_IF_FALSE = 0; // if (!conditions[a]) jmp(b);
   private static final int RETURN = 1; // return states[a];
   private static final int TRY_RETURN = 2; // if (rules[a] != null) return rules[a];
+  private static final int RETURN_IF = 3; // if (conditions[a]) return states[b];
 
-  // private static final int NO_OP = 3;
+  // private static final int NO_OP = 4;
 
   public MaterialRuleInterpreter(
       BooleanSupplier[] conditions,
@@ -55,6 +56,10 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         case TRY_RETURN -> {
           var res = this.rules[a].tryApply(x, y, z);
           if (res != null) return res;
+          instPointer++;
+        }
+        case RETURN_IF -> {
+          if (conditions[a].get()) return states[b];
           instPointer++;
         }
         default -> {
@@ -95,7 +100,17 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
           res.append("jmpiffalse ").append(conditions[a]).append(" ").append(b).append(",");
       case RETURN -> res.append("ret ").append(states[a]).append(",");
       case TRY_RETURN -> res.append("tryret ").append(rules[a]).append(",");
-      default -> res.append("noop ,");
+      case RETURN_IF ->
+          res.append("retif ").append(conditions[a]).append(" ").append(states[b]).append(",");
+      default ->
+          res.append("noop ")
+              .append("{")
+              .append(opcode)
+              .append(" ")
+              .append(a)
+              .append(" ")
+              .append(b)
+              .append("},");
     }
   }
 
@@ -121,6 +136,13 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     public void push(ConditionalBlockStateRule rule) {
       var index = this.conditions.size();
       this.conditions.add(rule.condition());
+
+      if (rule.followup() instanceof SimpleBlockStateRule simple) {
+        var stateIndex = this.states.size();
+        this.states.add(simple.state());
+        this.addInst(RETURN_IF, index, stateIndex);
+        return;
+      }
 
       var instIndex = this.instructions.size();
       this.addInst(JUMP_IF_FALSE, index, 0);
