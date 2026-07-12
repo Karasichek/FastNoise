@@ -2,6 +2,7 @@ package org.codeberg.zenxarch.fastnoise.surface;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.lang.invoke.MethodHandle;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
@@ -17,6 +18,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   private final BlockState[] states;
   // 0..3 instr id 4..17 a 18..31 b
   private final int[] instructions;
+  private final MethodHandle compiled;
 
   private static final int JUMP_IF_FALSE = 0; // if (!conditions[a]) jmp(b);
   private static final int RETURN = 1; // return states[a];
@@ -34,10 +36,15 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     this.rules = rules;
     this.states = states;
     this.instructions = instructions;
+    this.compiled = MaterialRuleCompilerCache.get(instructions);
   }
 
   @Override
   public @Nullable BlockState tryApply(int x, int y, int z) {
+    try {
+      return (BlockState) compiled.invoke(conditions, rules, states, x, y, z);
+    } catch (Throwable e) {
+    }
     var instPointer = 0;
     var max = instructions.length;
     while (instPointer < max) {
