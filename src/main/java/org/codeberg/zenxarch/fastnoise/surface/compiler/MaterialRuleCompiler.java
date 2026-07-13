@@ -2,20 +2,44 @@ package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
 import static org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleInterpreter.*;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectList;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
+import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
 
 public final class MaterialRuleCompiler {
   private MaterialRuleCompiler() {}
+
+  private static final ObjectList<Class<?>> commonTypes =
+      ObjectList.of(
+          BooleanSupplier[].class,
+          BlockStateRule[].class,
+          BlockState[].class,
+          int.class,
+          int.class,
+          int.class,
+          MaterialRuleContext.class);
 
   private static final MethodHandle condition;
   private static final MethodHandle ret;
   private static final MethodHandle tryRet;
   private static final MethodHandle retNull;
+
+  private static MethodHandle lookup(String name, Class<?>... classes)
+      throws NoSuchMethodException, IllegalAccessException {
+    var list = ObjectArrayList.of(classes);
+    list.addAll(commonTypes);
+    return MethodHandles.lookup()
+        .findStatic(
+            MaterialRuleCompiler.class,
+            name,
+            MethodType.methodType(BlockState.class, list.toArray(Class<?>[]::new)));
+  }
 
   static {
     MethodHandle temp$condition;
@@ -23,67 +47,11 @@ public final class MaterialRuleCompiler {
     MethodHandle temp$tryRet;
     MethodHandle temp$retNull;
 
-    var lookup = MethodHandles.lookup();
-
     try {
-      temp$condition =
-          lookup.findStatic(
-              MaterialRuleCompiler.class,
-              "condition",
-              MethodType.methodType(
-                  BlockState.class,
-                  int.class,
-                  MethodHandle.class,
-                  MethodHandle.class,
-                  BooleanSupplier[].class,
-                  BlockStateRule[].class,
-                  BlockState[].class,
-                  int.class,
-                  int.class,
-                  int.class));
-
-      temp$ret =
-          lookup.findStatic(
-              MaterialRuleCompiler.class,
-              "ret",
-              MethodType.methodType(
-                  BlockState.class,
-                  int.class,
-                  BooleanSupplier[].class,
-                  BlockStateRule[].class,
-                  BlockState[].class,
-                  int.class,
-                  int.class,
-                  int.class));
-
-      temp$tryRet =
-          lookup.findStatic(
-              MaterialRuleCompiler.class,
-              "tryRet",
-              MethodType.methodType(
-                  BlockState.class,
-                  int.class,
-                  MethodHandle.class,
-                  BooleanSupplier[].class,
-                  BlockStateRule[].class,
-                  BlockState[].class,
-                  int.class,
-                  int.class,
-                  int.class));
-
-      temp$retNull =
-          lookup.findStatic(
-              MaterialRuleCompiler.class,
-              "retNull",
-              MethodType.methodType(
-                  BlockState.class,
-                  BooleanSupplier[].class,
-                  BlockStateRule[].class,
-                  BlockState[].class,
-                  int.class,
-                  int.class,
-                  int.class));
-
+      temp$condition = lookup("condition", int.class, MethodHandle.class, MethodHandle.class);
+      temp$ret = lookup("ret", int.class);
+      temp$tryRet = lookup("tryRet", int.class, MethodHandle.class);
+      temp$retNull = lookup("retNull");
     } catch (Exception e) {
       temp$condition = null;
       temp$ret = null;
@@ -141,12 +109,13 @@ public final class MaterialRuleCompiler {
       BlockState[] states,
       int x,
       int y,
-      int z)
+      int z,
+      MaterialRuleContext context)
       throws Throwable {
     if (conditions[index].get()) {
-      return (BlockState) ifTrue.invokeExact(conditions, rules, states, x, y, z);
+      return (BlockState) ifTrue.invokeExact(conditions, rules, states, x, y, z, context);
     }
-    return (BlockState) ifFalse.invokeExact(conditions, rules, states, x, y, z);
+    return (BlockState) ifFalse.invokeExact(conditions, rules, states, x, y, z, context);
   }
 
   public static BlockState ret(
@@ -156,7 +125,8 @@ public final class MaterialRuleCompiler {
       BlockState[] states,
       int x,
       int y,
-      int z) {
+      int z,
+      MaterialRuleContext context) {
     return states[index];
   }
 
@@ -168,7 +138,8 @@ public final class MaterialRuleCompiler {
       BlockState[] states,
       int x,
       int y,
-      int z)
+      int z,
+      MaterialRuleContext context)
       throws Throwable {
     var state = rules[index].tryApply(x, y, z);
     if (state != null) return state;
@@ -181,7 +152,8 @@ public final class MaterialRuleCompiler {
       BlockState[] states,
       int x,
       int y,
-      int z) {
+      int z,
+      MaterialRuleContext context) {
     return null;
   }
 }

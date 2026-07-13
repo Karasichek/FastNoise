@@ -120,7 +120,7 @@ public class FastSurfaceGen {
 
     var rule = materialRule.apply(context);
     if (rule instanceof SequenceBlockStateRule seq) {
-      rule = MaterialRuleInterpreter.of(seq);
+      rule = MaterialRuleInterpreter.of(seq, context);
     }
 
     final int minY = chunk.getBottomY();

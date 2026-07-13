@@ -10,6 +10,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionalBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SimpleBlockStateRule;
+import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
 import org.jspecify.annotations.Nullable;
 
 public final class MaterialRuleInterpreter implements BlockStateRule {
@@ -19,6 +20,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   private final BlockState[] states;
   private final int[] instructions;
   private final MethodHandle compiled;
+  private final MaterialRuleContext context;
 
   public static final int JUMP_IF_FALSE = 0; // if (!conditions[a]) jmp(b);
   public static final int RETURN = 1; // return states[a];
@@ -31,18 +33,20 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
       BlockState[] states,
-      int[] instructions) {
+      int[] instructions,
+      MaterialRuleContext context) {
     this.conditions = conditions;
     this.rules = rules;
     this.states = states;
     this.instructions = instructions;
     this.compiled = MaterialRuleCompilerCache.get(instructions);
+    this.context = context;
   }
 
   @Override
   public @Nullable BlockState tryApply(int x, int y, int z) {
     try {
-      return (BlockState) compiled.invoke(conditions, rules, states, x, y, z);
+      return (BlockState) compiled.invokeExact(conditions, rules, states, x, y, z, context);
     } catch (Throwable e) {
     }
     var instPointer = 0;
@@ -78,8 +82,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     return null;
   }
 
-  public static MaterialRuleInterpreter of(SequenceBlockStateRule root) {
-    var builder = new Builder();
+  public static MaterialRuleInterpreter of(
+      SequenceBlockStateRule root, MaterialRuleContext context) {
+    var builder = new Builder(context);
     builder.push(root);
 
     return builder.build();
@@ -139,12 +144,14 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     private final ReferenceArrayList<BlockStateRule> rules;
     private final ReferenceArrayList<BlockState> states;
     private final IntArrayList instructions;
+    private final MaterialRuleContext context;
 
-    public Builder() {
+    public Builder(MaterialRuleContext context) {
       this.conditions = new ObjectArrayList<>();
       this.rules = new ReferenceArrayList<>();
       this.states = new ReferenceArrayList<>();
       this.instructions = new IntArrayList();
+      this.context = context;
     }
 
     private int indexOf(BlockState state) {
@@ -207,7 +214,8 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
           this.conditions.toArray(BooleanSupplier[]::new),
           this.rules.toArray(BlockStateRule[]::new),
           this.states.toArray(BlockState[]::new),
-          this.instructions.toIntArray());
+          this.instructions.toIntArray(),
+          context);
     }
   }
 }
