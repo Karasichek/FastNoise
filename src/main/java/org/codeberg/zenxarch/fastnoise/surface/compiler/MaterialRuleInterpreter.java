@@ -17,14 +17,13 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   private final BooleanSupplier[] conditions;
   private final BlockStateRule[] rules;
   private final BlockState[] states;
-  // 0..3 instr id 4..17 a 18..31 b
   private final int[] instructions;
   private final MethodHandle compiled;
 
-  private static final int JUMP_IF_FALSE = 0; // if (!conditions[a]) jmp(b);
-  private static final int RETURN = 1; // return states[a];
-  private static final int TRY_RETURN = 2; // if (rules[a] != null) return rules[a];
-  private static final int RETURN_IF = 3; // if (conditions[a]) return states[b];
+  public static final int JUMP_IF_FALSE = 0; // if (!conditions[a]) jmp(b);
+  public static final int RETURN = 1; // return states[a];
+  public static final int TRY_RETURN = 2; // if (rules[a] != null) return rules[a];
+  public static final int RETURN_IF = 3; // if (conditions[a]) return states[b];
 
   // private static final int NO_OP = 4;
 
@@ -50,25 +49,25 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     var max = instructions.length;
     while (instPointer < max) {
       var inst = this.instructions[instPointer];
-      var opcode = inst & 0xF;
-      var a = (inst >>> 4) & 0x3FFF;
-      var b = (inst >>> 18) & 0x3FFF;
-      switch (opcode) {
+      switch (inst) {
         case JUMP_IF_FALSE -> {
-          if (conditions[a].get()) instPointer++;
-          else instPointer = b;
+          instPointer =
+              (conditions[instructions[instPointer + 1]].get())
+                  ? instPointer + 3
+                  : instructions[instPointer + 2];
         }
         case RETURN -> {
-          return states[a];
+          return states[instructions[instPointer + 1]];
         }
         case TRY_RETURN -> {
-          var res = this.rules[a].tryApply(x, y, z);
+          var res = this.rules[instructions[instPointer + 1]].tryApply(x, y, z);
           if (res != null) return res;
-          instPointer++;
+          instPointer += 2;
         }
         case RETURN_IF -> {
-          if (conditions[a].get()) return states[b];
-          instPointer++;
+          if (conditions[instructions[instPointer + 1]].get())
+            return states[instructions[instPointer + 2]];
+          instPointer += 3;
         }
         default -> {
           // no op
@@ -90,35 +89,48 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   public String toString() {
     var res = new StringBuilder();
     res.append("MaterialRuleInterpreter[");
-    for (int i = 0; i < instructions.length; i++) {
-      var inst = instructions[i];
-      var opcode = inst & 0xF;
-      var a = (inst >>> 4) & 0x3FFF;
-      var b = (inst >>> 18) & 0x3FFF;
-      res.append(i).append(" ");
-      appendInstForToString(res, opcode, a, b);
-    }
+    toString0(res, instructions, 0);
     res.append("]");
     return res.toString();
   }
 
-  private void appendInstForToString(StringBuilder res, int opcode, int a, int b) {
-    switch (opcode) {
-      case JUMP_IF_FALSE ->
-          res.append("jmpiffalse ").append(conditions[a]).append(" ").append(b).append(",");
-      case RETURN -> res.append("ret ").append(states[a]).append(",");
-      case TRY_RETURN -> res.append("tryret ").append(rules[a]).append(",");
-      case RETURN_IF ->
-          res.append("retif ").append(conditions[a]).append(" ").append(states[b]).append(",");
-      default ->
-          res.append("noop ")
-              .append("{")
-              .append(opcode)
-              .append(" ")
-              .append(a)
-              .append(" ")
-              .append(b)
-              .append("},");
+  public static void toString0(StringBuilder builder, int[] instructions, int index) {
+    if (index >= instructions.length) {
+      builder.append("return null; /* end of program */");
+      return;
+    }
+    switch (instructions[index]) {
+      case JUMP_IF_FALSE -> {
+        builder.append("if (conditions[").append(instructions[index + 1]).append("].get()) {");
+        toString0(builder, instructions, index + 3);
+        builder.append("} else {");
+        toString0(builder, instructions, instructions[index + 2]);
+        builder.append("}");
+      }
+      case RETURN -> {
+        builder.append("return states[").append(instructions[index + 1]).append("];");
+      }
+      case TRY_RETURN -> {
+        builder
+            .append("state = rules[")
+            .append(instructions[index + 1])
+            .append("].tryApply(x,y,z); if (state != null) {return state;} else {");
+        toString0(builder, instructions, index + 2);
+        builder.append("}");
+      }
+      case RETURN_IF -> {
+        builder
+            .append("if (conditions[")
+            .append(instructions[index + 1])
+            .append("].get()) { return states[")
+            .append(instructions[index + 2])
+            .append("]; } else {");
+        toString0(builder, instructions, index + 3);
+        builder.append("}");
+      }
+      default -> {
+        builder.append("return null; /* invalid */");
+      }
     }
   }
 
@@ -168,30 +180,26 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         return;
       }
 
-      var instIndex = this.instructions.size();
       this.addInst(JUMP_IF_FALSE, index, 0);
+      var instIndex = instructions.size() - 1;
 
       push(rule.followup());
 
-      this.instructions.set(instIndex, combineInst(JUMP_IF_FALSE, index, this.instructions.size()));
+      this.instructions.set(instIndex, instructions.size());
     }
 
     private void push(BlockStateRule rule) {
-      if (rule instanceof SequenceBlockStateRule seq) push(seq);
-      else if (rule instanceof ConditionalBlockStateRule cond) push(cond);
-      else if (rule instanceof SimpleBlockStateRule simple) {
-        addInst(RETURN, indexOf(simple.state()), 0);
-      } else {
-        addInst(TRY_RETURN, indexOf(rule), 0);
+      switch (rule) {
+        case SequenceBlockStateRule seq -> push(seq);
+        case ConditionalBlockStateRule cond -> push(cond);
+        case SimpleBlockStateRule simple -> addInst(RETURN, indexOf(simple.state()));
+        default -> addInst(TRY_RETURN, indexOf(rule));
       }
     }
 
-    private void addInst(int opcode, int a, int b) {
-      this.instructions.add(opcode | (a << 4) | (b << 18));
-    }
-
-    private int combineInst(int opcode, int a, int b) {
-      return opcode | (a << 4) | (b << 18);
+    private void addInst(int opcode, int... data) {
+      this.instructions.add(opcode);
+      for (int i = 0; i < data.length; i++) this.instructions.add(data[i]);
     }
 
     public MaterialRuleInterpreter build() {

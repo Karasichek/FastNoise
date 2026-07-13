@@ -1,5 +1,7 @@
 package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
+import static org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleInterpreter.*;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -94,11 +96,6 @@ public final class MaterialRuleCompiler {
     retNull = temp$retNull;
   }
 
-  private static final int JUMP_IF_FALSE = 0; // if (!conditions[a]) jmp(b);
-  private static final int RETURN = 1; // return states[a];
-  private static final int TRY_RETURN = 2; // if (rules[a] != null) return rules[a];
-  private static final int RETURN_IF = 3; // if (conditions[a]) return states[b];
-
   public static MethodHandle compile(int[] program) {
     return compile0(program, 0);
   }
@@ -106,15 +103,18 @@ public final class MaterialRuleCompiler {
   private static MethodHandle compile0(int[] program, int index) {
     if (index >= program.length) return retNull;
     var inst = program[index];
-    var opcode = inst & 0xF;
-    var a = (inst >>> 4) & 0x3FFF;
-    var b = (inst >>> 18) & 0x3FFF;
 
-    return switch (opcode) {
-      case JUMP_IF_FALSE -> createCondition(a, compile0(program, index + 1), compile0(program, b));
-      case RETURN -> createRet(a);
-      case TRY_RETURN -> createTryRet(a, compile0(program, index + 1));
-      case RETURN_IF -> createCondition(a, createRet(b), compile0(program, index + 1));
+    return switch (inst) {
+      case JUMP_IF_FALSE ->
+          createCondition(
+              program[index + 1],
+              compile0(program, index + 3),
+              compile0(program, program[index + 2]));
+      case RETURN -> createRet(program[index + 1]);
+      case TRY_RETURN -> createTryRet(program[index + 1], compile0(program, index + 2));
+      case RETURN_IF ->
+          createCondition(
+              program[index + 1], createRet(program[index + 2]), compile0(program, index + 3));
       default -> retNull;
     };
   }
