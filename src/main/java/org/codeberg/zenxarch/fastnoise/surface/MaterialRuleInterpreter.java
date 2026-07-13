@@ -124,13 +124,13 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
   private static class Builder {
     private final ObjectArrayList<BooleanSupplier> conditions;
-    private final ObjectArrayList<BlockStateRule> rules;
+    private final ReferenceArrayList<BlockStateRule> rules;
     private final ReferenceArrayList<BlockState> states;
     private final IntArrayList instructions;
 
     public Builder() {
       this.conditions = new ObjectArrayList<>();
-      this.rules = new ObjectArrayList<>();
+      this.rules = new ReferenceArrayList<>();
       this.states = new ReferenceArrayList<>();
       this.instructions = new IntArrayList();
     }
@@ -140,7 +140,15 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       if (res == -1) {
         res = states.size();
         states.add(state);
-        return res;
+      }
+      return res;
+    }
+
+    private int indexOf(BlockStateRule state) {
+      var res = rules.indexOf(state);
+      if (res == -1) {
+        res = rules.size();
+        rules.add(state);
       }
       return res;
     }
@@ -174,9 +182,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       else if (rule instanceof SimpleBlockStateRule simple) {
         addInst(RETURN, indexOf(simple.state()), 0);
       } else {
-        var index = this.rules.size();
-        this.rules.add(rule);
-        addInst(TRY_RETURN, index, 0);
+        addInst(TRY_RETURN, indexOf(rule), 0);
       }
     }
 
