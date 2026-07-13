@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface;
+package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;

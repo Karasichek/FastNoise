@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface;
+package org.codeberg.zenxarch.fastnoise.surface.rules;
 
 import java.util.Objects;
 import net.minecraft.block.BlockState;
@@ -6,6 +6,7 @@ import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
+import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
 import org.jspecify.annotations.Nullable;
 
 public final class BiomePredicate implements BooleanSupplier {

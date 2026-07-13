@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface;
+package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
 import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;

@@ -8,8 +8,8 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BiomeMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import org.codeberg.zenxarch.fastnoise.surface.BiomePredicate;
 import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
+import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 

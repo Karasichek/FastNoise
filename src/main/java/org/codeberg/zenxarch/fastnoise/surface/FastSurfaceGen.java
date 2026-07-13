@@ -26,6 +26,7 @@ import org.codeberg.zenxarch.fastnoise.mixin.SurfaceBuilderAccessor;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastColumnIterator;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastIsFluidCache;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastPaletteIndexCache;
+import org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleInterpreter;
 
 public class FastSurfaceGen {
 

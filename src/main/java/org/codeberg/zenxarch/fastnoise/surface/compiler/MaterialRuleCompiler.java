@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface;
+package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
