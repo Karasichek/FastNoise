@@ -2,6 +2,7 @@ package org.codeberg.zenxarch.fastnoise.surface;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.lang.invoke.MethodHandle;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
@@ -124,14 +125,24 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   private static class Builder {
     private final ObjectArrayList<BooleanSupplier> conditions;
     private final ObjectArrayList<BlockStateRule> rules;
-    private final ObjectArrayList<BlockState> states;
+    private final ReferenceArrayList<BlockState> states;
     private final IntArrayList instructions;
 
     public Builder() {
       this.conditions = new ObjectArrayList<>();
       this.rules = new ObjectArrayList<>();
-      this.states = new ObjectArrayList<>();
+      this.states = new ReferenceArrayList<>();
       this.instructions = new IntArrayList();
+    }
+
+    private int indexOf(BlockState state) {
+      var res = states.indexOf(state);
+      if (res == -1) {
+        res = states.size();
+        states.add(state);
+        return res;
+      }
+      return res;
     }
 
     public void push(SequenceBlockStateRule rules) {
@@ -145,9 +156,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       this.conditions.add(rule.condition());
 
       if (rule.followup() instanceof SimpleBlockStateRule simple) {
-        var stateIndex = this.states.size();
-        this.states.add(simple.state());
-        this.addInst(RETURN_IF, index, stateIndex);
+        this.addInst(RETURN_IF, index, indexOf(simple.state()));
         return;
       }
 
@@ -163,9 +172,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       if (rule instanceof SequenceBlockStateRule seq) push(seq);
       else if (rule instanceof ConditionalBlockStateRule cond) push(cond);
       else if (rule instanceof SimpleBlockStateRule simple) {
-        var index = this.states.size();
-        this.states.add(simple.state());
-        addInst(RETURN, index, 0);
+        addInst(RETURN, indexOf(simple.state()), 0);
       } else {
         var index = this.rules.size();
         this.rules.add(rule);
