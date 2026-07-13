@@ -44,6 +44,8 @@ accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext fluidHeight I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthBelow I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthAbove I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext runDepth I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext heightContext Lnet/minecraft/world/gen/HeightContext;
 
 # threadlocal
 accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree
@@ -86,3 +88,9 @@ accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SimpleBloc
 
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext includedBiomes Ljava/util/Set;
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext posToBiome Ljava/util/function/Function;
+
+## YOffset
+accessible class net/minecraft/world/gen/YOffset$AboveBottom
+accessible class net/minecraft/world/gen/YOffset$BelowTop
+accessible class net/minecraft/world/gen/YOffset$Fixed
+accessible class net/minecraft/world/gen/YOffset$RelativeToSeaLevel
