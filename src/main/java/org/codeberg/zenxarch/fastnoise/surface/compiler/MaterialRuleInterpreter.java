@@ -172,9 +172,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         builder.append("}");
       }
       case BIOME_TEST -> {
-        builder.append("idx = context.getCurrentBiomeIdx(); if (");
+        builder.append("idx = context.getCurrentBiomeIdx(); if ((");
         builder.append(String.format("0x%xL", getLong(instructions, index + 1)));
-        builder.append(" & (0x1L << idx) == 0) { ");
+        builder.append(" & (0x1L << idx)) == 0) { ");
         toString1(builder, instructions, instructions[index + 3]);
         builder.append(" } else { ");
         toString1(builder, instructions, index + 4);
