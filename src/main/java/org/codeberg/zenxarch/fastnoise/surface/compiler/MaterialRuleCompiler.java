@@ -29,6 +29,7 @@ public final class MaterialRuleCompiler {
   private static final MethodHandle ret;
   private static final MethodHandle tryRet;
   private static final MethodHandle retNull;
+  private static final MethodHandle biomeTest;
 
   private static MethodHandle lookup(String name, Class<?>... classes)
       throws NoSuchMethodException, IllegalAccessException {
@@ -46,22 +47,26 @@ public final class MaterialRuleCompiler {
     MethodHandle temp$ret;
     MethodHandle temp$tryRet;
     MethodHandle temp$retNull;
+    MethodHandle temp$biomeTest;
 
     try {
       temp$condition = lookup("condition", int.class, MethodHandle.class, MethodHandle.class);
       temp$ret = lookup("ret", int.class);
       temp$tryRet = lookup("tryRet", int.class, MethodHandle.class);
       temp$retNull = lookup("retNull");
+      temp$biomeTest = lookup("biomeTest", long.class, MethodHandle.class, MethodHandle.class);
     } catch (Exception e) {
       temp$condition = null;
       temp$ret = null;
       temp$tryRet = null;
       temp$retNull = null;
+      temp$biomeTest = null;
     }
     condition = temp$condition;
     ret = temp$ret;
     tryRet = temp$tryRet;
     retNull = temp$retNull;
+    biomeTest = temp$biomeTest;
   }
 
   public static MethodHandle compile(int[] program) {
@@ -83,6 +88,11 @@ public final class MaterialRuleCompiler {
       case RETURN_IF ->
           createCondition(
               program[index + 1], createRet(program[index + 2]), compile0(program, index + 3));
+      case BIOME_TEST ->
+          createBiomeTest(
+              getLong(program, index + 1),
+              compile0(program, index + 4),
+              compile0(program, program[index + 3]));
       default -> retNull;
     };
   }
@@ -98,6 +108,11 @@ public final class MaterialRuleCompiler {
 
   private static MethodHandle createTryRet(int index, MethodHandle orElse) {
     return MethodHandles.insertArguments(tryRet, 0, index, orElse);
+  }
+
+  private static MethodHandle createBiomeTest(
+      long mask, MethodHandle ifTrue, MethodHandle ifFalse) {
+    return MethodHandles.insertArguments(biomeTest, 0, mask, ifTrue, ifFalse);
   }
 
   public static BlockState condition(
@@ -143,7 +158,7 @@ public final class MaterialRuleCompiler {
       throws Throwable {
     var state = rules[index].tryApply(x, y, z);
     if (state != null) return state;
-    return (BlockState) orElse.invokeExact(conditions, rules, states, x, y, z);
+    return (BlockState) orElse.invokeExact(conditions, rules, states, x, y, z, context);
   }
 
   public static BlockState retNull(
@@ -155,5 +170,24 @@ public final class MaterialRuleCompiler {
       int z,
       MaterialRuleContext context) {
     return null;
+  }
+
+  public static BlockState biomeTest(
+      long mask,
+      MethodHandle ifTrue,
+      MethodHandle ifFalse,
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context)
+      throws Throwable {
+    var idx = context.getCurrentBiomeIdx();
+    if ((mask & (0x1L << idx)) != 0) {
+      return (BlockState) ifTrue.invokeExact(conditions, rules, states, x, y, z, context);
+    }
+    return (BlockState) ifFalse.invokeExact(conditions, rules, states, x, y, z, context);
   }
 }

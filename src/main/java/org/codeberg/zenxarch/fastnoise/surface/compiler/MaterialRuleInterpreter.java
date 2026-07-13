@@ -11,6 +11,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionalBlockStat
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SimpleBlockStateRule;
 import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
+import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
 import org.jspecify.annotations.Nullable;
 
 public final class MaterialRuleInterpreter implements BlockStateRule {
@@ -26,6 +27,8 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   public static final int RETURN = 1; // return states[a];
   public static final int TRY_RETURN = 2; // if (rules[a] != null) return rules[a];
   public static final int RETURN_IF = 3; // if (conditions[a]) return states[b];
+  public static final int BIOME_TEST =
+      4; // if (!ctx.getCurrentBiomeIndex() matches a(mask)) jmp(b);
 
   // private static final int NO_OP = 4;
 
@@ -73,6 +76,12 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             return states[instructions[instPointer + 2]];
           instPointer += 3;
         }
+        case BIOME_TEST -> {
+          var idx = context.getCurrentBiomeIdx();
+          if ((getLong(instructions, instPointer + 1) & (0x1L << idx)) == 0) {
+            instPointer = instructions[instPointer + 3];
+          } else instPointer = instPointer + 4;
+        }
         default -> {
           // no op
           instPointer++;
@@ -80,6 +89,12 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       }
     }
     return null;
+  }
+
+  public static long getLong(int[] data, int index) {
+    var a = data[index];
+    var b = data[index + 1];
+    return (Integer.toUnsignedLong(a) << 32) | Integer.toUnsignedLong(b);
   }
 
   public static MaterialRuleInterpreter of(
@@ -94,12 +109,17 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   public String toString() {
     var res = new StringBuilder();
     res.append("MaterialRuleInterpreter[");
-    toString0(res, instructions, 0);
+    toString0(res, instructions);
     res.append("]");
     return res.toString();
   }
 
-  public static void toString0(StringBuilder builder, int[] instructions, int index) {
+  public static void toString0(StringBuilder builder, int[] instructions) {
+    builder.append("long mask; BlockState state; ");
+    toString1(builder, instructions, 0);
+  }
+
+  public static void toString1(StringBuilder builder, int[] instructions, int index) {
     if (index >= instructions.length) {
       builder.append("return null; /* end of program */");
       return;
@@ -107,9 +127,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     switch (instructions[index]) {
       case JUMP_IF_FALSE -> {
         builder.append("if (conditions[").append(instructions[index + 1]).append("].get()) {");
-        toString0(builder, instructions, index + 3);
+        toString1(builder, instructions, index + 3);
         builder.append("} else {");
-        toString0(builder, instructions, instructions[index + 2]);
+        toString1(builder, instructions, instructions[index + 2]);
         builder.append("}");
       }
       case RETURN -> {
@@ -120,7 +140,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             .append("state = rules[")
             .append(instructions[index + 1])
             .append("].tryApply(x,y,z); if (state != null) {return state;} else {");
-        toString0(builder, instructions, index + 2);
+        toString1(builder, instructions, index + 2);
         builder.append("}");
       }
       case RETURN_IF -> {
@@ -130,8 +150,17 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             .append("].get()) { return states[")
             .append(instructions[index + 2])
             .append("]; } else {");
-        toString0(builder, instructions, index + 3);
+        toString1(builder, instructions, index + 3);
         builder.append("}");
+      }
+      case BIOME_TEST -> {
+        builder.append("idx = context.getCurrentBiomeIdx(); if (");
+        builder.append(String.format("0x%xL", getLong(instructions, index + 1)));
+        builder.append(" & (0x1L << idx)) == 0) { ");
+        toString1(builder, instructions, instructions[index + 3]);
+        builder.append(" } else { ");
+        toString1(builder, instructions, index + 4);
+        builder.append(" }");
       }
       default -> {
         builder.append("return null; /* invalid */");
@@ -179,6 +208,16 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     }
 
     public void push(ConditionalBlockStateRule rule) {
+      if (rule.condition() instanceof BiomePredicate biome) {
+        this.addInst(BIOME_TEST, (int) (biome.mask >>> 32), (int) (biome.mask), 0);
+        var instIndex = instructions.size() - 1;
+
+        push(rule.followup());
+
+        this.instructions.set(instIndex, instructions.size());
+        return;
+      }
+
       var index = this.conditions.size();
       this.conditions.add(rule.condition());
 

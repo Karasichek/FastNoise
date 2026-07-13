@@ -44,7 +44,7 @@ public final class BiomePredicate implements BooleanSupplier {
       };
 
   private final MaterialRuleContext context;
-  private final long mask;
+  public final long mask;
 
   public BiomePredicate(long mask, MaterialRuleContext context) {
     this.context = context;
