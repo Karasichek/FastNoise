@@ -11,6 +11,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionalBlockStat
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SimpleBlockStateRule;
 import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
+import org.codeberg.zenxarch.fastnoise.surface.rules.AboveYPredicate;
 import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
 import org.jspecify.annotations.Nullable;
 
@@ -29,6 +30,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   public static final int RETURN_IF = 3; // if (conditions[a]) return states[b];
   public static final int BIOME_TEST =
       4; // if (!ctx.getCurrentBiomeIndex() matches a(mask)) jmp(b);
+  public static final int ABOVE_Y = 5; // if (!(context.blockY >= a + context.runDepth * b)) jmp(c);
+  public static final int ABOVE_Y_WITH_STONE_DEPTH =
+      6; // if (!(context.blockY + stoneDepthAbove >= a + context.runDepth * b)) jmp(c);
 
   // private static final int NO_OP = 4;
 
@@ -82,6 +86,20 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             instPointer = instructions[instPointer + 3];
           } else instPointer = instPointer + 4;
         }
+        case ABOVE_Y -> {
+          if (context.blockY
+              < (instructions[instPointer + 1]
+                  + context.runDepth * instructions[instPointer + 2])) {
+            instPointer = instructions[instPointer + 3];
+          } else instPointer += 4;
+        }
+        case ABOVE_Y_WITH_STONE_DEPTH -> {
+          if ((context.blockY + context.stoneDepthAbove)
+              < (instructions[instPointer + 1]
+                  + context.runDepth * instructions[instPointer + 2])) {
+            instPointer = instructions[instPointer + 3];
+          } else instPointer += 4;
+        }
         default -> {
           // no op
           instPointer++;
@@ -115,7 +133,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   }
 
   public static void toString0(StringBuilder builder, int[] instructions) {
-    builder.append("long mask; BlockState state; ");
+    builder.append("long idx; BlockState state; ");
     toString1(builder, instructions, 0);
   }
 
@@ -156,10 +174,34 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       case BIOME_TEST -> {
         builder.append("idx = context.getCurrentBiomeIdx(); if (");
         builder.append(String.format("0x%xL", getLong(instructions, index + 1)));
-        builder.append(" & (0x1L << idx)) == 0) { ");
+        builder.append(" & (0x1L << idx) == 0) { ");
         toString1(builder, instructions, instructions[index + 3]);
         builder.append(" } else { ");
         toString1(builder, instructions, index + 4);
+        builder.append(" }");
+      }
+      case ABOVE_Y -> {
+        builder
+            .append("if (context.blockY >= (")
+            .append(instructions[index + 1])
+            .append(" context.runDepth * ")
+            .append(instructions[index + 2])
+            .append(") { ");
+        toString1(builder, instructions, index + 4);
+        builder.append(" } else { ");
+        toString1(builder, instructions, instructions[index + 3]);
+        builder.append(" }");
+      }
+      case ABOVE_Y_WITH_STONE_DEPTH -> {
+        builder
+            .append("if ((context.blockY + context.stoneDepthAbove) >= (")
+            .append(instructions[index + 1])
+            .append(" context.runDepth * ")
+            .append(instructions[index + 2])
+            .append(") { ");
+        toString1(builder, instructions, index + 4);
+        builder.append(" } else { ");
+        toString1(builder, instructions, instructions[index + 3]);
         builder.append(" }");
       }
       default -> {
@@ -210,6 +252,20 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     public void push(ConditionalBlockStateRule rule) {
       if (rule.condition() instanceof BiomePredicate biome) {
         this.addInst(BIOME_TEST, (int) (biome.mask >>> 32), (int) (biome.mask), 0);
+        var instIndex = instructions.size() - 1;
+
+        push(rule.followup());
+
+        this.instructions.set(instIndex, instructions.size());
+        return;
+      }
+
+      if (rule.condition() instanceof AboveYPredicate above) {
+        this.addInst(
+            above.addStoneDepth() ? ABOVE_Y_WITH_STONE_DEPTH : ABOVE_Y,
+            above.y(),
+            above.surfaceDepthMultiplier(),
+            0);
         var instIndex = instructions.size() - 1;
 
         push(rule.followup());

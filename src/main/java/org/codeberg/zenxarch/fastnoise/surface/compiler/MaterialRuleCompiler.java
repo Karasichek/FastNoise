@@ -25,48 +25,40 @@ public final class MaterialRuleCompiler {
           int.class,
           MaterialRuleContext.class);
 
-  private static final MethodHandle condition;
-  private static final MethodHandle ret;
-  private static final MethodHandle tryRet;
-  private static final MethodHandle retNull;
-  private static final MethodHandle biomeTest;
+  private static final MethodHandle condition =
+      lookup("condition", int.class, MethodHandle.class, MethodHandle.class);
+  private static final MethodHandle ret = lookup("ret", int.class);
+  private static final MethodHandle tryRet = lookup("tryRet", int.class, MethodHandle.class);
+  private static final MethodHandle retNull = lookup("retNull");
+  private static final MethodHandle biomeTest =
+      lookup("biomeTest", long.class, MethodHandle.class, MethodHandle.class);
 
-  private static MethodHandle lookup(String name, Class<?>... classes)
-      throws NoSuchMethodException, IllegalAccessException {
+  private static final MethodHandle aboveY =
+      lookup("aboveY", int.class, MethodHandle.class, MethodHandle.class);
+  private static final MethodHandle aboveYWithRunDepth =
+      lookup("aboveYWithRunDepth", int.class, int.class, MethodHandle.class, MethodHandle.class);
+  private static final MethodHandle aboveYWithStoneDepth =
+      lookup("aboveYWithStoneDepth", int.class, MethodHandle.class, MethodHandle.class);
+  private static final MethodHandle aboveYWithRunDepthAndStoneDepth =
+      lookup(
+          "aboveYWithRunDepthAndStoneDepth",
+          int.class,
+          int.class,
+          MethodHandle.class,
+          MethodHandle.class);
+
+  private static MethodHandle lookup(String name, Class<?>... classes) {
     var list = ObjectArrayList.of(classes);
     list.addAll(commonTypes);
-    return MethodHandles.lookup()
-        .findStatic(
-            MaterialRuleCompiler.class,
-            name,
-            MethodType.methodType(BlockState.class, list.toArray(Class<?>[]::new)));
-  }
-
-  static {
-    MethodHandle temp$condition;
-    MethodHandle temp$ret;
-    MethodHandle temp$tryRet;
-    MethodHandle temp$retNull;
-    MethodHandle temp$biomeTest;
-
     try {
-      temp$condition = lookup("condition", int.class, MethodHandle.class, MethodHandle.class);
-      temp$ret = lookup("ret", int.class);
-      temp$tryRet = lookup("tryRet", int.class, MethodHandle.class);
-      temp$retNull = lookup("retNull");
-      temp$biomeTest = lookup("biomeTest", long.class, MethodHandle.class, MethodHandle.class);
+      return MethodHandles.lookup()
+          .findStatic(
+              MaterialRuleCompiler.class,
+              name,
+              MethodType.methodType(BlockState.class, list.toArray(Class<?>[]::new)));
     } catch (Exception e) {
-      temp$condition = null;
-      temp$ret = null;
-      temp$tryRet = null;
-      temp$retNull = null;
-      temp$biomeTest = null;
+      return null;
     }
-    condition = temp$condition;
-    ret = temp$ret;
-    tryRet = temp$tryRet;
-    retNull = temp$retNull;
-    biomeTest = temp$biomeTest;
   }
 
   public static MethodHandle compile(int[] program) {
@@ -93,6 +85,20 @@ public final class MaterialRuleCompiler {
               getLong(program, index + 1),
               compile0(program, index + 4),
               compile0(program, program[index + 3]));
+      case ABOVE_Y ->
+          createAboveY(
+              program[index + 1],
+              program[index + 2],
+              false,
+              compile0(program, index + 4),
+              compile0(program, program[index + 3]));
+      case ABOVE_Y_WITH_STONE_DEPTH ->
+          createAboveY(
+              program[index + 1],
+              program[index + 2],
+              true,
+              compile0(program, index + 4),
+              compile0(program, program[index + 3]));
       default -> retNull;
     };
   }
@@ -113,6 +119,29 @@ public final class MaterialRuleCompiler {
   private static MethodHandle createBiomeTest(
       long mask, MethodHandle ifTrue, MethodHandle ifFalse) {
     return MethodHandles.insertArguments(biomeTest, 0, mask, ifTrue, ifFalse);
+  }
+
+  private static MethodHandle createAboveY(
+      int y,
+      int runDepthMultiplier,
+      boolean addStoneDepth,
+      MethodHandle ifTrue,
+      MethodHandle ifFalse) {
+    if (addStoneDepth) {
+      if (runDepthMultiplier == 0) {
+        return MethodHandles.insertArguments(aboveYWithStoneDepth, 0, y, ifTrue, ifFalse);
+      } else {
+        return MethodHandles.insertArguments(
+            aboveYWithRunDepthAndStoneDepth, 0, y, runDepthMultiplier, ifTrue, ifFalse);
+      }
+    }
+
+    if (runDepthMultiplier == 0) {
+      return MethodHandles.insertArguments(aboveY, 0, y, ifTrue, ifFalse);
+    } else {
+      return MethodHandles.insertArguments(
+          aboveYWithRunDepth, 0, y, runDepthMultiplier, ifTrue, ifFalse);
+    }
   }
 
   public static BlockState condition(
@@ -189,5 +218,84 @@ public final class MaterialRuleCompiler {
       return (BlockState) ifTrue.invokeExact(conditions, rules, states, x, y, z, context);
     }
     return (BlockState) ifFalse.invokeExact(conditions, rules, states, x, y, z, context);
+  }
+
+  public static BlockState aboveY(
+      int testY,
+      MethodHandle ifTrue,
+      MethodHandle ifFalse,
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context)
+      throws Throwable {
+    if (context.blockY >= testY) {
+      return (BlockState) ifTrue.invokeExact(conditions, rules, states, x, y, z, context);
+    } else {
+      return (BlockState) ifFalse.invokeExact(conditions, rules, states, x, y, z, context);
+    }
+  }
+
+  public static BlockState aboveYWithRunDepth(
+      int testY,
+      int runDepthMultiplier,
+      MethodHandle ifTrue,
+      MethodHandle ifFalse,
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context)
+      throws Throwable {
+    if (context.blockY >= (testY + context.runDepth * runDepthMultiplier)) {
+      return (BlockState) ifTrue.invokeExact(conditions, rules, states, x, y, z, context);
+    } else {
+      return (BlockState) ifFalse.invokeExact(conditions, rules, states, x, y, z, context);
+    }
+  }
+
+  public static BlockState aboveYWithStoneDepth(
+      int testY,
+      MethodHandle ifTrue,
+      MethodHandle ifFalse,
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context)
+      throws Throwable {
+    if ((context.blockY + context.stoneDepthAbove) >= testY) {
+      return (BlockState) ifTrue.invokeExact(conditions, rules, states, x, y, z, context);
+    } else {
+      return (BlockState) ifFalse.invokeExact(conditions, rules, states, x, y, z, context);
+    }
+  }
+
+  public static BlockState aboveYWithRunDepthAndStoneDepth(
+      int testY,
+      int runDepthMultiplier,
+      MethodHandle ifTrue,
+      MethodHandle ifFalse,
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context)
+      throws Throwable {
+    if ((context.blockY + context.stoneDepthAbove)
+        >= (testY + context.runDepth * runDepthMultiplier)) {
+      return (BlockState) ifTrue.invokeExact(conditions, rules, states, x, y, z, context);
+    } else {
+      return (BlockState) ifFalse.invokeExact(conditions, rules, states, x, y, z, context);
+    }
   }
 }
