@@ -160,7 +160,22 @@ public final class MaterialRuleCompiler {
     return MethodHandles.insertArguments(tryRet, 0, index, orElse);
   }
 
+  private static record BiomeTestCache(long mask, MethodHandle ifTrue, MethodHandle ifFalse) {}
+
+  private static final Object2ObjectOpenHashMap<BiomeTestCache, MethodHandle> biomeTestCache =
+      new Object2ObjectOpenHashMap<>();
+
   private static MethodHandle createBiomeTest(
+      long mask, MethodHandle ifTrue, MethodHandle ifFalse) {
+    return biomeTestCache.computeIfAbsent(
+        new BiomeTestCache(mask, ifTrue, ifFalse), MaterialRuleCompiler::createBiomeTest0);
+  }
+
+  private static MethodHandle createBiomeTest0(BiomeTestCache cache) {
+    return createBiomeTest1(cache.mask, cache.ifTrue, cache.ifFalse);
+  }
+
+  private static MethodHandle createBiomeTest1(
       long mask, MethodHandle ifTrue, MethodHandle ifFalse) {
     return MethodHandles.insertArguments(biomeTest, 0, mask, ifTrue, ifFalse);
   }
