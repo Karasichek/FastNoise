@@ -104,7 +104,22 @@ public final class MaterialRuleCompiler {
     };
   }
 
+  private static record ConditionCache(int index, MethodHandle ifTrue, MethodHandle ifFalse) {}
+
+  private static final Object2ObjectOpenHashMap<ConditionCache, MethodHandle> conditionCache =
+      new Object2ObjectOpenHashMap<>();
+
   private static MethodHandle createCondition(
+      int index, MethodHandle ifTrue, MethodHandle ifFalse) {
+    return conditionCache.computeIfAbsent(
+        new ConditionCache(index, ifTrue, ifFalse), MaterialRuleCompiler::createCondition0);
+  }
+
+  private static MethodHandle createCondition0(ConditionCache entry) {
+    return createCondition1(entry.index, entry.ifTrue, entry.ifFalse);
+  }
+
+  private static MethodHandle createCondition1(
       int index, MethodHandle ifTrue, MethodHandle ifFalse) {
     return MethodHandles.insertArguments(condition, 0, index, ifTrue, ifFalse);
   }
