@@ -2,6 +2,7 @@ package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
 import static org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleInterpreter.*;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import java.lang.invoke.MethodHandle;
@@ -126,7 +127,21 @@ public final class MaterialRuleCompiler {
     return MethodHandles.insertArguments(ret, 0, index);
   }
 
+  private static record TryRetCacheEntry(int index, MethodHandle orElse) {}
+
+  private static final Object2ObjectOpenHashMap<TryRetCacheEntry, MethodHandle> tryRetCache =
+      new Object2ObjectOpenHashMap<>();
+
   private static MethodHandle createTryRet(int index, MethodHandle orElse) {
+    return tryRetCache.computeIfAbsent(
+        new TryRetCacheEntry(index, orElse), MaterialRuleCompiler::createTryRet0);
+  }
+
+  private static MethodHandle createTryRet0(TryRetCacheEntry entry) {
+    return createTryRet1(entry.index, entry.orElse);
+  }
+
+  private static MethodHandle createTryRet1(int index, MethodHandle orElse) {
     return MethodHandles.insertArguments(tryRet, 0, index, orElse);
   }
 
