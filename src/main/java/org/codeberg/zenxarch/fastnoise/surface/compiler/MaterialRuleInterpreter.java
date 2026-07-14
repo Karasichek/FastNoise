@@ -62,10 +62,8 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       var inst = this.instructions[instPointer];
       switch (inst) {
         case JUMP_IF_FALSE -> {
-          instPointer =
-              (conditions[instructions[instPointer + 1]].get())
-                  ? instPointer + 3
-                  : instructions[instPointer + 2];
+          instPointer +=
+              (conditions[instructions[instPointer + 1]].get()) ? 3 : instructions[instPointer + 2];
         }
         case RETURN -> {
           return states[instructions[instPointer + 1]];
@@ -82,23 +80,26 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         }
         case BIOME_TEST -> {
           var idx = context.getCurrentBiomeIdx();
-          if ((getLong(instructions, instPointer + 1) & (0x1L << idx)) == 0) {
-            instPointer = instructions[instPointer + 3];
-          } else instPointer = instPointer + 4;
+          instPointer +=
+              ((getLong(instructions, instPointer + 1) & (0x1L << idx)) == 0)
+                  ? instructions[instPointer + 3]
+                  : 4;
         }
         case ABOVE_Y -> {
-          if (context.blockY
-              < (instructions[instPointer + 1]
-                  + context.runDepth * instructions[instPointer + 2])) {
-            instPointer = instructions[instPointer + 3];
-          } else instPointer += 4;
+          instPointer +=
+              (context.blockY
+                      < (instructions[instPointer + 1]
+                          + context.runDepth * instructions[instPointer + 2]))
+                  ? instructions[instPointer + 3]
+                  : 4;
         }
         case ABOVE_Y_WITH_STONE_DEPTH -> {
-          if ((context.blockY + context.stoneDepthAbove)
-              < (instructions[instPointer + 1]
-                  + context.runDepth * instructions[instPointer + 2])) {
-            instPointer = instructions[instPointer + 3];
-          } else instPointer += 4;
+          instPointer +=
+              ((context.blockY + context.stoneDepthAbove)
+                      < (instructions[instPointer + 1]
+                          + context.runDepth * instructions[instPointer + 2]))
+                  ? instructions[instPointer + 3]
+                  : 4;
         }
         default -> {
           // no op
@@ -147,7 +148,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         builder.append("if (conditions[").append(instructions[index + 1]).append("].get()) {");
         toString1(builder, instructions, index + 3);
         builder.append("} else {");
-        toString1(builder, instructions, instructions[index + 2]);
+        toString1(builder, instructions, index + instructions[index + 2]);
         builder.append("}");
       }
       case RETURN -> {
@@ -174,10 +175,10 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       case BIOME_TEST -> {
         builder.append("idx = context.getCurrentBiomeIdx(); if ((");
         builder.append(String.format("0x%xL", getLong(instructions, index + 1)));
-        builder.append(" & (0x1L << idx)) == 0) { ");
-        toString1(builder, instructions, instructions[index + 3]);
-        builder.append(" } else { ");
+        builder.append(" & (0x1L << idx)) != 0) { ");
         toString1(builder, instructions, index + 4);
+        builder.append(" } else { ");
+        toString1(builder, instructions, index + instructions[index + 3]);
         builder.append(" }");
       }
       case ABOVE_Y -> {
@@ -189,7 +190,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             .append(") { ");
         toString1(builder, instructions, index + 4);
         builder.append(" } else { ");
-        toString1(builder, instructions, instructions[index + 3]);
+        toString1(builder, instructions, index + instructions[index + 3]);
         builder.append(" }");
       }
       case ABOVE_Y_WITH_STONE_DEPTH -> {
@@ -201,7 +202,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             .append(") { ");
         toString1(builder, instructions, index + 4);
         builder.append(" } else { ");
-        toString1(builder, instructions, instructions[index + 3]);
+        toString1(builder, instructions, index + instructions[index + 3]);
         builder.append(" }");
       }
       default -> {
@@ -250,13 +251,14 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     }
 
     public void push(ConditionalBlockStateRule rule) {
+      var startIndex = instructions.size();
       if (rule.condition() instanceof BiomePredicate biome) {
         this.addInst(BIOME_TEST, (int) (biome.mask >>> 32), (int) (biome.mask), 0);
         var instIndex = instructions.size() - 1;
 
         push(rule.followup());
 
-        this.instructions.set(instIndex, instructions.size());
+        this.instructions.set(instIndex, instructions.size() - startIndex);
         return;
       }
 
@@ -270,7 +272,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
         push(rule.followup());
 
-        this.instructions.set(instIndex, instructions.size());
+        this.instructions.set(instIndex, instructions.size() - startIndex);
         return;
       }
 
@@ -287,7 +289,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
       push(rule.followup());
 
-      this.instructions.set(instIndex, instructions.size());
+      this.instructions.set(instIndex, instructions.size() - startIndex);
     }
 
     private void push(BlockStateRule rule) {

@@ -74,7 +74,7 @@ public final class MaterialRuleCompiler {
           createCondition(
               program[index + 1],
               compile0(program, index + 3),
-              compile0(program, program[index + 2]));
+              compile0(program, index + program[index + 2]));
       case RETURN -> createRet(program[index + 1]);
       case TRY_RETURN -> createTryRet(program[index + 1], compile0(program, index + 2));
       case RETURN_IF ->
@@ -84,21 +84,21 @@ public final class MaterialRuleCompiler {
           createBiomeTest(
               getLong(program, index + 1),
               compile0(program, index + 4),
-              compile0(program, program[index + 3]));
+              compile0(program, index + program[index + 3]));
       case ABOVE_Y ->
           createAboveY(
               program[index + 1],
               program[index + 2],
               false,
               compile0(program, index + 4),
-              compile0(program, program[index + 3]));
+              compile0(program, index + program[index + 3]));
       case ABOVE_Y_WITH_STONE_DEPTH ->
           createAboveY(
               program[index + 1],
               program[index + 2],
               true,
               compile0(program, index + 4),
-              compile0(program, program[index + 3]));
+              compile0(program, index + program[index + 3]));
       default -> retNull;
     };
   }
