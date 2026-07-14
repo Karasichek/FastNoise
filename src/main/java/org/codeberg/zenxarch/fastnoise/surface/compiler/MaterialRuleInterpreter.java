@@ -10,6 +10,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionalBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SimpleBlockStateRule;
+import org.codeberg.zenxarch.fastnoise.FastNoiseConstants;
 import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
 import org.codeberg.zenxarch.fastnoise.surface.rules.AboveYPredicate;
 import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
@@ -55,6 +56,8 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     try {
       return (BlockState) compiled.invokeExact(conditions, rules, states, x, y, z, context);
     } catch (Throwable e) {
+      // TODO: handle crashes
+      FastNoiseConstants.LOGGER.error("Compiled surface rule failed", e);
     }
     var instPointer = 0;
     var max = instructions.length;
