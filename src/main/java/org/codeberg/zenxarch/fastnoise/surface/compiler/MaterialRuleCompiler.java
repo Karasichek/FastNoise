@@ -108,7 +108,21 @@ public final class MaterialRuleCompiler {
     return MethodHandles.insertArguments(condition, 0, index, ifTrue, ifFalse);
   }
 
+  private static final ObjectArrayList<MethodHandle> retCache = new ObjectArrayList<>();
+
   private static MethodHandle createRet(int index) {
+    if (index >= retCache.size()) {
+      retCache.size(index + 1);
+    }
+    var res = retCache.get(index);
+    if (res == null) {
+      res = createRet0(index);
+      retCache.set(index, res);
+    }
+    return res;
+  }
+
+  private static MethodHandle createRet0(int index) {
     return MethodHandles.insertArguments(ret, 0, index);
   }
 
