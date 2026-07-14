@@ -165,7 +165,36 @@ public final class MaterialRuleCompiler {
     return MethodHandles.insertArguments(biomeTest, 0, mask, ifTrue, ifFalse);
   }
 
+  private static record AboveYCache(
+      int y, int runDepthMultiplier, MethodHandle ifTrue, MethodHandle ifFalse) {}
+
+  private static final Object2ObjectOpenHashMap<AboveYCache, MethodHandle> aboveYCache =
+      new Object2ObjectOpenHashMap<>();
+
+  private static final Object2ObjectOpenHashMap<AboveYCache, MethodHandle>
+      aboveYWithStoneDepthCache = new Object2ObjectOpenHashMap<>();
+
   private static MethodHandle createAboveY(
+      int y,
+      int runDepthMultiplier,
+      boolean addStoneDepth,
+      MethodHandle ifTrue,
+      MethodHandle ifFalse) {
+    var entry = new AboveYCache(y, runDepthMultiplier, ifTrue, ifFalse);
+    return (addStoneDepth
+        ? aboveYWithStoneDepthCache.computeIfAbsent(entry, MaterialRuleCompiler::createAboveY1)
+        : aboveYCache.computeIfAbsent(entry, MaterialRuleCompiler::createAboveY0));
+  }
+
+  private static MethodHandle createAboveY0(AboveYCache cache) {
+    return createAboveY2(cache.y, cache.runDepthMultiplier, false, cache.ifTrue, cache.ifFalse);
+  }
+
+  private static MethodHandle createAboveY1(AboveYCache cache) {
+    return createAboveY2(cache.y, cache.runDepthMultiplier, true, cache.ifTrue, cache.ifFalse);
+  }
+
+  private static MethodHandle createAboveY2(
       int y,
       int runDepthMultiplier,
       boolean addStoneDepth,
