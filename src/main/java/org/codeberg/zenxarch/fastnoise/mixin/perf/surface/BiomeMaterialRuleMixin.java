@@ -30,8 +30,10 @@ public abstract class BiomeMaterialRuleMixin {
     if (ruleContext instanceof MaterialRuleContext ctx) {
       return BiomePredicate.getSupplier(((BiomeMaterialRule) (Object) this).biomes(), ctx);
     }
-    if (this.isDisjoint(ruleContext.includedBiomes)) return BiomePredicate.ALWAYS_FALSE;
-    if (this.isSuperset(ruleContext.includedBiomes)) return BiomePredicate.ALWAYS_TRUE;
+    if (ruleContext.includedBiomes != null) {
+      if (this.isDisjoint(ruleContext.includedBiomes)) return BiomePredicate.ALWAYS_FALSE;
+      if (this.isSuperset(ruleContext.includedBiomes)) return BiomePredicate.ALWAYS_TRUE;
+    }
     return new VanillaBiomePredicate(((BiomeMaterialRule) (Object) this).biomes(), ruleContext);
   }
 }

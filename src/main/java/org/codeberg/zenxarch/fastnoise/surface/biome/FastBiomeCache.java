@@ -70,6 +70,32 @@ public final class FastBiomeCache {
     return this.biomes[idxInUpper - 1];
   }
 
+  public int getBiomeIdxOrNull(int blockX, int blockY, int blockZ) {
+    final int mby = (blockY - 2) >> 2;
+    final var bitIdx = getBitIdx(blockX, blockZ);
+
+    return getBiomeIdxOrNull(mby, bitIdx);
+  }
+
+  private int getBiomeIdxOrNull(int minBiomeY, int bitIdx) {
+    final var lowerCache = getCacheForY(minBiomeY);
+
+    if (getBit(lowerCache[0], bitIdx) == 0x0) return -1;
+
+    final var upperCache = getCacheForY(minBiomeY + 1);
+
+    // too much work, leaving here b/c I like symmetry
+    // if (getBit(upperCache[0], bitIdx) == 0x0) return null;
+    if (getBit(lowerCache[0] & upperCache[0], bitIdx) == 0x0) return -1;
+
+    int idxInUpper;
+    if ((idxInUpper = findIdx(upperCache, bitIdx)) == 0) return -1;
+
+    if (getBit(upperCache[idxInUpper] & lowerCache[idxInUpper], bitIdx) == 0x0) return -1;
+
+    return idxInUpper - 1;
+  }
+
   private int[] getCacheForY(int by) {
     final var cby = MathHelper.clamp(by, minYInBiomes, maxYInBiomes);
     final var lby = cby & 0x3;
