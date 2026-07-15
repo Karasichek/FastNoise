@@ -65,6 +65,8 @@ accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistan
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier
 
+accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext getCurrentBiome ()Lnet/minecraft/registry/entry/RegistryEntry;
+
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BiomeMaterialRule
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$NoiseThresholdMaterialCondition
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$VerticalGradientMaterialCondition
