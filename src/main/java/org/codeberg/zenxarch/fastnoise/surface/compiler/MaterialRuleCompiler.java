@@ -2,8 +2,6 @@ package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
 import static org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleInterpreter.*;
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import java.lang.invoke.MethodHandle;
@@ -110,12 +108,6 @@ public final class MaterialRuleCompiler {
     };
   }
 
-  private static record TernaryCache(
-      MethodHandle guard, MethodHandle ifTrue, MethodHandle ifFalse) {}
-
-  private static final Object2ObjectOpenHashMap<TernaryCache, MethodHandle> ternaryCache =
-      new Object2ObjectOpenHashMap<>();
-
   private static MethodHandle createTernary(
       MethodHandle guard, int[] program, int index0, int index1) {
     return createTernary(guard, compile0(program, index0), compile0(program, index1));
@@ -123,103 +115,26 @@ public final class MaterialRuleCompiler {
 
   private static MethodHandle createTernary(
       MethodHandle guard, MethodHandle ifTrue, MethodHandle ifFalse) {
-    return ternaryCache.computeIfAbsent(
-        new TernaryCache(guard, ifTrue, ifFalse), MaterialRuleCompiler::createTernary0);
+    return MethodHandles.guardWithTest(guard, ifTrue, ifFalse);
   }
-
-  private static MethodHandle createTernary0(TernaryCache cache) {
-    return MethodHandles.guardWithTest(cache.guard, cache.ifTrue, cache.ifFalse);
-  }
-
-  private static final ObjectArrayList<MethodHandle> conditionCache = new ObjectArrayList<>();
 
   private static MethodHandle createCondition(int index) {
-    if (index >= conditionCache.size()) {
-      conditionCache.size(index + 1);
-    }
-    var res = conditionCache.get(index);
-    if (res == null) {
-      res = createCondition0(index);
-      conditionCache.set(index, res);
-    }
-    return res;
-  }
-
-  private static MethodHandle createCondition0(int index) {
     return MethodHandles.insertArguments(condition, 0, index);
   }
 
-  private static final ObjectArrayList<MethodHandle> retCache = new ObjectArrayList<>();
-
   private static MethodHandle createRet(int index) {
-    if (index >= retCache.size()) {
-      retCache.size(index + 1);
-    }
-    var res = retCache.get(index);
-    if (res == null) {
-      res = createRet0(index);
-      retCache.set(index, res);
-    }
-    return res;
-  }
-
-  private static MethodHandle createRet0(int index) {
     return MethodHandles.insertArguments(ret, 0, index);
   }
 
-  private static record TryRetCacheEntry(int index, MethodHandle orElse) {}
-
-  private static final Object2ObjectOpenHashMap<TryRetCacheEntry, MethodHandle> tryRetCache =
-      new Object2ObjectOpenHashMap<>();
-
   private static MethodHandle createTryRet(int index, MethodHandle orElse) {
-    return tryRetCache.computeIfAbsent(
-        new TryRetCacheEntry(index, orElse), MaterialRuleCompiler::createTryRet0);
-  }
-
-  private static MethodHandle createTryRet0(TryRetCacheEntry entry) {
-    return createTryRet1(entry.index, entry.orElse);
-  }
-
-  private static MethodHandle createTryRet1(int index, MethodHandle orElse) {
     return MethodHandles.insertArguments(tryRet, 0, index, orElse);
   }
 
-  private static final Long2ObjectOpenHashMap<MethodHandle> biomeTestCache =
-      new Long2ObjectOpenHashMap<>();
-
   private static MethodHandle createBiomeTest(long mask) {
-    return biomeTestCache.computeIfAbsent(mask, MaterialRuleCompiler::createBiomeTest0);
-  }
-
-  private static MethodHandle createBiomeTest0(long mask) {
     return MethodHandles.insertArguments(biomeTest, 0, mask);
   }
 
-  private static record AboveYCache(int y, int runDepthMultiplier) {}
-
-  private static final Object2ObjectOpenHashMap<AboveYCache, MethodHandle> aboveYCache =
-      new Object2ObjectOpenHashMap<>();
-
-  private static final Object2ObjectOpenHashMap<AboveYCache, MethodHandle>
-      aboveYWithStoneDepthCache = new Object2ObjectOpenHashMap<>();
-
   private static MethodHandle createAboveY(int y, int runDepthMultiplier, boolean addStoneDepth) {
-    var entry = new AboveYCache(y, runDepthMultiplier);
-    return (addStoneDepth
-        ? aboveYWithStoneDepthCache.computeIfAbsent(entry, MaterialRuleCompiler::createAboveY1)
-        : aboveYCache.computeIfAbsent(entry, MaterialRuleCompiler::createAboveY0));
-  }
-
-  private static MethodHandle createAboveY0(AboveYCache cache) {
-    return createAboveY2(cache.y, cache.runDepthMultiplier, false);
-  }
-
-  private static MethodHandle createAboveY1(AboveYCache cache) {
-    return createAboveY2(cache.y, cache.runDepthMultiplier, true);
-  }
-
-  private static MethodHandle createAboveY2(int y, int runDepthMultiplier, boolean addStoneDepth) {
     if (addStoneDepth) {
       if (runDepthMultiplier == 0) {
         return MethodHandles.insertArguments(aboveYWithStoneDepth, 0, y);
