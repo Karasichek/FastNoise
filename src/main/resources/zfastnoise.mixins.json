@@ -10,6 +10,7 @@
     "perf.surface.ConditionMaterialRuleMixin",
     "perf.surface.SequenceMaterialRuleMixin",
     "perf.surface.AboveYMaterialConditionMixin",
+    "debug.disable_carve_features_and_entities.ChunkGeneratingMixin",
     "HeightmapAccessor",
     "ChunkNoiseSamplerAccessor",
     "ChunkGeneratorAccessor",
