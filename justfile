@@ -49,7 +49,10 @@ clean:
     ./gradlew clean
 
 prod:
-    ./gradlew --rerun-tasks prodClient
+    ./gradlew prodClient
+
+prodServer:
+    ./gradlew prodServer
 
 modrinth ptype="alpha":
     touch changelog.md

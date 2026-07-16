@@ -186,4 +186,13 @@ tasks.register("prodClient", net.fabricmc.loom.task.prod.ClientProductionRunTask
   jvmArgs.add("-Xmx4G")
   jvmArgs.add("-XX:+UseShenandoahGC")
   jvmArgs.add("-XX:ShenandoahGCMode=generational")
+  doNotTrackState("prod client task")
+}
+
+tasks.register("prodServer", net.fabricmc.loom.task.prod.ServerProductionRunTask) {
+  mods.from configurations.modImplementation
+  jvmArgs.add("-Xmx4G")
+  jvmArgs.add("-XX:+UseShenandoahGC")
+  jvmArgs.add("-XX:ShenandoahGCMode=generational")
+  doNotTrackState("prod server task")
 }
