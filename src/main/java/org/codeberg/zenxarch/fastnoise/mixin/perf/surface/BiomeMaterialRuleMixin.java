@@ -8,13 +8,12 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BiomeMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import org.codeberg.zenxarch.fastnoise.surface.BiomePredicate;
 import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
-import org.spongepowered.asm.mixin.Debug;
+import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
+import org.codeberg.zenxarch.fastnoise.surface.rules.VanillaBiomePredicate;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Debug(export = true)
 @Mixin(BiomeMaterialRule.class)
 public abstract class BiomeMaterialRuleMixin {
   @Shadow
@@ -31,6 +30,10 @@ public abstract class BiomeMaterialRuleMixin {
     if (ruleContext instanceof MaterialRuleContext ctx) {
       return BiomePredicate.getSupplier(((BiomeMaterialRule) (Object) this).biomes(), ctx);
     }
-    return op.call(ruleContext);
+    if (ruleContext.includedBiomes != null) {
+      if (this.isDisjoint(ruleContext.includedBiomes)) return BiomePredicate.ALWAYS_FALSE;
+      if (this.isSuperset(ruleContext.includedBiomes)) return BiomePredicate.ALWAYS_TRUE;
+    }
+    return new VanillaBiomePredicate(((BiomeMaterialRule) (Object) this).biomes(), ruleContext);
   }
 }

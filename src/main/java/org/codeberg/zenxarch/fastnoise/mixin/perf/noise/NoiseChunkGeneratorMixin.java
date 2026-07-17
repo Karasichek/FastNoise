@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.SharedConstants;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.ChainedBlockSource;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
@@ -83,6 +84,11 @@ public abstract class NoiseChunkGeneratorMixin {
         chunk.getOrCreateChunkNoiseSampler(
             chunkx ->
                 this.createChunkNoiseSampler(chunkx, structureAccessor, blender, noiseConfig));
+
+    if (sampler.blockStateSampler instanceof ChainedBlockSource chained && chained.samplers().length >= 5) {
+      return this.populateNoise(
+          blender, structureAccessor, noiseConfig, chunk, minimumCellY, cellHeight);
+    }
 
     FastNoiseGen.populateNoise(sampler, defaultBlock, chunk, minimumCellY, cellHeight);
 

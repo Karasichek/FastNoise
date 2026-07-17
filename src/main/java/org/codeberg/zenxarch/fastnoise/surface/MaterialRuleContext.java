@@ -18,6 +18,10 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
   public final RegistryEntry<Biome>[] biomes;
 
+  public int cachedBiomeIdx;
+  private final FastBiomeCache biomeCache;
+  private final Function<BlockPos, RegistryEntry<Biome>> fallback;
+
   @SuppressWarnings("unchecked")
   public MaterialRuleContext(
       SurfaceBuilder surfaceBuilder,
@@ -30,15 +34,25 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       final Chunk[] chunks) {
     var biomes = includedBiomes.toArray(RegistryEntry[]::new);
 
+    FastBiomeCache biomeCache;
+
+    if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) {
+      biomeCache = biomes.length == 1 ? null : new FastBiomeCache(biomes, chunks);
+    } else {
+      biomeCache = null;
+    }
+    this.fallback = posToBiome;
+
     super(
         surfaceBuilder,
         noiseConfig,
         chunk,
         chunkNoiseSampler,
-        mapPosToBiome(posToBiome, biomes, chunks),
+        mapPosToBiome(biomeCache, posToBiome, biomes, chunks),
         heightContext,
         includedBiomes);
 
+    this.biomeCache = biomeCache;
     this.biomes = biomes;
   }
 
@@ -47,17 +61,17 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   }
 
   private static Function<BlockPos, RegistryEntry<Biome>> mapPosToBiome(
-      Function<BlockPos, RegistryEntry<Biome>> posToBiome,
+      FastBiomeCache cache,
+      Function<BlockPos, RegistryEntry<Biome>> fallback,
       RegistryEntry<Biome>[] includedBiomes,
       final Chunk[] chunks) {
     if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) {
       if (includedBiomes.length == 1) {
         return (_) -> includedBiomes[0];
       }
-      var cache = new FastBiomeCache(includedBiomes, chunks);
-      return (posz) -> getBiomeOr(cache, posz, posToBiome);
+      return (posz) -> getBiomeOr(cache, posz, fallback);
     }
-    return posToBiome;
+    return fallback;
   }
 
   private static RegistryEntry<Biome> getBiomeOr(
@@ -79,6 +93,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   public void initVerticalContext(
       int stoneDepthAbove, int stoneDepthBelow, int fluidHeight, int blockY) {
     super.initVerticalContext(stoneDepthAbove, stoneDepthBelow, fluidHeight, blockY);
+    cachedBiomeIdx = this.biomes.length == 1 ? 0 : -1;
   }
 
   @Override
@@ -87,8 +102,23 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   }
 
   public int getCurrentBiomeIdx() {
-    var biome = getCurrentBiome();
-    return indexOf(biomes, biome);
+    if (cachedBiomeIdx != -1) return cachedBiomeIdx;
+    if (this.currentBiome != null) {
+      this.cachedBiomeIdx = indexOf(biomes, this.currentBiome);
+      return this.cachedBiomeIdx;
+    }
+    if (this.biomeCache == null) {
+      this.cachedBiomeIdx = indexOf(biomes, getCurrentBiome());
+      return this.cachedBiomeIdx;
+    }
+    this.cachedBiomeIdx = this.biomeCache.getBiomeIdxOrNull(this.blockX, this.blockY, this.blockZ);
+    if (this.cachedBiomeIdx == -1) {
+      this.currentBiome = this.fallback.apply(this.pos.set(this.blockX, this.blockY, this.blockZ));
+      this.cachedBiomeIdx = indexOf(biomes, this.currentBiome);
+      return this.cachedBiomeIdx;
+    }
+    this.currentBiome = this.biomes[this.cachedBiomeIdx];
+    return this.cachedBiomeIdx;
   }
 
   private static int indexOf(RegistryEntry<Biome>[] biomes, RegistryEntry<Biome> biome) {

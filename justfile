@@ -51,6 +51,9 @@ clean:
 prod:
     ./gradlew :prodClient
 
+prodServer:
+    ./gradlew prodServer
+
 modrinth ptype="alpha":
     touch changelog.md
     $EDITOR changelog.md

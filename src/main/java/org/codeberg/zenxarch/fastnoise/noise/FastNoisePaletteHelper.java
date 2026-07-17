@@ -50,7 +50,7 @@ public final class FastNoisePaletteHelper {
     System.arraycopy(biomes, 0, downSizedBiomes, 0, size);
     container.data =
         new Data<RegistryEntry<Biome>>(
-            biomePaletteTypes[bits],
+            biomePaletteTypes[bits - 1],
             repackBiomeStorage(biomes, bits, storage),
             new ArrayPalette<>(downSizedBiomes, bits, size));
   }

@@ -51,6 +51,12 @@ public class FastNoiseConfigEntries {
       mixin("perf.surface", "Replace buildSurface with optimized implementation", true)
           .incompatibleWith("biolith");
 
+  public static final BooleanConfigEntry MIXIN_DEBUG_DISABLE_CARVE_FEATURES_AND_ENTITIES =
+      mixin(
+          "debug.disable_carve_features_and_entities",
+          "Disable carve, features and entites chunk generation step",
+          false);
+
   public static final List<BooleanConfigEntry> ENTRIES =
       new ObjectArrayList<>(
           List.of(
@@ -61,5 +67,6 @@ public class FastNoiseConfigEntries {
               OPTIMIZE_BIOME_ACCESS,
               MIXIN_PERF_BIOMES,
               MIXIN_PERF_NOISE,
-              MIXIN_PERF_SURFACE));
+              MIXIN_PERF_SURFACE,
+              MIXIN_DEBUG_DISABLE_CARVE_FEATURES_AND_ENTITIES));
 }
