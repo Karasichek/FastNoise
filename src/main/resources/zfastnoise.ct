@@ -39,15 +39,18 @@ extendable class net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule
 
-accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockMaterialRule
-
-
 # MaterialRuleContext
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext uniquePosValue J
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockX I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockY I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockZ I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext pos Lnet/minecraft/util/math/BlockPos$Mutable;
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext fluidHeight I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthBelow I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthAbove I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext runDepth I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext heightContext Lnet/minecraft/world/gen/HeightContext;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext currentBiome Lnet/minecraft/registry/entry/RegistryEntry;
 
 # threadlocal
 accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree
@@ -66,7 +69,34 @@ accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistan
 ## optimize surface rules
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier
+
+accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext getCurrentBiome ()Lnet/minecraft/registry/entry/RegistryEntry;
+
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BiomeMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$NoiseThresholdMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$VerticalGradientMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$AboveYMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$WaterMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$TemperatureMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SteepMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$NotMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$HoleMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SurfaceMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$StoneDepthMaterialCondition
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$TerracottaBandsMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$ConditionMaterialRule
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$ConditionalBlockStateRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceBlockStateRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SimpleBlockStateRule
 
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext includedBiomes Ljava/util/Set;
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext posToBiome Ljava/util/function/Function;
+## YOffset
+accessible class net/minecraft/world/gen/YOffset$AboveBottom
+accessible class net/minecraft/world/gen/YOffset$BelowTop
+accessible class net/minecraft/world/gen/YOffset$Fixed
+accessible class net/minecraft/world/gen/YOffset$RelativeToSeaLevel
