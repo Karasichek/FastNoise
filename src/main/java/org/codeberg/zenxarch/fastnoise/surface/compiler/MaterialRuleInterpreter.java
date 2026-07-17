@@ -19,8 +19,8 @@ import org.jspecify.annotations.Nullable;
 public final class MaterialRuleInterpreter implements BlockStateRule {
 
   private final BooleanSupplier[] conditions;
-  private final BlockStateRule[] rules;
-  private final BlockState[] states;
+  public final BlockStateRule[] rules;
+  public final BlockState[] states;
   private final int[] instructions;
   private final MethodHandle compiled;
   private final MaterialRuleContext context;

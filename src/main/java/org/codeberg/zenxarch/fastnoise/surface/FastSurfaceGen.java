@@ -12,7 +12,6 @@ import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.ArrayPalette;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.SingularPalette;
 import net.minecraft.world.gen.HeightContext;
@@ -118,18 +117,29 @@ public class FastSurfaceGen {
             includedBiomes,
             chunks);
 
+    var sections = chunk.getSectionArray();
+
+    var willUpdateHeightmap = true;
+    var willAddWater = true;
+    var willGrow = true;
     var rule = materialRule.apply(context);
     if (rule instanceof SequenceBlockStateRule seq) {
-      rule = MaterialRuleInterpreter.of(seq, context);
+      var newrule = MaterialRuleInterpreter.of(seq, context);
+      if (newrule.rules.length == 0) {
+        willUpdateHeightmap = FastBlockColumn.willHeightmapUpdate(defaultState, newrule.states);
+        willAddWater = willAddWater(newrule.states);
+
+        var maxStates = 0;
+        for (int i = 0; i < sections.length; i++)
+          maxStates = Math.max(maxStates, sections[i].blockStateContainer.data.palette().getSize());
+
+        willGrow = (maxStates + newrule.states.length) > 16;
+      }
+      rule = newrule;
     }
 
     final int minY = chunk.getBottomY();
 
-    if (!sanityCheck(chunk)) {
-      throw new IllegalStateException("Some mod has made unexpected changes to chunk gen");
-    }
-
-    var sections = chunk.getSectionArray();
     final var indexCache = new FastPaletteIndexCache(sections);
 
     if (indexCache.size() == 0) return;
@@ -155,9 +165,17 @@ public class FastSurfaceGen {
           final var sy = (y - minY) >> 4;
           final var section = sections[sy];
 
-          indexCache.updateBlock(sy, sections[sy].blockStateContainer, x, y & 0xF, z, state);
+          final var iy = y & 0xF;
 
-          updateExtras(section, x, y, z, state, column, chunk, sy, isFluidCache);
+          if (willGrow) indexCache.updateBlock(sy, section.blockStateContainer, x, iy, z, state);
+          else indexCache.updateBlockFast(sy, section.blockStateContainer, x, iy, z, state);
+
+          if (willUpdateHeightmap) {
+            column.fastUpdateHeightmap(x, z, y, state);
+          }
+
+          if (willAddWater && isFluidCache.isFluid(state))
+            Chunk.getList(chunk.getPostProcessingLists(), sy).add((short) (x | iy << 4 | z << 8));
         }
       }
     }
@@ -165,21 +183,9 @@ public class FastSurfaceGen {
     indexCache.finish(sections);
   }
 
-  private static void updateExtras(
-      ChunkSection section,
-      int x,
-      int iy,
-      int z,
-      BlockState state,
-      FastBlockColumn column,
-      Chunk chunk,
-      int sy,
-      FastIsFluidCache isFluidCache) {
-    column.fastUpdateHeightmap(x, z, iy, state);
-
-    final var y = iy & 0xF;
-    if (isFluidCache.isFluid(state))
-      Chunk.getList(chunk.getPostProcessingLists(), sy).add((short) (x | y << 4 | z << 8));
+  private static boolean willAddWater(final BlockState[] states) {
+    for (int i = 0; i < states.length; i++) if (!states[i].getFluidState().isEmpty()) return true;
+    return false;
   }
 
   private static boolean canSkipSurfaceBuilder(

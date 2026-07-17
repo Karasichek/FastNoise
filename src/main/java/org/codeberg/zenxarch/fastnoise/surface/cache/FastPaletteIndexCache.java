@@ -53,6 +53,25 @@ public class FastPaletteIndexCache {
     } else storage.set((y << 4 | z) << 4 | x, idx);
   }
 
+  private int getIdxFast(int sy, PalettedContainer<BlockState> container, BlockState state) {
+    if (states[sy] == state) return indices[sy];
+    var index = container.data.palette().index(state, container);
+    states[sy] = state;
+    indices[sy] = index;
+    return index;
+  }
+
+  public void updateBlockFast(
+      int sy, PalettedContainer<BlockState> container, int x, int y, int z, BlockState state) {
+    var idx = getIdxFast(sy, container, state);
+    final var storage = container.data.storage();
+    final int dataIdx = y << 4 | z;
+    final int shift = x << 2;
+    final var data = storage.getData();
+    data[dataIdx] &= ~(0xFL << shift);
+    data[dataIdx] |= ((long) idx) << shift;
+  }
+
   public void finish(ChunkSection[] sections) {
     for (int i = 0; i < states.length; i++) {
       if (states[i] != null) sections[i].calculateCounts();
