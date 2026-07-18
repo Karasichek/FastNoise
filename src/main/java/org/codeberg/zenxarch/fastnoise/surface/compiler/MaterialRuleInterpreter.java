@@ -163,6 +163,12 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     return res.toString();
   }
 
+  public static void debugPrint(int[] instructions) {
+    var builder = new StringBuilder();
+    toString0(builder, instructions);
+    FastNoiseConstants.LOGGER.info("Program : {}", builder.toString());
+  }
+
   public static void toString0(StringBuilder builder, int[] instructions) {
     builder.append("long idx; BlockState state; ");
     toString1(builder, instructions, 0);
