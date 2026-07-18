@@ -11,6 +11,8 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionMaterialRul
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionalBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SimpleBlockStateRule;
@@ -27,32 +29,16 @@ public final class RuleExpansion {
               expand(condition.ifTrue(), context), expand(condition.thenRun(), context));
       case BlockMaterialRule block -> new SimpleBlockStateRule(block.resultState());
       case TerracottaBandsMaterialRule terracotta -> terracotta.apply(context);
+      case RegisteredRule reg -> expand(reg.holder().value(), context);
       default -> rule.apply(context);
     };
   }
 
   public static BlockStateRule expand(SequenceMaterialRule seq, MaterialRuleContext context) {
     var rules = seq.sequence();
-    var size = rules.size();
-
-    if (size == 1) return expand(rules.getFirst(), context);
-
     var builder = ObjectArrayList.<BlockStateRule>of();
 
-    for (int i = 0; i < size; i++) {
-      var rule = expand(rules.get(i), context);
-      if (rule == BiomePredicate.ALWAYS_NULL) continue;
-      if (rule instanceof SequenceBlockStateRule sequenceBlockStateRule) {
-        var nsize = sequenceBlockStateRule.rules().size();
-        for (int j = 0; j < nsize; j++) {
-          var nrule = sequenceBlockStateRule.rules().get(j);
-          if (nrule == BiomePredicate.ALWAYS_NULL) continue;
-          builder.add(nrule);
-        }
-        continue;
-      }
-      builder.add(rule);
-    }
+    addAll(rules, builder, context);
 
     if (builder.isEmpty()) return BiomePredicate.ALWAYS_NULL;
     if (builder.size() == 1) return builder.getFirst();
@@ -82,6 +68,7 @@ public final class RuleExpansion {
         if (condition == BiomePredicate.ALWAYS_TRUE) add(nrule, builder, context);
         else add(new ConditionalBlockStateRule(condition, nrule), builder, context);
       }
+      case RegisteredRule reg -> add(reg.holder().value(), builder, context);
       default -> {
         if (rule != BiomePredicate.ALWAYS_NULL) builder.add(expand(rule, context));
       }
@@ -106,6 +93,7 @@ public final class RuleExpansion {
       case MaterialRules.BiomeMaterialRule biome ->
           BiomePredicate.getSupplier(biome.biomes(), context);
       case StoneDepthMaterialCondition stone -> StoneDepthPredicate.create(stone, context);
+      case RegisteredCondition reg -> expand(reg.holder().value(), context);
       default -> condition.apply(context);
     };
   }
