@@ -26,6 +26,7 @@ import org.codeberg.zenxarch.fastnoise.surface.cache.FastColumnIterator;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastIsFluidCache;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastPaletteIndexCache;
 import org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleInterpreter;
+import org.codeberg.zenxarch.fastnoise.surface.rules.RuleExpansion;
 
 public class FastSurfaceGen {
 
@@ -122,7 +123,7 @@ public class FastSurfaceGen {
     var willUpdateHeightmap = true;
     var willAddWater = true;
     var willGrow = true;
-    var rule = materialRule.apply(context);
+    var rule = RuleExpansion.expand(materialRule, context);
     if (rule instanceof SequenceBlockStateRule seq) {
       var newrule = MaterialRuleInterpreter.of(seq, context);
       if (newrule.rules.length == 0) {
