@@ -221,9 +221,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         builder
             .append("if (context.blockY >= (")
             .append(instructions[index + 1])
-            .append(" context.runDepth * ")
+            .append(" + context.runDepth * ")
             .append(instructions[index + 2])
-            .append(") { ");
+            .append(")) { ");
         toString1(builder, instructions, index + 4);
         builder.append(" } else { ");
         toString1(builder, instructions, index + instructions[index + 3]);
@@ -252,7 +252,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             .append(",")
             .append(instructions[index + 4] != 0)
             .append(",")
-            .append("context) { ");
+            .append("context)) { ");
         toString1(builder, instructions, index + 6);
         builder.append(" } else {");
         toString1(builder, instructions, index + instructions[index + 5]);
