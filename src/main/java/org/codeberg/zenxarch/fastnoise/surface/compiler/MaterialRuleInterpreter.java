@@ -35,9 +35,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   public static final int ABOVE_Y = 5; // if (!(context.blockY >= a + context.runDepth * b)) jmp(c);
   public static final int ABOVE_Y_WITH_STONE_DEPTH =
       6; // if (!(context.blockY + stoneDepthAbove >= a + context.runDepth * b)) jmp(c);
-  public static final int STONE_DEPTH = 7;
-
-  // if (!stoneDepthTest(a, b != 0, c, d != 0)) jmp(e);
+  public static final int STONE_DEPTH = 7; // if (!stoneDepthTest(a, b != 0, c, d != 0)) jmp(e);
 
   // private static final int NO_OP = 4;
 
