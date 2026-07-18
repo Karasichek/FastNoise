@@ -50,6 +50,15 @@ accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext runDepth I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext heightContext Lnet/minecraft/world/gen/HeightContext;
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext currentBiome Lnet/minecraft/registry/entry/RegistryEntry;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext surfaceBuilder Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext biomeTemperaturePredicate Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext steepSlopePredicate Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext negativeRunDepthPredicate Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext surfacePredicate Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;
+
+accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext getSecondaryDepth ()D
+accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext estimateSurfaceHeight ()I
 
 # threadlocal
 accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree
