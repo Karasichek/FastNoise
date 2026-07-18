@@ -14,6 +14,7 @@ import org.codeberg.zenxarch.fastnoise.FastNoiseConstants;
 import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
 import org.codeberg.zenxarch.fastnoise.surface.rules.AboveYPredicate;
 import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
+import org.codeberg.zenxarch.fastnoise.surface.rules.StoneDepthPredicate;
 import org.jspecify.annotations.Nullable;
 
 public final class MaterialRuleInterpreter implements BlockStateRule {
@@ -34,6 +35,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   public static final int ABOVE_Y = 5; // if (!(context.blockY >= a + context.runDepth * b)) jmp(c);
   public static final int ABOVE_Y_WITH_STONE_DEPTH =
       6; // if (!(context.blockY + stoneDepthAbove >= a + context.runDepth * b)) jmp(c);
+  public static final int STONE_DEPTH = 7;
+
+  // if (!stoneDepthTest(a, b != 0, c, d != 0)) jmp(e);
 
   // private static final int NO_OP = 4;
 
@@ -104,6 +108,17 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
                   ? instructions[instPointer + 3]
                   : 4;
         }
+        case STONE_DEPTH -> {
+          instPointer +=
+              stoneDepthTest(
+                      instructions[instPointer + 1],
+                      instructions[instPointer + 2] != 0,
+                      instructions[instPointer + 3],
+                      instructions[instPointer + 4] != 0,
+                      context)
+                  ? 6
+                  : instructions[instPointer + 5];
+        }
         default -> {
           // no op
           instPointer++;
@@ -111,6 +126,20 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       }
     }
     return null;
+  }
+
+  private static boolean stoneDepthTest(
+      int offset,
+      boolean addSurfaceDepth,
+      int secondaryDepthRange,
+      boolean ceiling,
+      MaterialRuleContext context) {
+    var stoneDepth = ceiling ? context.stoneDepthBelow : context.stoneDepthAbove;
+    if (addSurfaceDepth) stoneDepth -= context.runDepth;
+    if (secondaryDepthRange != 0)
+      stoneDepth -= (int) ((context.getSecondaryDepth() + 1.0) * 0.5 * secondaryDepthRange);
+
+    return stoneDepth <= offset;
   }
 
   public static long getLong(int[] data, int index) {
@@ -208,6 +237,23 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         toString1(builder, instructions, index + instructions[index + 3]);
         builder.append(" }");
       }
+      case STONE_DEPTH -> {
+        builder
+            .append("if (stoneDepthTest(")
+            .append(instructions[index + 1])
+            .append(",")
+            .append(instructions[index + 2] != 0)
+            .append(",")
+            .append(instructions[index + 3])
+            .append(",")
+            .append(instructions[index + 4] != 0)
+            .append(",")
+            .append("context) { ");
+        toString1(builder, instructions, index + 6);
+        builder.append(" } else {");
+        toString1(builder, instructions, index + instructions[index + 5]);
+        builder.append(" }");
+      }
       default -> {
         builder.append("return null; /* invalid */");
       }
@@ -270,6 +316,22 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             above.addStoneDepth() ? ABOVE_Y_WITH_STONE_DEPTH : ABOVE_Y,
             above.y(),
             above.surfaceDepthMultiplier(),
+            0);
+        var instIndex = instructions.size() - 1;
+
+        push(rule.followup());
+
+        this.instructions.set(instIndex, instructions.size() - startIndex);
+        return;
+      }
+
+      if (rule.condition() instanceof StoneDepthPredicate stone) {
+        this.addInst(
+            STONE_DEPTH,
+            stone.offset(),
+            stone.addSurfaceDepth() ? 1 : 0,
+            stone.secondaryDepthRange(),
+            stone.ceiling() ? 1 : 0,
             0);
         var instIndex = instructions.size() - 1;
 

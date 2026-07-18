@@ -38,6 +38,8 @@ public final class MaterialRuleCompiler {
       lookupCondition("aboveYWithStoneDepth", int.class);
   private static final MethodHandle aboveYWithRunDepthAndStoneDepth =
       lookupCondition("aboveYWithRunDepthAndStoneDepth", int.class, int.class);
+  private static final MethodHandle stoneDepthTest =
+      lookupCondition("stoneDepthTest", int.class, boolean.class, int.class, boolean.class);
 
   private static MethodHandle lookupCondition(String name, Class<?>... classes) {
     var list = ObjectArrayList.of(classes);
@@ -104,6 +106,16 @@ public final class MaterialRuleCompiler {
               program,
               index + 4,
               index + program[index + 3]);
+      case STONE_DEPTH ->
+          createTernary(
+              createStoneDepthTest(
+                  program[index + 1],
+                  program[index + 2] != 0,
+                  program[index + 3],
+                  program[index + 4] != 0),
+              program,
+              index + 6,
+              index + program[index + 5]);
       default -> retNull;
     };
   }
@@ -149,6 +161,12 @@ public final class MaterialRuleCompiler {
     } else {
       return MethodHandles.insertArguments(aboveYWithRunDepth, 0, y, runDepthMultiplier);
     }
+  }
+
+  private static MethodHandle createStoneDepthTest(
+      int offset, boolean addSurfaceDepth, int secondaryDepthRange, boolean ceiling) {
+    return MethodHandles.insertArguments(
+        stoneDepthTest, 0, offset, addSurfaceDepth, secondaryDepthRange, ceiling);
   }
 
   public static boolean condition(
@@ -266,9 +284,28 @@ public final class MaterialRuleCompiler {
       int x,
       int y,
       int z,
-      MaterialRuleContext context)
-      throws Throwable {
+      MaterialRuleContext context) {
     return (context.blockY + context.stoneDepthAbove)
         >= (testY + context.runDepth * runDepthMultiplier);
+  }
+
+  public static boolean stoneDepthTest(
+      int offset,
+      boolean addSurfaceDepth,
+      int secondaryDepthRange,
+      boolean ceiling,
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context) {
+    var stoneDepth = ceiling ? context.stoneDepthBelow : context.stoneDepthAbove;
+    if (addSurfaceDepth) stoneDepth -= context.runDepth;
+    if (secondaryDepthRange != 0)
+      stoneDepth -= (int) ((context.getSecondaryDepth() + 1.0) * 0.5 * secondaryDepthRange);
+
+    return stoneDepth <= offset;
   }
 }
