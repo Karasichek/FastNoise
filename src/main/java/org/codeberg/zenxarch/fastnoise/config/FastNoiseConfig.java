@@ -90,6 +90,10 @@ public class FastNoiseConfig {
     return CONFIG_WITH_OVERRIDES.get(entry.key());
   }
 
+  static int get(IntConfigEntry entry) {
+    return CONFIG_WITH_OVERRIDES.get(entry.key());
+  }
+
   public static final boolean OPTIMIZE_END_BIOMES = get(FastNoiseConfigEntries.OPTIMIZE_END_BIOMES);
   public static final boolean OPTIMIZE_BIOME_TREE = get(FastNoiseConfigEntries.OPTIMIZE_BIOME_TREE);
   public static final boolean OPTIMIZE_FIXED_BIOMES =
@@ -98,6 +102,14 @@ public class FastNoiseConfig {
       get(FastNoiseConfigEntries.SKIP_TRIVIAL_SURFACE_BUILDER);
   public static final boolean OPTIMIZE_BIOME_ACCESS =
       get(FastNoiseConfigEntries.OPTIMIZE_BIOME_ACCESS);
+
+  public static final int MAX_CACHE_SIZE =
+      scaleByMemory(get(FastNoiseConfigEntries.MAX_CACHE_SIZE_PER_GB));
+
+  private static int scaleByMemory(int value) {
+    var memory = Runtime.getRuntime().maxMemory() / (1024.0 * 1024 * 1024);
+    return (int) (value * memory);
+  }
 
   public static Object2BooleanMap<String> loadConfig() {
     var result = new Object2BooleanArrayMap<String>();
