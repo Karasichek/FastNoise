@@ -29,6 +29,16 @@ public final class FastNoiseConfigLoader {
     CONFIG.setComment(entry.key(), entry.comment());
   }
 
+  private static void loadInteger(IntConfigEntry entry) {
+    Optional<Integer> value = CONFIG.getOptional(entry.key());
+    if (value.isEmpty()) {
+      CONFIG.set(entry.key(), entry.defaultValue());
+    } else {
+      CONFIG.set(entry.key(), entry.validate(value.get()));
+    }
+    CONFIG.setComment(entry.key(), entry.comment());
+  }
+
   private static void initVersion() {
     CONFIG.set(FastNoiseConfigEntries.MIXIN_PERF_SURFACE.key(), true);
     CONFIG.set(FastNoiseConfigEntries.OPTIMIZE_BIOME_ACCESS.key(), true);
@@ -52,6 +62,9 @@ public final class FastNoiseConfigLoader {
     if (CONFIG.isEmpty()) CONFIG.set(VERSION_KEY, CONFIG_VERSION);
     for (var entry : FastNoiseConfigEntries.ENTRIES) {
       loadBoolean(entry);
+    }
+    for (var entry : FastNoiseConfigEntries.INT_ENTRIES) {
+      loadInteger(entry);
     }
     updateConfig();
     CONFIG.save();
