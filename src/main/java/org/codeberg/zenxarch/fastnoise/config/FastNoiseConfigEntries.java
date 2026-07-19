@@ -57,6 +57,13 @@ public class FastNoiseConfigEntries {
           "Disable carve, features and entites chunk generation step",
           false);
 
+  public static final IntConfigEntry MAX_CACHE_SIZE_PER_GB =
+      IntConfigEntry.of(
+              "perf.surface.max_cache_size_per_gb",
+              "Max size of surface rule compiler cache per gb of allocated memory",
+              100)
+          .constraint(16, 65536);
+
   public static final List<BooleanConfigEntry> ENTRIES =
       new ObjectArrayList<>(
           List.of(
@@ -69,4 +76,7 @@ public class FastNoiseConfigEntries {
               MIXIN_PERF_NOISE,
               MIXIN_PERF_SURFACE,
               MIXIN_DEBUG_DISABLE_CARVE_FEATURES_AND_ENTITIES));
+
+  public static final List<IntConfigEntry> INT_ENTRIES =
+      new ObjectArrayList<>(List.of(MAX_CACHE_SIZE_PER_GB));
 }
