@@ -1,19 +1,29 @@
 package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
 import it.unimi.dsi.fastutil.ints.IntArrays;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
 import java.lang.invoke.MethodHandle;
 
 public final class MaterialRuleCompilerCache {
   private MaterialRuleCompilerCache() {}
 
-  private static final Object2ObjectOpenCustomHashMap<int[], MethodHandle> cache =
-      new Object2ObjectOpenCustomHashMap<>(
-          16, Object2ObjectOpenCustomHashMap.FAST_LOAD_FACTOR, IntArrays.HASH_STRATEGY);
+  public static MaterialRuleCompilerCache create() {
+    return new MaterialRuleCompilerCache();
+  }
 
-  public static MethodHandle get(int[] program) {
-    synchronized (cache) {
-      return cache.computeIfAbsent(program, MaterialRuleCompiler::compile);
-    }
+  public static MaterialRuleCompilerCache INSTANCE = create();
+
+  private final Object2ObjectLinkedOpenCustomHashMap<int[], MethodHandle> cache =
+      new Object2ObjectLinkedOpenCustomHashMap<>(
+          100, Object2ObjectOpenCustomHashMap.FAST_LOAD_FACTOR, IntArrays.HASH_STRATEGY);
+
+  public synchronized MethodHandle get(int[] program) {
+    var res = cache.getAndMoveToFirst(program);
+    if (res != null) return res;
+    res = MaterialRuleCompiler.compile(program);
+    cache.put(program, res);
+    if (cache.size() > 100) cache.removeLast();
+    return res;
   }
 }

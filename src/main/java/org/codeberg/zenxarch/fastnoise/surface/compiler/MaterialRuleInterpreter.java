@@ -49,7 +49,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     this.rules = rules;
     this.states = states;
     this.instructions = instructions;
-    this.compiled = MaterialRuleCompilerCache.get(instructions);
+    this.compiled = MaterialRuleCompilerCache.INSTANCE.get(instructions);
     this.context = context;
   }
 
