@@ -16,7 +16,8 @@
     "ChunkGeneratorAccessor",
     "SurfaceBuilderAccessor",
     "MultiNoiseBiomeSourceAccessor",
-    "EntriesAccessor"
+    "EntriesAccessor",
+    "SurfaceBuilderMixin"
   ],
   "injectors": {
     "defaultRequire": 1

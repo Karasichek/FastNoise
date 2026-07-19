@@ -49,7 +49,10 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     this.rules = rules;
     this.states = states;
     this.instructions = instructions;
-    this.compiled = MaterialRuleCompilerCache.INSTANCE.get(instructions);
+    this.compiled =
+        ((MaterialRuleCompilerCacheHolder) context.surfaceBuilder)
+            .zenxarch$getCache()
+            .get(instructions);
     this.context = context;
   }
 

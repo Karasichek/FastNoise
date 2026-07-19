@@ -12,8 +12,6 @@ public final class MaterialRuleCompilerCache {
     return new MaterialRuleCompilerCache();
   }
 
-  public static MaterialRuleCompilerCache INSTANCE = create();
-
   private final Object2ObjectLinkedOpenCustomHashMap<int[], MethodHandle> cache =
       new Object2ObjectLinkedOpenCustomHashMap<>(
           100, Object2ObjectOpenCustomHashMap.FAST_LOAD_FACTOR, IntArrays.HASH_STRATEGY);
