@@ -39,6 +39,8 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
   // private static final int NO_OP = 4;
 
+  private boolean hasNotCrashed = true;
+
   public MaterialRuleInterpreter(
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
@@ -58,11 +60,14 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
   @Override
   public @Nullable BlockState tryApply(int x, int y, int z) {
-    try {
-      return (BlockState) compiled.invokeExact(conditions, rules, states, x, y, z, context);
-    } catch (Throwable e) {
-      // TODO: handle crashes
-      FastNoiseConstants.LOGGER.error("Compiled surface rule failed", e);
+    if (hasNotCrashed) {
+      try {
+        return (BlockState) compiled.invokeExact(conditions, rules, states, x, y, z, context);
+      } catch (Throwable e) {
+        // TODO: handle crashes
+        FastNoiseConstants.LOGGER.error("Compiled surface rule failed", e);
+        hasNotCrashed = false;
+      }
     }
     var instPointer = 0;
     var max = instructions.length;
