@@ -93,8 +93,6 @@ accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$HoleMateri
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SurfaceMaterialCondition
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$StoneDepthMaterialCondition
 
-accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$RegisteredCondition
-accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$RegisteredRule
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$InvertedBooleanSupplier
 
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$TerracottaBandsMaterialRule
