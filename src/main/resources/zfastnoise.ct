@@ -58,6 +58,8 @@ accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext negativeRunDepthPredicate Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext surfacePredicate Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;
 
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext noiseConfig Lnet/minecraft/world/gen/noise/NoiseConfig;
+
 accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext getSecondaryDepth ()D
 accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext estimateSurfaceHeight ()I
 
@@ -113,3 +115,8 @@ accessible class net/minecraft/world/gen/YOffset$AboveBottom
 accessible class net/minecraft/world/gen/YOffset$BelowTop
 accessible class net/minecraft/world/gen/YOffset$Fixed
 accessible class net/minecraft/world/gen/YOffset$RelativeToSeaLevel
+
+## Xoroshiro128PlusPlusRandom
+accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedLo J
+accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedHi J
+accessible field net/minecraft/util/math/random/CheckedRandom$Splitter seed J

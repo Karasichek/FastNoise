@@ -73,7 +73,8 @@ public abstract class NoiseChunkGeneratorMixin {
             chunkx ->
                 this.createChunkNoiseSampler(chunkx, structureAccessor, blender, noiseConfig));
 
-    if (sampler.blockStateSampler instanceof ChainedBlockSource chained && chained.samplers().length >= 5) {
+    if (sampler.blockStateSampler instanceof ChainedBlockSource chained
+        && chained.samplers().length >= 5) {
       return this.populateNoise(
           blender, structureAccessor, noiseConfig, chunk, minimumCellY, cellHeight);
     }
