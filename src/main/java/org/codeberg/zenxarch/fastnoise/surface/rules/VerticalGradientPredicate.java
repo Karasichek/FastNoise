@@ -1,12 +1,12 @@
 package org.codeberg.zenxarch.fastnoise.surface.rules;
 
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.CheckedRandom;
 import net.minecraft.util.math.random.RandomSplitter;
 import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
+import org.codeberg.zenxarch.fastnoise.surface.AllocFreeRandom;
 
 public record VerticalGradientPredicate(
     int trueAtAndBelow, int falseAtAndAbove, RandomSplitter splitter, MaterialRuleContext context)
@@ -57,22 +57,9 @@ public record VerticalGradientPredicate(
       if (blockY >= falseAtAndAbove) return false;
 
       var probability = map(blockY, trueAtAndBelow, falseAtAndAbove);
-      return nextFloat(seedLo, seedHi, context.blockX, blockY, context.blockZ) < probability;
-    }
-
-    private static float nextFloat(long seedLo, long seedHi, int x, int y, int z) {
-      seedLo = MathHelper.hashCode(x, y, z) ^ seedLo;
-
-      if ((seedLo | seedHi) == 0L) {
-        seedLo = -7046029254386353131L;
-        seedHi = 7640891576956012809L;
-      }
-
-      return (float) (next(seedLo, seedHi) >>> (64 - 24)) * 5.9604645E-8F;
-    }
-
-    private static long next(long s0, long s1) {
-      return Long.rotateLeft(s0 + s1, 17) + s0;
+      return AllocFreeRandom.nextFloatXoroshiro(
+              seedLo, seedHi, context.blockX, blockY, context.blockZ)
+          < probability;
     }
   }
 
@@ -87,19 +74,8 @@ public record VerticalGradientPredicate(
       if (blockY >= falseAtAndAbove) return false;
 
       var probability = map(blockY, trueAtAndBelow, falseAtAndAbove);
-      return nextFloat(seed, context.blockX, blockY, context.blockZ) < probability;
-    }
-
-    private static float nextFloat(long seed, int x, int y, int z) {
-      seed = MathHelper.hashCode(x, y, z) ^ seed;
-      seed = (seed ^ 25214903917L) & 281474976710655L;
-
-      return next(seed, 24) * 5.9604645E-8F;
-    }
-
-    private static int next(long seed, final int bits) {
-      seed = seed * 25214903917L + 11L & 281474976710655L;
-      return (int) (seed >> 48 - bits);
+      return AllocFreeRandom.nextFloatChecked(seed, context.blockX, blockY, context.blockZ)
+          < probability;
     }
   }
 }
