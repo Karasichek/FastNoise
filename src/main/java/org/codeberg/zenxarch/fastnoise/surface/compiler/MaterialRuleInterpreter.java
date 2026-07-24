@@ -1,20 +1,26 @@
 package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import static org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleProgram.*;
+
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.lang.invoke.MethodHandle;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionalBlockStateRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.InvertedBooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SimpleBlockStateRule;
 import org.codeberg.zenxarch.fastnoise.FastNoiseConstants;
+import org.codeberg.zenxarch.fastnoise.surface.AllocFreeRandom;
 import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
+import org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleProgram.JumpData;
 import org.codeberg.zenxarch.fastnoise.surface.rules.AboveYPredicate;
 import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
 import org.codeberg.zenxarch.fastnoise.surface.rules.StoneDepthPredicate;
+import org.codeberg.zenxarch.fastnoise.surface.rules.VerticalGradientPredicate;
+import org.codeberg.zenxarch.fastnoise.surface.rules.VerticalGradientPredicate.CheckedVerticalGradientPredicate;
+import org.codeberg.zenxarch.fastnoise.surface.rules.VerticalGradientPredicate.XoroshiroVerticalGradientPredicate;
 import org.jspecify.annotations.Nullable;
 
 public final class MaterialRuleInterpreter implements BlockStateRule {
@@ -22,22 +28,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   private final BooleanSupplier[] conditions;
   public final BlockStateRule[] rules;
   public final BlockState[] states;
-  private final int[] instructions;
+  private final MaterialRuleProgram program;
   private final MethodHandle compiled;
   private final MaterialRuleContext context;
-
-  public static final int JUMP_IF_FALSE = 0; // if (!conditions[a]) jmp(b);
-  public static final int RETURN = 1; // return states[a];
-  public static final int TRY_RETURN = 2; // if (rules[a] != null) return rules[a];
-  public static final int RETURN_IF = 3; // if (conditions[a]) return states[b];
-  public static final int BIOME_TEST =
-      4; // if (!ctx.getCurrentBiomeIndex() matches a(mask)) jmp(b);
-  public static final int ABOVE_Y = 5; // if (!(context.blockY >= a + context.runDepth * b)) jmp(c);
-  public static final int ABOVE_Y_WITH_STONE_DEPTH =
-      6; // if (!(context.blockY + stoneDepthAbove >= a + context.runDepth * b)) jmp(c);
-  public static final int STONE_DEPTH = 7; // if (!stoneDepthTest(a, b != 0, c, d != 0)) jmp(e);
-
-  // private static final int NO_OP = 4;
 
   private boolean hasNotCrashed = true;
 
@@ -45,16 +38,14 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
       BlockState[] states,
-      int[] instructions,
+      MaterialRuleProgram program,
       MaterialRuleContext context) {
     this.conditions = conditions;
     this.rules = rules;
     this.states = states;
-    this.instructions = instructions;
+    this.program = program;
     this.compiled =
-        ((MaterialRuleCompilerCacheHolder) context.surfaceBuilder)
-            .zenxarch$getCache()
-            .get(instructions);
+        ((MaterialRuleCompilerCacheHolder) context.surfaceBuilder).zenxarch$getCache().get(program);
     this.context = context;
   }
 
@@ -70,60 +61,29 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       }
     }
     var instPointer = 0;
-    var max = instructions.length;
+    final var opcodes = program.opcode();
+    final var data = program.data();
+    final var max = opcodes.length;
     while (instPointer < max) {
-      var inst = this.instructions[instPointer];
+      var inst = opcodes[instPointer];
       switch (inst) {
-        case JUMP_IF_FALSE -> {
-          instPointer +=
-              (conditions[instructions[instPointer + 1]].get()) ? 3 : instructions[instPointer + 2];
+        case OPCODE_RETURN -> {
+          return states[data[instPointer]];
         }
-        case RETURN -> {
-          return states[instructions[instPointer + 1]];
-        }
-        case TRY_RETURN -> {
-          var res = this.rules[instructions[instPointer + 1]].tryApply(x, y, z);
+        case OPCODE_TRY_RETURN -> {
+          var res = rules[data[instPointer]].tryApply(x, y, z);
           if (res != null) return res;
-          instPointer += 2;
+          instPointer++;
         }
-        case RETURN_IF -> {
-          if (conditions[instructions[instPointer + 1]].get())
-            return states[instructions[instPointer + 2]];
-          instPointer += 3;
-        }
-        case BIOME_TEST -> {
-          var idx = context.getCurrentBiomeIdx();
+        case OPCODE_JUMP_IF -> {
+          var jumpData = program.jumpDataArr()[data[instPointer]];
           instPointer +=
-              ((getLong(instructions, instPointer + 1) & (0x1L << idx)) == 0)
-                  ? instructions[instPointer + 3]
-                  : 4;
+              evalCondition(jumpData.type(), jumpData.idx(), x, y, z) ? jumpData.offset() : 1;
         }
-        case ABOVE_Y -> {
+        case OPCODE_JUMP_IF_NOT -> {
+          var jumpData = program.jumpDataArr()[data[instPointer]];
           instPointer +=
-              (context.blockY
-                      < (instructions[instPointer + 1]
-                          + context.runDepth * instructions[instPointer + 2]))
-                  ? instructions[instPointer + 3]
-                  : 4;
-        }
-        case ABOVE_Y_WITH_STONE_DEPTH -> {
-          instPointer +=
-              ((context.blockY + context.stoneDepthAbove)
-                      < (instructions[instPointer + 1]
-                          + context.runDepth * instructions[instPointer + 2]))
-                  ? instructions[instPointer + 3]
-                  : 4;
-        }
-        case STONE_DEPTH -> {
-          instPointer +=
-              stoneDepthTest(
-                      instructions[instPointer + 1],
-                      instructions[instPointer + 2] != 0,
-                      instructions[instPointer + 3],
-                      instructions[instPointer + 4] != 0,
-                      context)
-                  ? 6
-                  : instructions[instPointer + 5];
+              evalCondition(jumpData.type(), jumpData.idx(), x, y, z) ? 1 : jumpData.offset();
         }
         default -> {
           // no op
@@ -134,18 +94,61 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     return null;
   }
 
-  private static boolean stoneDepthTest(
-      int offset,
-      boolean addSurfaceDepth,
-      int secondaryDepthRange,
-      boolean ceiling,
-      MaterialRuleContext context) {
-    var stoneDepth = ceiling ? context.stoneDepthBelow : context.stoneDepthAbove;
-    if (addSurfaceDepth) stoneDepth -= context.runDepth;
-    if (secondaryDepthRange != 0)
-      stoneDepth -= (int) ((context.getSecondaryDepth() + 1.0) * 0.5 * secondaryDepthRange);
+  private boolean evalCondition(byte type, int idx, int x, int y, int z) {
+    return switch (type) {
+      case JUMP_TYPE_CONDITION -> conditions[idx].get();
+      case JUMP_TYPE_BIOME -> {
+        var biomeIdx = context.getCurrentBiomeIdx();
+        yield (program.biomeMasks()[idx] & (0x1L << biomeIdx)) != 0;
+      }
+      case JUMP_TYPE_ABOVE_Y -> {
+        var aboveY = program.aboveYConditions()[idx];
+        yield (context.blockY + (aboveY.addStoneDepth() ? context.stoneDepthAbove : 0))
+            >= (aboveY.y() + context.runDepth * aboveY.surfaceDepthMultiplier());
+      }
+      case JUMP_TYPE_STONE_DEPTH -> {
+        var stoneDepthCondition = program.stoneDepthConditions()[idx];
+        var stoneDepth =
+            stoneDepthCondition.ceiling() ? context.stoneDepthBelow : context.stoneDepthAbove;
+        if (stoneDepthCondition.addSurfaceDepth()) stoneDepth -= context.runDepth;
+        if (stoneDepthCondition.secondaryDepthRange() != 0)
+          stoneDepth -=
+              (int)
+                  ((context.getSecondaryDepth() + 1.0)
+                      * 0.5
+                      * stoneDepthCondition.secondaryDepthRange());
 
-    return stoneDepth <= offset;
+        yield stoneDepth <= stoneDepthCondition.offset();
+      }
+      case JUMP_TYPE_XORO_VERTICAL_GRADIENT -> {
+        var xoro = program.xoroVerticalGradientConditions()[idx];
+
+        final int blockY = this.context.blockY;
+        if (blockY <= xoro.trueAtAndBelow()) yield true;
+        if (blockY >= xoro.falseAtAndAbove()) yield false;
+
+        var probability =
+            VerticalGradientPredicate.map(blockY, xoro.trueAtAndBelow(), xoro.falseAtAndAbove());
+        yield AllocFreeRandom.nextFloatXoroshiro(
+                xoro.seedLo(), xoro.seedHi(), context.blockX, blockY, context.blockZ)
+            < probability;
+      }
+      case JUMP_TYPE_CHECKED_VERTICAL_GRADIENT -> {
+        var checked = program.checkedVerticalGradientConditions()[idx];
+
+        final int blockY = this.context.blockY;
+        if (blockY <= checked.trueAtAndBelow()) yield true;
+        if (blockY >= checked.falseAtAndAbove()) yield false;
+
+        var probability =
+            VerticalGradientPredicate.map(
+                blockY, checked.trueAtAndBelow(), checked.falseAtAndAbove());
+        yield AllocFreeRandom.nextDoubleChecked(
+                checked.seed(), context.blockX, blockY, context.blockZ)
+            < probability;
+      }
+      default -> true;
+    };
   }
 
   public static long getLong(int[] data, int index) {
@@ -166,105 +169,60 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   public String toString() {
     var res = new StringBuilder();
     res.append("MaterialRuleInterpreter[");
-    toString0(res, instructions);
+    toString0(res, program);
     res.append("]");
     return res.toString();
   }
 
-  public static void debugPrint(int[] instructions) {
+  public static void debugPrint(MaterialRuleProgram program) {
     var builder = new StringBuilder();
-    toString0(builder, instructions);
+    toString0(builder, program);
     FastNoiseConstants.LOGGER.info("Program : {}", builder.toString());
   }
 
-  public static void toString0(StringBuilder builder, int[] instructions) {
+  public static void toString0(StringBuilder builder, MaterialRuleProgram program) {
     builder.append("long idx; BlockState state; ");
-    toString1(builder, instructions, 0);
+    toString1(builder, program, 0);
   }
 
-  public static void toString1(StringBuilder builder, int[] instructions, int index) {
-    if (index >= instructions.length) {
+  private static void toString1(StringBuilder builder, MaterialRuleProgram program, int index) {
+    if (index >= program.opcode().length) {
       builder.append("return null; /* end of program */");
       return;
     }
-    switch (instructions[index]) {
-      case JUMP_IF_FALSE -> {
-        builder.append("if (conditions[").append(instructions[index + 1]).append("].get()) {");
-        toString1(builder, instructions, index + 3);
-        builder.append("} else {");
-        toString1(builder, instructions, index + instructions[index + 2]);
-        builder.append("}");
+    final var opcode = program.opcode()[index];
+    final var data = program.data()[index];
+    switch (opcode) {
+      case OPCODE_RETURN -> {
+        builder.append("return states[").append(data).append("];");
       }
-      case RETURN -> {
-        builder.append("return states[").append(instructions[index + 1]).append("];");
-      }
-      case TRY_RETURN -> {
+      case OPCODE_TRY_RETURN -> {
         builder
             .append("state = rules[")
-            .append(instructions[index + 1])
+            .append(data)
             .append("].tryApply(x,y,z); if (state != null) {return state;} else {");
-        toString1(builder, instructions, index + 2);
+        toString1(builder, program, index + 1);
         builder.append("}");
       }
-      case RETURN_IF -> {
-        builder
-            .append("if (conditions[")
-            .append(instructions[index + 1])
-            .append("].get()) { return states[")
-            .append(instructions[index + 2])
-            .append("]; } else {");
-        toString1(builder, instructions, index + 3);
+      case OPCODE_JUMP_IF -> {
+        var jumpData = program.jumpDataArr()[data];
+        builder.append("if (");
+        toString2(builder, program, jumpData.type(), jumpData.idx());
+        builder.append(") {");
+        toString1(builder, program, index + jumpData.offset());
+        builder.append("} else {");
+        toString1(builder, program, index + 1);
         builder.append("}");
       }
-      case BIOME_TEST -> {
-        builder.append("idx = context.getCurrentBiomeIdx(); if ((");
-        builder.append(String.format("0x%xL", getLong(instructions, index + 1)));
-        builder.append(" & (0x1L << idx)) != 0) { ");
-        toString1(builder, instructions, index + 4);
-        builder.append(" } else { ");
-        toString1(builder, instructions, index + instructions[index + 3]);
-        builder.append(" }");
-      }
-      case ABOVE_Y -> {
-        builder
-            .append("if (context.blockY >= (")
-            .append(instructions[index + 1])
-            .append(" + context.runDepth * ")
-            .append(instructions[index + 2])
-            .append(")) { ");
-        toString1(builder, instructions, index + 4);
-        builder.append(" } else { ");
-        toString1(builder, instructions, index + instructions[index + 3]);
-        builder.append(" }");
-      }
-      case ABOVE_Y_WITH_STONE_DEPTH -> {
-        builder
-            .append("if ((context.blockY + context.stoneDepthAbove) >= (")
-            .append(instructions[index + 1])
-            .append(" context.runDepth * ")
-            .append(instructions[index + 2])
-            .append(") { ");
-        toString1(builder, instructions, index + 4);
-        builder.append(" } else { ");
-        toString1(builder, instructions, index + instructions[index + 3]);
-        builder.append(" }");
-      }
-      case STONE_DEPTH -> {
-        builder
-            .append("if (stoneDepthTest(")
-            .append(instructions[index + 1])
-            .append(",")
-            .append(instructions[index + 2] != 0)
-            .append(",")
-            .append(instructions[index + 3])
-            .append(",")
-            .append(instructions[index + 4] != 0)
-            .append(",")
-            .append("context)) { ");
-        toString1(builder, instructions, index + 6);
-        builder.append(" } else {");
-        toString1(builder, instructions, index + instructions[index + 5]);
-        builder.append(" }");
+      case OPCODE_JUMP_IF_NOT -> {
+        var jumpData = program.jumpDataArr()[data];
+        builder.append("if (");
+        toString2(builder, program, jumpData.type(), jumpData.idx());
+        builder.append(") {");
+        toString1(builder, program, index + 1);
+        builder.append("} else {");
+        toString1(builder, program, index + jumpData.offset());
+        builder.append("}");
       }
       default -> {
         builder.append("return null; /* invalid */");
@@ -272,18 +230,81 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     }
   }
 
+  private static void toString2(
+      StringBuilder builder, MaterialRuleProgram program, int type, int idx) {
+    switch (type) {
+      case JUMP_TYPE_CONDITION -> {
+        builder.append("conditions[").append(idx).append("].get()");
+      }
+      case JUMP_TYPE_BIOME -> {
+        builder.append("biomeTest(context, ").append(program.biomeMasks()[idx]).append(")");
+      }
+      case JUMP_TYPE_ABOVE_Y -> {
+        var cond = program.aboveYConditions()[idx];
+        builder
+            .append("aboveYTest(context, y, ")
+            .append(cond.addStoneDepth())
+            .append(",")
+            .append(cond.y())
+            .append(",")
+            .append(cond.surfaceDepthMultiplier())
+            .append(")");
+      }
+      case JUMP_TYPE_STONE_DEPTH -> {
+        var cond = program.stoneDepthConditions()[idx];
+        builder
+            .append("stoneDepthTest(context, ")
+            .append(cond.offset())
+            .append(",")
+            .append(cond.addSurfaceDepth())
+            .append(",")
+            .append(cond.secondaryDepthRange())
+            .append(",")
+            .append(cond.ceiling())
+            .append(")");
+      }
+      case JUMP_TYPE_XORO_VERTICAL_GRADIENT -> {
+        var cond = program.xoroVerticalGradientConditions()[idx];
+        builder
+            .append("xoroVerticalGradientTest(context, x, y, z, ")
+            .append(cond.trueAtAndBelow())
+            .append(",")
+            .append(cond.falseAtAndAbove())
+            .append(",")
+            .append(cond.seedLo())
+            .append(",")
+            .append(cond.seedHi())
+            .append(")");
+      }
+      case JUMP_TYPE_CHECKED_VERTICAL_GRADIENT -> {
+        var cond = program.checkedVerticalGradientConditions()[idx];
+        builder
+            .append("checkedVerticalGradientTest(context, x, y, z, ")
+            .append(cond.trueAtAndBelow())
+            .append(",")
+            .append(cond.falseAtAndAbove())
+            .append(",")
+            .append(cond.seed())
+            .append(")");
+      }
+      default -> {
+        builder.append("unknown");
+      }
+    }
+  }
+
   private static class Builder {
-    private final ObjectArrayList<BooleanSupplier> conditions;
+    private final ReferenceArrayList<BooleanSupplier> conditions;
     private final ReferenceArrayList<BlockStateRule> rules;
     private final ReferenceArrayList<BlockState> states;
-    private final IntArrayList instructions;
+    private final MaterialRuleProgram.Builder program;
     private final MaterialRuleContext context;
 
     public Builder(MaterialRuleContext context) {
-      this.conditions = new ObjectArrayList<>();
+      this.conditions = new ReferenceArrayList<>();
       this.rules = new ReferenceArrayList<>();
       this.states = new ReferenceArrayList<>();
-      this.instructions = new IntArrayList();
+      this.program = new MaterialRuleProgram.Builder();
       this.context = context;
     }
 
@@ -305,6 +326,15 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       return res;
     }
 
+    private int indexOf(BooleanSupplier supplier) {
+      var res = conditions.indexOf(supplier);
+      if (res == -1) {
+        res = conditions.size();
+        conditions.add(supplier);
+      }
+      return res;
+    }
+
     public void push(SequenceBlockStateRule rules) {
       var rles = rules.rules();
       var size = rles.size();
@@ -312,75 +342,66 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     }
 
     public void push(ConditionalBlockStateRule rule) {
-      var startIndex = instructions.size();
-      if (rule.condition() instanceof BiomePredicate biome) {
-        this.addInst(BIOME_TEST, (int) (biome.mask >>> 32), (int) (biome.mask), 0);
-        var instIndex = instructions.size() - 1;
+      var startIndex = program.size();
 
-        push(rule.followup());
+      byte jumpType = -1;
+      var jumpIdx = -1;
 
-        this.instructions.set(instIndex, instructions.size() - startIndex);
-        return;
+      var condition = rule.condition();
+      var invert = false;
+
+      while (condition instanceof InvertedBooleanSupplier inverted) {
+        invert = !invert;
+        condition = inverted.target();
       }
 
-      if (rule.condition() instanceof AboveYPredicate above) {
-        this.addInst(
-            above.addStoneDepth() ? ABOVE_Y_WITH_STONE_DEPTH : ABOVE_Y,
-            above.y(),
-            above.surfaceDepthMultiplier(),
-            0);
-        var instIndex = instructions.size() - 1;
-
-        push(rule.followup());
-
-        this.instructions.set(instIndex, instructions.size() - startIndex);
-        return;
+      switch (condition) {
+        case BiomePredicate biome -> {
+          jumpType = JUMP_TYPE_BIOME;
+          jumpIdx = program.addBiomeMask(biome.mask);
+        }
+        case AboveYPredicate aboveY -> {
+          jumpType = JUMP_TYPE_ABOVE_Y;
+          jumpIdx = program.addAboveY(aboveY);
+        }
+        case StoneDepthPredicate stoneDepth -> {
+          jumpType = JUMP_TYPE_STONE_DEPTH;
+          jumpIdx = program.addStoneDepth(stoneDepth);
+        }
+        case XoroshiroVerticalGradientPredicate xoro -> {
+          jumpType = JUMP_TYPE_XORO_VERTICAL_GRADIENT;
+          jumpIdx = program.addXoro(xoro);
+        }
+        case CheckedVerticalGradientPredicate checked -> {
+          jumpType = JUMP_TYPE_CHECKED_VERTICAL_GRADIENT;
+          jumpIdx = program.addChecked(checked);
+        }
+        default -> {
+          jumpType = JUMP_TYPE_CONDITION;
+          jumpIdx = indexOf(condition);
+        }
       }
 
-      if (rule.condition() instanceof StoneDepthPredicate stone) {
-        this.addInst(
-            STONE_DEPTH,
-            stone.offset(),
-            stone.addSurfaceDepth() ? 1 : 0,
-            stone.secondaryDepthRange(),
-            stone.ceiling() ? 1 : 0,
-            0);
-        var instIndex = instructions.size() - 1;
-
-        push(rule.followup());
-
-        this.instructions.set(instIndex, instructions.size() - startIndex);
-        return;
-      }
-
-      var index = this.conditions.size();
-      this.conditions.add(rule.condition());
-
-      if (rule.followup() instanceof SimpleBlockStateRule simple) {
-        this.addInst(RETURN_IF, index, indexOf(simple.state()));
-        return;
-      }
-
-      this.addInst(JUMP_IF_FALSE, index, 0);
-      var instIndex = instructions.size() - 1;
-
+      program.addInst(invert ? OPCODE_JUMP_IF : OPCODE_JUMP_IF_NOT, 0);
       push(rule.followup());
+      var jumpOffset = program.size() - startIndex;
 
-      this.instructions.set(instIndex, instructions.size() - startIndex);
+      var jumpDataIdx = program.addJumpData(new JumpData(jumpType, jumpIdx, jumpOffset));
+
+      program.updateInst(startIndex, invert ? OPCODE_JUMP_IF : OPCODE_JUMP_IF_NOT, jumpDataIdx);
     }
 
     private void push(BlockStateRule rule) {
       switch (rule) {
         case SequenceBlockStateRule seq -> push(seq);
         case ConditionalBlockStateRule cond -> push(cond);
-        case SimpleBlockStateRule simple -> addInst(RETURN, indexOf(simple.state()));
-        default -> addInst(TRY_RETURN, indexOf(rule));
+        case SimpleBlockStateRule simple -> {
+          program.addInst(OPCODE_RETURN, indexOf(simple.state()));
+        }
+        default -> {
+          program.addInst(OPCODE_TRY_RETURN, indexOf(rule));
+        }
       }
-    }
-
-    private void addInst(int opcode, int... data) {
-      this.instructions.add(opcode);
-      for (int i = 0; i < data.length; i++) this.instructions.add(data[i]);
     }
 
     public MaterialRuleInterpreter build() {
@@ -388,7 +409,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
           this.conditions.toArray(BooleanSupplier[]::new),
           this.rules.toArray(BlockStateRule[]::new),
           this.states.toArray(BlockState[]::new),
-          this.instructions.toIntArray(),
+          this.program.build(),
           context);
     }
   }
