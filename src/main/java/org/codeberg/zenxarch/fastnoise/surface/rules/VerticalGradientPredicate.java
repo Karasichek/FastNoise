@@ -37,7 +37,7 @@ public record VerticalGradientPredicate(
     return splitter.split(context.blockX, blockY, context.blockZ).nextFloat() < probability;
   }
 
-  public static double map(double value, double start, double end) {
+  private static double map(double value, double start, double end) {
     double delta = (value - start) / (end - start);
     return 1.0 - delta;
   }
