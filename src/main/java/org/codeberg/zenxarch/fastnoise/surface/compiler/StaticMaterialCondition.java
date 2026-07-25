@@ -52,7 +52,7 @@ public interface StaticMaterialCondition {
     @Override
     public MethodHandle compiled() {
       return MaterialRuleCompiler.createStoneDepthTest(
-          offset, addSurfaceDepth, secondaryDepthRange, ceiling);
+          offset + 1, addSurfaceDepth, secondaryDepthRange, ceiling);
     }
   }
 
