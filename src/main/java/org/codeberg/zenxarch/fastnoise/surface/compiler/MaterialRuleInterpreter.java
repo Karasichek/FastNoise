@@ -5,16 +5,19 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.lang.invoke.MethodHandle;
 import net.minecraft.block.BlockState;
+import net.minecraft.world.gen.HeightContext;
+import net.minecraft.world.gen.noise.NoiseConfig;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BiomeMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionalBlockStateRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.SimpleBlockStateRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
 import org.codeberg.zenxarch.fastnoise.FastNoiseConstants;
 import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
-import org.codeberg.zenxarch.fastnoise.surface.rules.AboveYPredicate;
 import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
-import org.codeberg.zenxarch.fastnoise.surface.rules.StoneDepthPredicate;
 import org.jspecify.annotations.Nullable;
 
 public final class MaterialRuleInterpreter implements BlockStateRule {
@@ -25,6 +28,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   private final int[] instructions;
   private final MethodHandle compiled;
   private final MaterialRuleContext context;
+  private final MaterialRuleCompilerCacheHeightContextSpecific cache;
 
   public static final int JUMP_IF_FALSE = 0; // if (!conditions[a]) jmp(b);
   public static final int RETURN = 1; // return states[a];
@@ -32,10 +36,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   public static final int RETURN_IF = 3; // if (conditions[a]) return states[b];
   public static final int BIOME_TEST =
       4; // if (!ctx.getCurrentBiomeIndex() matches a(mask)) jmp(b);
-  public static final int ABOVE_Y = 5; // if (!(context.blockY >= a + context.runDepth * b)) jmp(c);
-  public static final int ABOVE_Y_WITH_STONE_DEPTH =
-      6; // if (!(context.blockY + stoneDepthAbove >= a + context.runDepth * b)) jmp(c);
-  public static final int STONE_DEPTH = 7; // if (!stoneDepthTest(a, b != 0, c, d != 0)) jmp(e);
+  public static final int JUMP_IF_FALSE_STATIC = 5; // if (!staticConditions[a].get()) jmp(b);
 
   // private static final int NO_OP = 4;
 
@@ -46,15 +47,14 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       BlockStateRule[] rules,
       BlockState[] states,
       int[] instructions,
+      MaterialRuleCompilerCacheHeightContextSpecific cache,
       MaterialRuleContext context) {
     this.conditions = conditions;
     this.rules = rules;
     this.states = states;
     this.instructions = instructions;
-    this.compiled =
-        ((MaterialRuleCompilerCacheHolder) context.surfaceBuilder)
-            .zenxarch$getCache()
-            .get(instructions);
+    this.cache = cache;
+    this.compiled = cache.get(instructions);
     this.context = context;
   }
 
@@ -98,32 +98,21 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
                   ? instructions[instPointer + 3]
                   : 4;
         }
-        case ABOVE_Y -> {
-          instPointer +=
-              (context.blockY
-                      < (instructions[instPointer + 1]
-                          + context.runDepth * instructions[instPointer + 2]))
-                  ? instructions[instPointer + 3]
-                  : 4;
-        }
-        case ABOVE_Y_WITH_STONE_DEPTH -> {
-          instPointer +=
-              ((context.blockY + context.stoneDepthAbove)
-                      < (instructions[instPointer + 1]
-                          + context.runDepth * instructions[instPointer + 2]))
-                  ? instructions[instPointer + 3]
-                  : 4;
-        }
-        case STONE_DEPTH -> {
-          instPointer +=
-              stoneDepthTest(
-                      instructions[instPointer + 1],
-                      instructions[instPointer + 2] != 0,
-                      instructions[instPointer + 3],
-                      instructions[instPointer + 4] != 0,
-                      context)
-                  ? 6
-                  : instructions[instPointer + 5];
+        case JUMP_IF_FALSE_STATIC -> {
+          var idx = instructions[instPointer + 1];
+          var offset = instructions[instPointer + 2];
+          try {
+            instPointer +=
+                ((boolean)
+                        cache
+                            .getHandle(idx)
+                            .invokeExact(
+                                this.conditions, this.rules, this.states, x, y, z, this.context))
+                    ? 3
+                    : offset;
+          } catch (Throwable e) {
+            instPointer += offset;
+          }
         }
         default -> {
           // no op
@@ -134,20 +123,6 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     return null;
   }
 
-  private static boolean stoneDepthTest(
-      int offset,
-      boolean addSurfaceDepth,
-      int secondaryDepthRange,
-      boolean ceiling,
-      MaterialRuleContext context) {
-    var stoneDepth = ceiling ? context.stoneDepthBelow : context.stoneDepthAbove;
-    if (addSurfaceDepth) stoneDepth -= context.runDepth;
-    if (secondaryDepthRange != 0)
-      stoneDepth -= (int) ((context.getSecondaryDepth() + 1.0) * 0.5 * secondaryDepthRange);
-
-    return stoneDepth <= offset;
-  }
-
   public static long getLong(int[] data, int index) {
     var a = data[index];
     var b = data[index + 1];
@@ -155,11 +130,11 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   }
 
   public static MaterialRuleInterpreter of(
-      SequenceBlockStateRule root, MaterialRuleContext context) {
-    var builder = new Builder(context);
-    builder.push(root);
-
-    return builder.build();
+      MaterialRuleContext context,
+      HeightContext heightContext,
+      NoiseConfig config,
+      MaterialRule rule) {
+    return new Builder(context, config, rule).build();
   }
 
   @Override
@@ -225,45 +200,15 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         toString1(builder, instructions, index + instructions[index + 3]);
         builder.append(" }");
       }
-      case ABOVE_Y -> {
+      case JUMP_IF_FALSE_STATIC -> {
         builder
-            .append("if (context.blockY >= (")
+            .append("if (specialCondition(")
             .append(instructions[index + 1])
-            .append(" + context.runDepth * ")
-            .append(instructions[index + 2])
-            .append(")) { ");
-        toString1(builder, instructions, index + 4);
-        builder.append(" } else { ");
-        toString1(builder, instructions, index + instructions[index + 3]);
-        builder.append(" }");
-      }
-      case ABOVE_Y_WITH_STONE_DEPTH -> {
-        builder
-            .append("if ((context.blockY + context.stoneDepthAbove) >= (")
-            .append(instructions[index + 1])
-            .append(" context.runDepth * ")
-            .append(instructions[index + 2])
-            .append(") { ");
-        toString1(builder, instructions, index + 4);
-        builder.append(" } else { ");
-        toString1(builder, instructions, index + instructions[index + 3]);
-        builder.append(" }");
-      }
-      case STONE_DEPTH -> {
-        builder
-            .append("if (stoneDepthTest(")
-            .append(instructions[index + 1])
-            .append(",")
-            .append(instructions[index + 2] != 0)
-            .append(",")
-            .append(instructions[index + 3])
-            .append(",")
-            .append(instructions[index + 4] != 0)
             .append(",")
             .append("context)) { ");
-        toString1(builder, instructions, index + 6);
+        toString1(builder, instructions, index + 3);
         builder.append(" } else {");
-        toString1(builder, instructions, index + instructions[index + 5]);
+        toString1(builder, instructions, index + instructions[index + 2]);
         builder.append(" }");
       }
       default -> {
@@ -279,12 +224,19 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     private final IntArrayList instructions;
     private final MaterialRuleContext context;
 
-    public Builder(MaterialRuleContext context) {
+    private final MaterialRuleCompilerCacheHeightContextSpecific cache;
+
+    public Builder(MaterialRuleContext context, NoiseConfig config, MaterialRule rule) {
       this.conditions = new ObjectArrayList<>();
       this.rules = new ReferenceArrayList<>();
       this.states = new ReferenceArrayList<>();
       this.instructions = new IntArrayList();
       this.context = context;
+      this.cache =
+          ((MaterialRuleCompilerCacheHolder) context.surfaceBuilder)
+              .zenxarch$getCache()
+              .get(context.heightContext, config, rule);
+      this.push(rule);
     }
 
     private int indexOf(BlockState state) {
@@ -305,76 +257,82 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       return res;
     }
 
-    public void push(SequenceBlockStateRule rules) {
-      var rles = rules.rules();
+    public void push(SequenceMaterialRule rule) {
+      var rles = rule.sequence();
       var size = rles.size();
       for (int i = 0; i < size; i++) push(rles.get(i));
     }
 
-    public void push(ConditionalBlockStateRule rule) {
+    public void push(ConditionMaterialRule rule) {
       var startIndex = instructions.size();
-      if (rule.condition() instanceof BiomePredicate biome) {
-        this.addInst(BIOME_TEST, (int) (biome.mask >>> 32), (int) (biome.mask), 0);
+      if (rule.ifTrue() instanceof BiomeMaterialRule biome) {
+        var cond = BiomePredicate.getSupplier(biome.biomes(), context);
+        if (cond == BiomePredicate.ALWAYS_FALSE) return;
+        if (cond == BiomePredicate.ALWAYS_TRUE) {
+          push(rule.thenRun());
+          return;
+        }
+        if (cond instanceof BiomePredicate biomeCond) {
+          this.addInst(BIOME_TEST, (int) (biomeCond.mask >>> 32), (int) (biomeCond.mask), 0);
+        }
         var instIndex = instructions.size() - 1;
 
-        push(rule.followup());
+        push(rule.thenRun());
+
+        if (instIndex + 1 == instructions.size()) {
+          this.removeInst(4);
+          return;
+        }
 
         this.instructions.set(instIndex, instructions.size() - startIndex);
         return;
       }
 
-      if (rule.condition() instanceof AboveYPredicate above) {
-        this.addInst(
-            above.addStoneDepth() ? ABOVE_Y_WITH_STONE_DEPTH : ABOVE_Y,
-            above.y(),
-            above.surfaceDepthMultiplier(),
-            0);
+      var specialIdx = cache.getIdx(rule.ifTrue());
+
+      if (specialIdx != -1) {
+        this.addInst(JUMP_IF_FALSE_STATIC, specialIdx, 0);
+
         var instIndex = instructions.size() - 1;
+        push(rule.thenRun());
 
-        push(rule.followup());
-
-        this.instructions.set(instIndex, instructions.size() - startIndex);
-        return;
-      }
-
-      if (rule.condition() instanceof StoneDepthPredicate stone) {
-        this.addInst(
-            STONE_DEPTH,
-            stone.offset(),
-            stone.addSurfaceDepth() ? 1 : 0,
-            stone.secondaryDepthRange(),
-            stone.ceiling() ? 1 : 0,
-            0);
-        var instIndex = instructions.size() - 1;
-
-        push(rule.followup());
+        if (instIndex + 1 == instructions.size()) {
+          this.removeInst(3);
+          return;
+        }
 
         this.instructions.set(instIndex, instructions.size() - startIndex);
         return;
       }
 
       var index = this.conditions.size();
-      this.conditions.add(rule.condition());
+      this.conditions.add(rule.ifTrue().apply(context));
 
-      if (rule.followup() instanceof SimpleBlockStateRule simple) {
-        this.addInst(RETURN_IF, index, indexOf(simple.state()));
+      if (rule.thenRun() instanceof BlockMaterialRule simple) {
+        this.addInst(RETURN_IF, index, indexOf(simple.resultState()));
         return;
       }
 
       this.addInst(JUMP_IF_FALSE, index, 0);
       var instIndex = instructions.size() - 1;
 
-      push(rule.followup());
+      push(rule.thenRun());
+
+      if (instIndex + 1 == instructions.size()) {
+        this.removeInst(3);
+        return;
+      }
 
       this.instructions.set(instIndex, instructions.size() - startIndex);
     }
 
-    private void push(BlockStateRule rule) {
+    private void push(MaterialRule rule) {
       switch (rule) {
-        case SequenceBlockStateRule seq -> push(seq);
-        case ConditionalBlockStateRule cond -> push(cond);
-        case SimpleBlockStateRule simple -> addInst(RETURN, indexOf(simple.state()));
-        default -> addInst(TRY_RETURN, indexOf(rule));
+        case SequenceMaterialRule seq -> push(seq);
+        case ConditionMaterialRule cond -> push(cond);
+        case BlockMaterialRule simple -> addInst(RETURN, indexOf(simple.resultState()));
+        case RegisteredRule registered -> push(registered.holder().value());
+        default -> addInst(TRY_RETURN, indexOf(rule.apply(context)));
       }
     }
 
@@ -383,12 +341,17 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       for (int i = 0; i < data.length; i++) this.instructions.add(data[i]);
     }
 
+    private void removeInst(int len) {
+      this.instructions.size(this.instructions.size() - len);
+    }
+
     public MaterialRuleInterpreter build() {
       return new MaterialRuleInterpreter(
           this.conditions.toArray(BooleanSupplier[]::new),
           this.rules.toArray(BlockStateRule[]::new),
           this.states.toArray(BlockState[]::new),
           this.instructions.toIntArray(),
+          cache,
           context);
     }
   }
