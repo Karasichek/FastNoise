@@ -141,7 +141,7 @@ public final class MaterialRuleCompiler {
               index + program[index + 2],
               cache,
               contextSpecificCache);
-      default -> retNull;
+      default -> throw new IllegalStateException("Invalid instruction");
     };
   }
 

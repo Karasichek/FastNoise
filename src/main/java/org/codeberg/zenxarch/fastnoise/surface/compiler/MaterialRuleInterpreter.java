@@ -115,8 +115,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
           }
         }
         default -> {
-          // no op
-          instPointer++;
+          throw new IllegalStateException("Invalid instruction");
         }
       }
     }
