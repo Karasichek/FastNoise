@@ -2,6 +2,7 @@ package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
 import static org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleInterpreter.*;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import java.lang.invoke.MethodHandle;
@@ -38,6 +39,8 @@ public final class MaterialRuleCompiler {
       lookupCondition("aboveYWithStoneDepth", int.class);
   private static final MethodHandle aboveYWithRunDepthAndStoneDepth =
       lookupCondition("aboveYWithRunDepthAndStoneDepth", int.class, int.class);
+  private static final MethodHandle stoneDepthTest =
+      lookupCondition("stoneDepthTest", int.class, boolean.class, int.class, boolean.class);
 
   private static MethodHandle lookupCondition(String name, Class<?>... classes) {
     var list = ObjectArrayList.of(classes);
@@ -68,49 +71,82 @@ public final class MaterialRuleCompiler {
   }
 
   public static MethodHandle compile(int[] program) {
-    return compile0(program, 0);
+    var baseCache = new Int2ObjectOpenHashMap<MethodHandle>();
+    return compile0(program, 0, baseCache);
   }
 
-  private static MethodHandle compile0(int[] program, int index) {
+  private static MethodHandle compile0(
+      int[] program, int index, Int2ObjectOpenHashMap<MethodHandle> cache) {
+    if (index >= program.length) return retNull;
+    if (cache.containsKey(index)) return cache.get(index);
+    var res = compile1(program, index, cache);
+    cache.put(index, res);
+    return res;
+  }
+
+  private static MethodHandle compile1(
+      int[] program, int index, Int2ObjectOpenHashMap<MethodHandle> cache) {
     if (index >= program.length) return retNull;
     var inst = program[index];
 
     return switch (inst) {
       case JUMP_IF_FALSE ->
           createTernary(
-              createCondition(program[index + 1]), program, index + 3, index + program[index + 2]);
+              createCondition(program[index + 1]),
+              program,
+              index + 3,
+              index + program[index + 2],
+              cache);
       case RETURN -> createRet(program[index + 1]);
-      case TRY_RETURN -> createTryRet(program[index + 1], compile0(program, index + 2));
+      case TRY_RETURN -> createTryRet(program[index + 1], compile0(program, index + 2, cache));
       case RETURN_IF ->
           createTernary(
               createCondition(program[index + 1]),
               createRet(program[index + 2]),
-              compile0(program, index + 3));
+              compile0(program, index + 3, cache));
       case BIOME_TEST ->
           createTernary(
               createBiomeTest(getLong(program, index + 1)),
               program,
               index + 4,
-              index + program[index + 3]);
+              index + program[index + 3],
+              cache);
       case ABOVE_Y ->
           createTernary(
               createAboveY(program[index + 1], program[index + 2], false),
               program,
               index + 4,
-              index + program[index + 3]);
+              index + program[index + 3],
+              cache);
       case ABOVE_Y_WITH_STONE_DEPTH ->
           createTernary(
               createAboveY(program[index + 1], program[index + 2], true),
               program,
               index + 4,
-              index + program[index + 3]);
+              index + program[index + 3],
+              cache);
+      case STONE_DEPTH ->
+          createTernary(
+              createStoneDepthTest(
+                  program[index + 1],
+                  program[index + 2] != 0,
+                  program[index + 3],
+                  program[index + 4] != 0),
+              program,
+              index + 6,
+              index + program[index + 5],
+              cache);
       default -> retNull;
     };
   }
 
   private static MethodHandle createTernary(
-      MethodHandle guard, int[] program, int index0, int index1) {
-    return createTernary(guard, compile0(program, index0), compile0(program, index1));
+      MethodHandle guard,
+      int[] program,
+      int index0,
+      int index1,
+      Int2ObjectOpenHashMap<MethodHandle> cache) {
+    return createTernary(guard, compile0(program, index0, cache), compile0(program, index1, cache));
   }
 
   private static MethodHandle createTernary(
@@ -149,6 +185,12 @@ public final class MaterialRuleCompiler {
     } else {
       return MethodHandles.insertArguments(aboveYWithRunDepth, 0, y, runDepthMultiplier);
     }
+  }
+
+  private static MethodHandle createStoneDepthTest(
+      int offset, boolean addSurfaceDepth, int secondaryDepthRange, boolean ceiling) {
+    return MethodHandles.insertArguments(
+        stoneDepthTest, 0, offset, addSurfaceDepth, secondaryDepthRange, ceiling);
   }
 
   public static boolean condition(
@@ -266,9 +308,28 @@ public final class MaterialRuleCompiler {
       int x,
       int y,
       int z,
-      MaterialRuleContext context)
-      throws Throwable {
+      MaterialRuleContext context) {
     return (context.blockY + context.stoneDepthAbove)
         >= (testY + context.runDepth * runDepthMultiplier);
+  }
+
+  public static boolean stoneDepthTest(
+      int offset,
+      boolean addSurfaceDepth,
+      int secondaryDepthRange,
+      boolean ceiling,
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context) {
+    var stoneDepth = ceiling ? context.stoneDepthBelow : context.stoneDepthAbove;
+    if (addSurfaceDepth) stoneDepth -= context.runDepth;
+    if (secondaryDepthRange != 0)
+      stoneDepth -= (int) ((context.getSecondaryDepth() + 1.0) * 0.5 * secondaryDepthRange);
+
+    return stoneDepth <= offset;
   }
 }

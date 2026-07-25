@@ -31,7 +31,7 @@ public class FastBlockColumn implements BlockColumn {
       HeightmapUtil.calculateHeightmaps(ChunkStatus.SURFACE);
 
   @SuppressWarnings("unchecked")
-  private final Predicate<BlockState>[] predicates =
+  private static final Predicate<BlockState>[] predicates =
       Stream.of(heightmaps).map(type -> type.getBlockPredicate()).toArray(Predicate[]::new);
 
   private static final long completedMask = getCompletedMask(heightmaps);
@@ -110,5 +110,16 @@ public class FastBlockColumn implements BlockColumn {
         mask |= (0x1L << i);
       }
     }
+  }
+
+  public static boolean willHeightmapUpdate(BlockState defaultBlock, BlockState[] possible) {
+    for (int predicateIdx = 0; predicateIdx < predicates.length; predicateIdx++) {
+      var predicate = predicates[predicateIdx];
+      var expected = predicate.test(defaultBlock);
+      for (int stateIdx = 0; stateIdx < possible.length; stateIdx++) {
+        if (predicate.test(possible[stateIdx]) != expected) return true;
+      }
+    }
+    return false;
   }
 }
