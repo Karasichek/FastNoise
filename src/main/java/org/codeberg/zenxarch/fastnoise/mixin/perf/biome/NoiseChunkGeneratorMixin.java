@@ -11,7 +11,6 @@ import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.mixin.ChunkGeneratorAccessor;
 import org.codeberg.zenxarch.fastnoise.noise.FastBiomeGen;
 import org.spongepowered.asm.mixin.Final;
@@ -41,10 +40,6 @@ public abstract class NoiseChunkGeneratorMixin {
       final StructureAccessor structureAccessor,
       final Chunk chunk,
       Operation<Void> op) {
-    if (!FastNoiseConfig.ENABLED) {
-      op.call(blender, noiseConfig, structureAccessor, chunk);
-      return;
-    }
     var sampler =
         chunk.getOrCreateChunkNoiseSampler(
             chunkx ->

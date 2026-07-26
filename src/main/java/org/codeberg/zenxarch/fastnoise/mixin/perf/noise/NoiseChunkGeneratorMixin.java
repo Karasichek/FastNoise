@@ -12,7 +12,6 @@ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.chunk.GenerationShapeConfig;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.noise.FastNoiseGen;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -47,17 +46,6 @@ public abstract class NoiseChunkGeneratorMixin {
       NoiseConfig noiseConfig,
       int minimumCellY,
       Operation<Chunk> op) {
-    if (!FastNoiseConfig.ENABLED) {
-      return op.call(
-          chunk,
-          cellHeight,
-          generationShapeConfig,
-          minimumY,
-          blender,
-          structureAccessor,
-          noiseConfig,
-          minimumCellY);
-    }
     if (((Object) this.getClass()) != NoiseChunkGenerator.class)
       return op.call(
           chunk,

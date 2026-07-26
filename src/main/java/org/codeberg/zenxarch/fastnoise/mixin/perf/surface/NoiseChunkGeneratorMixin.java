@@ -17,7 +17,6 @@ import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.mixin.SurfaceBuilderAccessor;
 import org.codeberg.zenxarch.fastnoise.surface.FastSurfaceGen;
 import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeAccumulator;
@@ -78,8 +77,7 @@ public abstract class NoiseChunkGeneratorMixin {
       @Local final ChunkRegion chunkRegion) {
 
     final var registry = chunkRegion.getRegistryManager().getOrThrow(RegistryKeys.BIOME);
-    if (!FastNoiseConfig.ENABLED
-        || !FastSurfaceGen.canUseSurfaceBuilder(chunk, includedBiomes, registry)) {
+    if (!FastSurfaceGen.canUseSurfaceBuilder(chunk, includedBiomes, registry)) {
       op.call(
           chunkGenerator,
           chunk,
