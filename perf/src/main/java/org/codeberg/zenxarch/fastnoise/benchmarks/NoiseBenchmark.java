@@ -1,7 +1,5 @@
 package org.codeberg.zenxarch.fastnoise.benchmarks;
 
-import net.minecraft.util.collection.BoundedRegionArray;
-import net.minecraft.world.chunk.ProtoChunk;
 import org.codeberg.zenxarch.fastnoise.BenchmarkSettings;
 import org.codeberg.zenxarch.fastnoise.ChunkRegion;
 import org.codeberg.zenxarch.fastnoise.TestWorld;
@@ -16,7 +14,7 @@ import org.openjdk.jmh.annotations.TearDown;
 @State(Scope.Thread)
 public class NoiseBenchmark {
   private TestWorld world;
-  private BoundedRegionArray<ProtoChunk> chunks;
+  private ChunkRegion chunks;
 
   @Param(value = {"overworld", "nether", "end"})
   private String worldName;
@@ -30,9 +28,8 @@ public class NoiseBenchmark {
           default -> BenchmarkSettings.end();
         };
     world = new TestWorld(settings);
-    var region = ChunkRegion.of(world, settings.centerX(), settings.centerZ(), settings.radius());
-    region.storage().forEach(chunk -> chunk.getOrCreateChunkNoiseSampler(world::createSampler));
-    this.chunks = region.storage();
+    this.chunks = ChunkRegion.of(world, settings.centerX(), settings.centerZ(), settings.radius());
+    chunks.forEach(world::createSampler);
   }
 
   @TearDown(Level.Invocation)
@@ -42,6 +39,6 @@ public class NoiseBenchmark {
 
   @Benchmark
   public void noisegen() {
-    chunks.forEach(world::noise);
+    chunks.forEach((chunk) -> world.noise(chunks, chunk));
   }
 }

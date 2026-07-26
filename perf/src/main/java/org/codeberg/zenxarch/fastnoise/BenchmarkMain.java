@@ -3,6 +3,7 @@ package org.codeberg.zenxarch.fastnoise;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import net.minecraft.util.Util;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.results.RunResult;
 import org.openjdk.jmh.results.format.ResultFormatFactory;
@@ -55,10 +56,12 @@ public class BenchmarkMain {
     } catch (Exception e) {
       LOGGER.error("Huh?", e);
     }
+    Util.shutdownExecutors();
   }
 
   public static void runParityTest() {
     ParityTest.doParityTest();
+    Util.shutdownExecutors();
   }
 
   private static int getIntProperty(String name, int def, int min) {

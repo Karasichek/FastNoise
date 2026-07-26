@@ -1,7 +1,5 @@
 package org.codeberg.zenxarch.fastnoise.benchmarks;
 
-import net.minecraft.util.collection.BoundedRegionArray;
-import net.minecraft.world.chunk.ProtoChunk;
 import org.codeberg.zenxarch.fastnoise.BenchmarkSettings;
 import org.codeberg.zenxarch.fastnoise.ChunkRegion;
 import org.codeberg.zenxarch.fastnoise.TestWorld;
@@ -10,7 +8,7 @@ import org.openjdk.jmh.annotations.*;
 @State(Scope.Thread)
 public class BiomesBenchmark {
   private TestWorld world;
-  private BoundedRegionArray<ProtoChunk> chunks;
+  private ChunkRegion chunks;
 
   @Param(value = {"overworld", "nether", "end"})
   private String worldName;
@@ -24,8 +22,7 @@ public class BiomesBenchmark {
           default -> BenchmarkSettings.end();
         };
     world = new TestWorld(settings);
-    var region = ChunkRegion.of(world, settings.centerX(), settings.centerZ(), settings.radius());
-    this.chunks = region.storage();
+    this.chunks = ChunkRegion.of(world, settings.centerX(), settings.centerZ(), settings.radius());
   }
 
   @TearDown(Level.Invocation)
@@ -35,6 +32,6 @@ public class BiomesBenchmark {
 
   @Benchmark
   public void biomegen() {
-    this.chunks.forEach(world::biomes);
+    this.chunks.forEach(chunk -> world.biomes(chunks, chunk));
   }
 }

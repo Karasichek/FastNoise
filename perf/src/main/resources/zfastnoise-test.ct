@@ -28,3 +28,5 @@ accessible field net/minecraft/world/chunk/ChunkSection randomTickableBlockCount
 accessible field net/minecraft/world/chunk/ChunkSection randomTickableFluidCount S
 
 accessible method net/minecraft/test/TestServer <init> (Ljava/lang/Thread;Lnet/minecraft/world/level/storage/LevelStorage$Session;Lnet/minecraft/resource/ResourcePackManager;Lnet/minecraft/server/SaveLoader;Ljava/util/Optional;ZI)V
+
+accessible method net/minecraft/world/gen/chunk/NoiseChunkGenerator createChunkNoiseSampler (Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/noise/NoiseConfig;)Lnet/minecraft/world/gen/chunk/ChunkNoiseSampler;

@@ -1,12 +1,13 @@
 {
   "required": true,
   "package": "org.codeberg.zenxarch.fastnoise.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "mixins": [
     "MainMixin",
     "NoiseChunkGeneratorAccessor",
     "JmhRunnerMixin",
-    "ChunkAccessor"
+    "ChunkAccessor",
+    "NoiseChunkGeneratorMixin"
   ],
   "injectors": {
     "defaultRequire": 1

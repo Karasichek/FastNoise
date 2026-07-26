@@ -42,44 +42,38 @@ public final class ParityTest {
 
     generateChunk(fakeWorld, modded, moddedBiomes, "Modded " + name);
 
-    modded
-        .storage()
-        .forEach(
-            (a) -> {
-              var b = original.getChunk(a.getPos());
+    modded.forEach(
+        (a) -> {
+          var b = original.getChunk(a.getPos());
 
-              try {
-                TestWorld.matches(a, b);
-              } catch (Exception e) {
-                TestWorld.dumpSections("Modded", a);
-                TestWorld.dumpSections("Vanilla", b);
-                throw e;
-              }
-            });
+          try {
+            TestWorld.matches(a, b);
+          } catch (Exception e) {
+            TestWorld.dumpSections("Modded", a);
+            TestWorld.dumpSections("Vanilla", b);
+            throw e;
+          }
+        });
     LOGGER.info(name + " matches");
   }
 
   private static void generateChunk(
       TestWorld world, ChunkRegion base, ChunkRegion biomeRegion, String name) {
-    biomeRegion
-        .storage()
-        .forEach(
-            (chunk) -> {
-              world.biomes(chunk);
-              chunk.setStatus(ChunkStatus.BIOMES);
-            });
+    biomeRegion.forEach(
+        (chunk) -> {
+          world.biomes(biomeRegion, chunk);
+          chunk.setStatus(ChunkStatus.BIOMES);
+        });
 
     LOGGER.info("Generated Biomes for " + name);
 
     base.copyBiomes(biomeRegion);
 
-    base.storage()
-        .forEach(
-            (chunk) -> {
-              chunk.getOrCreateChunkNoiseSampler(world::createSampler);
-              world.noise(chunk);
-              world.surface(chunk, biomeRegion);
-            });
+    base.forEach(
+        (chunk) -> {
+          world.noise(base, chunk);
+          world.surface(chunk, biomeRegion);
+        });
 
     LOGGER.info("Generated " + name);
   }

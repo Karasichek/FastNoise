@@ -35,25 +35,20 @@ public class SurfaceBenchmark {
     this.biomeSource =
         ChunkRegion.of(world, settings.centerX(), settings.centerZ(), settings.radius() + 1);
 
-    biomeSource
-        .storage()
-        .forEach(
-            chunk -> {
-              world.biomes(chunk);
-              world.noise(chunk);
-              chunk.setStatus(ChunkStatus.NOISE);
-            });
+    biomeSource.forEach(
+        chunk -> {
+          world.biomes(biomeSource, chunk);
+          world.noise(biomeSource, chunk);
+        });
 
     chunks.copyBiomes(biomeSource);
     chunks.copyNoiseAndHeightmap(biomeSource);
 
-    chunks
-        .storage()
-        .forEach(
-            chunk -> {
-              chunk.getOrCreateChunkNoiseSampler(world::createSampler);
-              chunk.setStatus(ChunkStatus.NOISE);
-            });
+    chunks.forEach(
+        chunk -> {
+          world.createSampler(chunk);
+          chunk.setStatus(ChunkStatus.NOISE);
+        });
   }
 
   @TearDown(Level.Invocation)
@@ -63,6 +58,6 @@ public class SurfaceBenchmark {
 
   @Benchmark
   public void surface() {
-    chunks.storage().forEach(chunk -> world.surface(chunk, biomeSource));
+    chunks.forEach(chunk -> world.surface(chunk, biomeSource));
   }
 }

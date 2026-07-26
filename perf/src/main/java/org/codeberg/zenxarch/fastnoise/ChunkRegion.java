@@ -2,6 +2,7 @@ package org.codeberg.zenxarch.fastnoise;
 
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortList;
+import java.util.function.Consumer;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.collection.BoundedRegionArray;
 import net.minecraft.util.math.ChunkPos;
@@ -9,9 +10,11 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ProtoChunk;
+import org.codeberg.zenxarch.fastnoise.TestGlobals.FakeAbstractChunkHolder;
 import org.codeberg.zenxarch.fastnoise.mixin.ChunkAccessor;
 
-public record ChunkRegion(BoundedRegionArray<ProtoChunk> storage) implements BiomeAccess.Storage {
+public record ChunkRegion(BoundedRegionArray<FakeAbstractChunkHolder> storage)
+    implements BiomeAccess.Storage {
   public static ChunkRegion of(TestWorld world, int centerX, int centerZ, int radius) {
 
     var storage = TestGlobals.createRegionArray(world.serverWorld, centerX, centerZ, radius);
@@ -24,7 +27,7 @@ public record ChunkRegion(BoundedRegionArray<ProtoChunk> storage) implements Bio
   }
 
   public void copyNoiseAndHeightmap(ChunkRegion region) {
-    this.storage.forEach(
+    this.forEach(
         (dest) -> {
           var src = region.getChunk(dest.getPos());
 
@@ -60,7 +63,7 @@ public record ChunkRegion(BoundedRegionArray<ProtoChunk> storage) implements Bio
   }
 
   public void copyBiomes(ChunkRegion region) {
-    this.storage.forEach(
+    this.forEach(
         (dest) -> {
           var src = region.getChunk(dest.getPos());
 
@@ -79,6 +82,10 @@ public record ChunkRegion(BoundedRegionArray<ProtoChunk> storage) implements Bio
   }
 
   public ProtoChunk getChunk(int cx, int cz) {
-    return this.storage.get(cx, cz);
+    return this.storage.get(cx, cz).getChunk();
+  }
+
+  public void forEach(Consumer<ProtoChunk> consumer) {
+    this.storage.forEach(chunkHolder -> consumer.accept(chunkHolder.getChunk()));
   }
 }
