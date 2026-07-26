@@ -1,13 +1,15 @@
 package org.codeberg.zenxarch.fastnoise;
 
 import net.minecraft.registry.RegistryKey;
-import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionOptions;
 
 public record BenchmarkSettings(
-    ChunkRegion region,
-    ChunkRegion biomeRegion,
+    int centerX,
+    int centerZ,
+    int radius,
     long seed,
+    RegistryKey<World> worldKey,
     RegistryKey<DimensionOptions> dimensionOptions) {
 
   private static int getIntProperty(String name, int def, int min) {
@@ -37,23 +39,6 @@ public record BenchmarkSettings(
 
   public static final long seedCount = getLongProperty("zseedcount", 16, 1);
 
-  private static ChunkRegion overworldRegion() {
-    return ChunkRegion.of(worldCenter - WorldRadiusInChunks, worldCenter + WorldRadiusInChunks);
-  }
-
-  private static ChunkRegion overworldBiomeRegion() {
-    return ChunkRegion.of(
-        worldCenter - WorldRadiusInChunks - 1, worldCenter + WorldRadiusInChunks + 1);
-  }
-
-  private static ChunkRegion endRegion() {
-    return ChunkRegion.of(endCenter - WorldRadiusInChunks, endCenter + WorldRadiusInChunks);
-  }
-
-  private static ChunkRegion endBiomeRegion() {
-    return ChunkRegion.of(endCenter - WorldRadiusInChunks - 1, endCenter + WorldRadiusInChunks + 1);
-  }
-
   public static BenchmarkSettings overworld() {
     return overworld(defaultSeed);
   }
@@ -68,21 +53,21 @@ public record BenchmarkSettings(
 
   public static BenchmarkSettings overworld(long seed) {
     return new BenchmarkSettings(
-        overworldRegion(), overworldBiomeRegion(), seed, DimensionOptions.OVERWORLD);
+        worldCenter,
+        worldCenter,
+        WorldRadiusInChunks,
+        seed,
+        World.OVERWORLD,
+        DimensionOptions.OVERWORLD);
   }
 
   public static BenchmarkSettings nether(long seed) {
     return new BenchmarkSettings(
-        overworldRegion(), overworldBiomeRegion(), seed, DimensionOptions.NETHER);
+        worldCenter, worldCenter, WorldRadiusInChunks, seed, World.NETHER, DimensionOptions.NETHER);
   }
 
   public static BenchmarkSettings end(long seed) {
-    return new BenchmarkSettings(endRegion(), endBiomeRegion(), seed, DimensionOptions.END);
-  }
-
-  public static record ChunkRegion(ChunkPos min, ChunkPos max) {
-    public static ChunkRegion of(int min, int max) {
-      return new ChunkRegion(new ChunkPos(min, min), new ChunkPos(max, max));
-    }
+    return new BenchmarkSettings(
+        endCenter, endCenter, WorldRadiusInChunks, seed, World.END, DimensionOptions.END);
   }
 }

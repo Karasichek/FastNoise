@@ -13,10 +13,12 @@ import net.minecraft.block.Blocks;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.Heightmap.Type;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.Chunk;
@@ -54,13 +56,17 @@ public final class TestWorld {
 
   private final FakeWorld world;
 
+  public final ServerWorld serverWorld;
+
   public TestWorld(BenchmarkSettings settings) {
-    this(settings.dimensionOptions(), settings.seed());
+    this(settings.worldKey(), settings.dimensionOptions(), settings.seed());
   }
 
-  public TestWorld(RegistryKey<DimensionOptions> optionsKey, long seed) {
+  public TestWorld(
+      RegistryKey<World> worldKey, RegistryKey<DimensionOptions> optionsKey, long seed) {
     this.seed = seed;
     var manager = TestGlobals.getManager();
+    this.serverWorld = TestGlobals.create(worldKey, optionsKey, seed);
     var options =
         manager
             .getEntryOrThrow(WorldPresets.DEFAULT)

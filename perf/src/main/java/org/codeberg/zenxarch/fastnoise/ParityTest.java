@@ -26,49 +26,61 @@ public final class ParityTest {
 
     FastNoiseConfig.ENABLED = false;
 
-    var original = ChunkRegion.of(fakeWorld, settings.region());
-    var originalBiomes = ChunkRegion.of(fakeWorld, settings.biomeRegion());
+    var original =
+        ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius());
+    var originalBiomes =
+        ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius() + 1);
 
     generateChunk(fakeWorld, original, originalBiomes, "Vanilla " + name);
 
     FastNoiseConfig.ENABLED = true;
 
-    var modded = ChunkRegion.of(fakeWorld, settings.region());
-    var moddedBiomes = ChunkRegion.of(fakeWorld, settings.biomeRegion());
+    var modded =
+        ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius());
+    var moddedBiomes =
+        ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius() + 1);
 
     generateChunk(fakeWorld, modded, moddedBiomes, "Modded " + name);
 
-    for (int i = 0; i < modded.chunks().length; i++) {
-      var a = modded.chunks()[i];
-      var b = original.getChunk(a.getPos());
+    modded
+        .storage()
+        .forEach(
+            (a) -> {
+              var b = original.getChunk(a.getPos());
 
-      try {
-        TestWorld.matches(a, b);
-      } catch (Exception e) {
-        TestWorld.dumpSections("Modded", a);
-        TestWorld.dumpSections("Vanilla", b);
-        throw e;
-      }
-    }
+              try {
+                TestWorld.matches(a, b);
+              } catch (Exception e) {
+                TestWorld.dumpSections("Modded", a);
+                TestWorld.dumpSections("Vanilla", b);
+                throw e;
+              }
+            });
     LOGGER.info(name + " matches");
   }
 
   private static void generateChunk(
       TestWorld world, ChunkRegion base, ChunkRegion biomeRegion, String name) {
-    for (int i = 0; i < biomeRegion.chunks().length; i++) {
-      world.biomes(biomeRegion.chunks()[i]);
-      biomeRegion.chunks()[i].setStatus(ChunkStatus.BIOMES);
-    }
+    biomeRegion
+        .storage()
+        .forEach(
+            (chunk) -> {
+              world.biomes(chunk);
+              chunk.setStatus(ChunkStatus.BIOMES);
+            });
 
     LOGGER.info("Generated Biomes for " + name);
 
     base.copyBiomes(biomeRegion);
 
-    for (int i = 0; i < base.chunks().length; i++) {
-      base.chunks()[i].getOrCreateChunkNoiseSampler(world::createSampler);
-      world.noise(base.chunks()[i]);
-      world.surface(base.chunks()[i], biomeRegion);
-    }
+    base.storage()
+        .forEach(
+            (chunk) -> {
+              chunk.getOrCreateChunkNoiseSampler(world::createSampler);
+              world.noise(chunk);
+              world.surface(chunk, biomeRegion);
+            });
+
     LOGGER.info("Generated " + name);
   }
 }

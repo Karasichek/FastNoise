@@ -93,7 +93,7 @@ public final class TestGlobals {
         false);
   }
 
-  public BoundedRegionArray<ProtoChunk> createRegionArray(
+  public static BoundedRegionArray<ProtoChunk> createRegionArray(
       ServerWorld world, int centerX, int centerZ, int radius) {
     return BoundedRegionArray.create(
         centerX,

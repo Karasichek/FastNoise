@@ -31,22 +31,29 @@ public class SurfaceBenchmark {
         };
     world = new TestWorld(settings);
 
-    this.chunks = ChunkRegion.of(world, settings.region());
-    this.biomeSource = ChunkRegion.of(world, settings.biomeRegion());
+    this.chunks = ChunkRegion.of(world, settings.centerX(), settings.centerZ(), settings.radius());
+    this.biomeSource =
+        ChunkRegion.of(world, settings.centerX(), settings.centerZ(), settings.radius() + 1);
 
-    for (int i = 0; i < biomeSource.chunks().length; i++) {
-      world.biomes(biomeSource.chunks()[i]);
-      world.noise(biomeSource.chunks()[i]);
-      biomeSource.chunks()[i].setStatus(ChunkStatus.NOISE);
-    }
+    biomeSource
+        .storage()
+        .forEach(
+            chunk -> {
+              world.biomes(chunk);
+              world.noise(chunk);
+              chunk.setStatus(ChunkStatus.NOISE);
+            });
 
     chunks.copyBiomes(biomeSource);
     chunks.copyNoiseAndHeightmap(biomeSource);
 
-    for (int i = 0; i < chunks.chunks().length; i++) {
-      chunks.chunks()[i].getOrCreateChunkNoiseSampler(world::createSampler);
-      chunks.chunks()[i].setStatus(ChunkStatus.NOISE);
-    }
+    chunks
+        .storage()
+        .forEach(
+            chunk -> {
+              chunk.getOrCreateChunkNoiseSampler(world::createSampler);
+              chunk.setStatus(ChunkStatus.NOISE);
+            });
   }
 
   @TearDown(Level.Invocation)
@@ -56,8 +63,6 @@ public class SurfaceBenchmark {
 
   @Benchmark
   public void surface() {
-    for (int i = 0; i < chunks.chunks().length; i++) {
-      world.surface(chunks.chunks()[i], biomeSource);
-    }
+    chunks.storage().forEach(chunk -> world.surface(chunk, biomeSource));
   }
 }
