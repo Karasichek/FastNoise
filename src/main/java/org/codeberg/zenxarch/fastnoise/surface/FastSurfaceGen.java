@@ -18,7 +18,6 @@ import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.mixin.SurfaceBuilderAccessor;
@@ -26,7 +25,6 @@ import org.codeberg.zenxarch.fastnoise.surface.cache.FastColumnIterator;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastIsFluidCache;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastPaletteIndexCache;
 import org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleInterpreter;
-import org.codeberg.zenxarch.fastnoise.surface.rules.RuleExpansion;
 
 public class FastSurfaceGen {
 
@@ -123,20 +121,18 @@ public class FastSurfaceGen {
     var willUpdateHeightmap = true;
     var willAddWater = true;
     var willGrow = true;
-    var rule = RuleExpansion.expand(materialRule, context);
-    if (rule instanceof SequenceBlockStateRule seq) {
-      var newrule = MaterialRuleInterpreter.of(seq, context);
-      if (newrule.rules.length == 0) {
-        willUpdateHeightmap = FastBlockColumn.willHeightmapUpdate(defaultState, newrule.states);
-        willAddWater = willAddWater(newrule.states);
+    var rule = MaterialRuleInterpreter.of(context, heightContext, noiseConfig, materialRule);
+    {
+      if (rule.rules.length == 0) {
+        willUpdateHeightmap = FastBlockColumn.willHeightmapUpdate(defaultState, rule.states);
+        willAddWater = willAddWater(rule.states);
 
         var maxStates = 0;
         for (int i = 0; i < sections.length; i++)
           maxStates = Math.max(maxStates, sections[i].blockStateContainer.data.palette().getSize());
 
-        willGrow = (maxStates + newrule.states.length) > 16;
+        willGrow = (maxStates + rule.states.length) > 16;
       }
-      rule = newrule;
     }
 
     final int minY = chunk.getBottomY();

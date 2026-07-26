@@ -1,7 +1,6 @@
 package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
 import static org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleInterpreter.*;
-import static org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleProgram.*;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -10,6 +9,9 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import net.minecraft.block.BlockState;
+import net.minecraft.util.math.random.CheckedRandom;
+import net.minecraft.util.math.random.RandomSplitter;
+import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import org.codeberg.zenxarch.fastnoise.surface.AllocFreeRandom;
@@ -44,6 +46,8 @@ public final class MaterialRuleCompiler {
       lookupCondition("aboveYWithRunDepthAndStoneDepth", int.class, int.class);
   private static final MethodHandle stoneDepthTest =
       lookupCondition("stoneDepthTest", int.class, boolean.class, int.class, boolean.class);
+  private static final MethodHandle verticalGradientTest =
+      lookupCondition("verticalGradientTest", int.class, int.class, RandomSplitter.class);
   private static final MethodHandle xoroVerticalGradientTest =
       lookupCondition("xoroVerticalGradientTest", int.class, int.class, long.class, long.class);
   private static final MethodHandle checkedVerticalGradientTest =
@@ -77,102 +81,81 @@ public final class MaterialRuleCompiler {
     }
   }
 
-  public static MethodHandle compile(MaterialRuleProgram program) {
+  public static MethodHandle compile(
+      int[] program, MaterialRuleCompilerCacheHeightContextSpecific contextSpecificCache) {
     var baseCache = new Int2ObjectOpenHashMap<MethodHandle>();
-    return compile0(program, 0, baseCache);
+    return compile0(program, 0, baseCache, contextSpecificCache);
   }
 
   private static MethodHandle compile0(
-      MaterialRuleProgram program, int index, Int2ObjectOpenHashMap<MethodHandle> cache) {
-    if (index >= program.size()) return retNull;
+      int[] program,
+      int index,
+      Int2ObjectOpenHashMap<MethodHandle> cache,
+      MaterialRuleCompilerCacheHeightContextSpecific contextSpecificCache) {
+    if (index >= program.length) return retNull;
     if (cache.containsKey(index)) return cache.get(index);
-    var res = compile1(program, index, cache);
+    var res = compile1(program, index, cache, contextSpecificCache);
     cache.put(index, res);
     return res;
   }
 
   private static MethodHandle compile1(
-      MaterialRuleProgram program, int index, Int2ObjectOpenHashMap<MethodHandle> cache) {
-    if (index >= program.size()) return retNull;
-    var inst = program.opcode()[index];
+      int[] program,
+      int index,
+      Int2ObjectOpenHashMap<MethodHandle> cache,
+      MaterialRuleCompilerCacheHeightContextSpecific contextSpecificCache) {
+    if (index >= program.length) return retNull;
+    var inst = program[index];
 
     return switch (inst) {
-      case OPCODE_RETURN -> createRet(program.data()[index]);
-      case OPCODE_TRY_RETURN ->
-          createTryRet(program.data()[index], compile0(program, index + 1, cache));
-      case OPCODE_JUMP_IF -> {
-        var jumpData = program.jumpDataArr()[program.data()[index]];
-        yield createTernary(
-            createConditionFromProgram(program, jumpData.type(), jumpData.idx()),
-            program,
-            index + jumpData.offset(),
-            index + 1,
-            cache);
-      }
-      case OPCODE_JUMP_IF_NOT -> {
-        var jumpData = program.jumpDataArr()[program.data()[index]];
-        yield createTernary(
-            createConditionFromProgram(program, jumpData.type(), jumpData.idx()),
-            program,
-            index + 1,
-            index + jumpData.offset(),
-            cache);
-      }
-      default -> retNull;
+      case JUMP_IF_FALSE ->
+          createTernary(
+              createCondition(program[index + 1]),
+              program,
+              index + 3,
+              index + program[index + 2],
+              cache,
+              contextSpecificCache);
+      case RETURN -> createRet(program[index + 1]);
+      case TRY_RETURN ->
+          createTryRet(
+              program[index + 1], compile0(program, index + 2, cache, contextSpecificCache));
+      case RETURN_IF ->
+          createTernary(
+              createCondition(program[index + 1]),
+              createRet(program[index + 2]),
+              compile0(program, index + 3, cache, contextSpecificCache));
+      case BIOME_TEST ->
+          createTernary(
+              createBiomeTest(getLong(program, index + 1)),
+              program,
+              index + 4,
+              index + program[index + 3],
+              cache,
+              contextSpecificCache);
+      case JUMP_IF_FALSE_STATIC ->
+          createTernary(
+              contextSpecificCache.getHandle(program[index + 1]),
+              program,
+              index + 3,
+              index + program[index + 2],
+              cache,
+              contextSpecificCache);
+      default -> throw new IllegalStateException("Invalid instruction");
     };
   }
 
   private static MethodHandle createTernary(
       MethodHandle guard,
-      MaterialRuleProgram program,
+      int[] program,
       int index0,
       int index1,
-      Int2ObjectOpenHashMap<MethodHandle> cache) {
-    return createTernary(guard, compile0(program, index0, cache), compile0(program, index1, cache));
-  }
-
-  private static MethodHandle createConditionFromProgram(
-      MaterialRuleProgram program, byte type, int idx) {
-    return switch (type) {
-      case JUMP_TYPE_CONDITION -> createCondition(idx);
-      case JUMP_TYPE_BIOME -> createBiomeTest(program.biomeMasks()[idx]);
-      case JUMP_TYPE_ABOVE_Y -> {
-        var aboveY = program.aboveYConditions()[idx];
-        yield createAboveY(aboveY.y(), aboveY.surfaceDepthMultiplier(), aboveY.addStoneDepth());
-      }
-      case JUMP_TYPE_STONE_DEPTH -> {
-        var stoneDepth = program.stoneDepthConditions()[idx];
-        yield MethodHandles.insertArguments(
-            stoneDepthTest,
-            0,
-            stoneDepth.offset(),
-            stoneDepth.addSurfaceDepth(),
-            stoneDepth.secondaryDepthRange(),
-            stoneDepth.ceiling());
-      }
-      case JUMP_TYPE_XORO_VERTICAL_GRADIENT -> {
-        var xoro = program.xoroVerticalGradientConditions()[idx];
-        yield MethodHandles.insertArguments(
-            xoroVerticalGradientTest,
-            0,
-            xoro.trueAtAndBelow(),
-            xoro.falseAtAndAbove(),
-            xoro.seedLo(),
-            xoro.seedHi());
-      }
-      case JUMP_TYPE_CHECKED_VERTICAL_GRADIENT -> {
-        var checked = program.checkedVerticalGradientConditions()[idx];
-        yield MethodHandles.insertArguments(
-            checkedVerticalGradientTest,
-            0,
-            checked.trueAtAndBelow(),
-            checked.falseAtAndAbove(),
-            checked.seed());
-      }
-      default -> {
-        throw new IllegalStateException("undefined condition type " + type);
-      }
-    };
+      Int2ObjectOpenHashMap<MethodHandle> cache,
+      MaterialRuleCompilerCacheHeightContextSpecific contextSpecificCache) {
+    return createTernary(
+        guard,
+        compile0(program, index0, cache, contextSpecificCache),
+        compile0(program, index1, cache, contextSpecificCache));
   }
 
   private static MethodHandle createTernary(
@@ -196,7 +179,7 @@ public final class MaterialRuleCompiler {
     return MethodHandles.insertArguments(biomeTest, 0, mask);
   }
 
-  private static MethodHandle createAboveY(int y, int runDepthMultiplier, boolean addStoneDepth) {
+  public static MethodHandle createAboveY(int y, int runDepthMultiplier, boolean addStoneDepth) {
     if (addStoneDepth) {
       if (runDepthMultiplier == 0) {
         return MethodHandles.insertArguments(aboveYWithStoneDepth, 0, y);
@@ -213,6 +196,37 @@ public final class MaterialRuleCompiler {
     }
   }
 
+  public static MethodHandle createStoneDepthTest(
+      int offset, boolean addSurfaceDepth, int secondaryDepthRange, boolean ceiling) {
+    return MethodHandles.insertArguments(
+        stoneDepthTest, 0, offset, addSurfaceDepth, secondaryDepthRange, ceiling);
+  }
+
+  public static MethodHandle createVerticalGradientTest(
+      int trueAtAndBelow, int falseAtAndAbove, RandomSplitter splitter) {
+    return switch (splitter) {
+      case Xoroshiro128PlusPlusRandom.Splitter xoro ->
+          createXoroVerticalGradientTest(trueAtAndBelow, falseAtAndAbove, xoro.seedLo, xoro.seedHi);
+      case CheckedRandom.Splitter checked ->
+          createCheckedVerticalGradientTest(trueAtAndBelow, falseAtAndAbove, checked.seed);
+      default ->
+          MethodHandles.insertArguments(
+              verticalGradientTest, 0, trueAtAndBelow, falseAtAndAbove, splitter);
+    };
+  }
+
+  public static MethodHandle createXoroVerticalGradientTest(
+      int trueAtAndBelow, int falseAtAndAbove, long seedLo, long seedHi) {
+    return MethodHandles.insertArguments(
+        xoroVerticalGradientTest, 0, trueAtAndBelow, falseAtAndAbove, seedLo, seedHi);
+  }
+
+  public static MethodHandle createCheckedVerticalGradientTest(
+      int trueAtAndBelow, int falseAtAndAbove, long seed) {
+    return MethodHandles.insertArguments(
+        checkedVerticalGradientTest, 0, trueAtAndBelow, falseAtAndAbove, seed);
+  }
+
   public static boolean condition(
       int index,
       BooleanSupplier[] conditions,
@@ -221,8 +235,7 @@ public final class MaterialRuleCompiler {
       int x,
       int y,
       int z,
-      MaterialRuleContext context)
-      throws Throwable {
+      MaterialRuleContext context) {
     return conditions[index].get();
   }
 
@@ -286,8 +299,7 @@ public final class MaterialRuleCompiler {
       int x,
       int y,
       int z,
-      MaterialRuleContext context)
-      throws Throwable {
+      MaterialRuleContext context) {
     return context.blockY >= testY;
   }
 
@@ -300,8 +312,7 @@ public final class MaterialRuleCompiler {
       int x,
       int y,
       int z,
-      MaterialRuleContext context)
-      throws Throwable {
+      MaterialRuleContext context) {
     return context.blockY >= (testY + context.runDepth * runDepthMultiplier);
   }
 
@@ -313,8 +324,7 @@ public final class MaterialRuleCompiler {
       int x,
       int y,
       int z,
-      MaterialRuleContext context)
-      throws Throwable {
+      MaterialRuleContext context) {
     return (context.blockY + context.stoneDepthAbove) >= testY;
   }
 
@@ -350,6 +360,25 @@ public final class MaterialRuleCompiler {
       stoneDepth -= (int) ((context.getSecondaryDepth() + 1.0) * 0.5 * secondaryDepthRange);
 
     return stoneDepth <= offset;
+  }
+
+  public static boolean verticalGradientTest(
+      int trueAtAndBelow,
+      int falseAtAndAbove,
+      RandomSplitter splitter,
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context) {
+    final int blockY = context.blockY;
+    if (blockY <= trueAtAndBelow) return true;
+    if (blockY >= falseAtAndAbove) return false;
+
+    var probability = VerticalGradientPredicate.map(blockY, trueAtAndBelow, falseAtAndAbove);
+    return splitter.split(context.blockX, blockY, context.blockZ).nextFloat() < probability;
   }
 
   public static boolean xoroVerticalGradientTest(

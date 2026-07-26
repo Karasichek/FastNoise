@@ -1,9 +1,11 @@
 package org.codeberg.zenxarch.fastnoise.surface.compiler;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
-import java.lang.invoke.MethodHandle;
-import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
+import net.minecraft.world.gen.HeightContext;
+import net.minecraft.world.gen.noise.NoiseConfig;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 
 public final class MaterialRuleCompilerCache {
   private MaterialRuleCompilerCache() {}
@@ -12,16 +14,31 @@ public final class MaterialRuleCompilerCache {
     return new MaterialRuleCompilerCache();
   }
 
-  private final Object2ObjectLinkedOpenHashMap<MaterialRuleProgram, MethodHandle> cache =
-      new Object2ObjectLinkedOpenHashMap<>(
-          FastNoiseConfig.MAX_CACHE_SIZE, Object2ObjectOpenCustomHashMap.FAST_LOAD_FACTOR);
+  private static final Hash.Strategy<HeightContext> HEIGHT_CONTEXT_STRATEGY =
+      new Hash.Strategy<HeightContext>() {
+        public boolean equals(HeightContext a, HeightContext b) {
+          if (a == null || b == null) return a == b;
+          if (a == b) return true;
+          return a.getHeight() == b.getHeight()
+              && a.getMinY() == b.getMinY()
+              && a.getSeaLevel() == b.getSeaLevel();
+        }
 
-  public synchronized MethodHandle get(MaterialRuleProgram program) {
-    var res = cache.getAndMoveToFirst(program);
-    if (res != null) return res;
-    res = MaterialRuleCompiler.compile(program);
-    cache.put(program, res);
-    while (cache.size() > FastNoiseConfig.MAX_CACHE_SIZE) cache.removeLast();
-    return res;
+        public int hashCode(HeightContext o) {
+          return HashCommon.mix(o.getHeight())
+              ^ HashCommon.mix(o.getMinY())
+              ^ HashCommon.mix(o.getSeaLevel());
+        }
+      };
+
+  private final Object2ObjectOpenCustomHashMap<
+          HeightContext, MaterialRuleCompilerCacheHeightContextSpecific>
+      cache = new Object2ObjectOpenCustomHashMap<>(HEIGHT_CONTEXT_STRATEGY);
+
+  public synchronized MaterialRuleCompilerCacheHeightContextSpecific get(
+      HeightContext context, NoiseConfig config, MaterialRule rule) {
+    return this.cache.computeIfAbsent(
+        context,
+        (ctx) -> new MaterialRuleCompilerCacheHeightContextSpecific(context, config, rule));
   }
 }
