@@ -30,7 +30,7 @@ public interface StaticMaterialCondition {
               aboveY.addStoneDepth());
       case StoneDepthMaterialCondition stone ->
           new StoneDepthCondition(
-              stone.offset(),
+              stone.offset() + 1,
               stone.addSurfaceDepth(),
               stone.secondaryDepthRange(),
               stone.surfaceType() == VerticalSurfaceType.CEILING);
@@ -52,7 +52,7 @@ public interface StaticMaterialCondition {
     @Override
     public MethodHandle compiled() {
       return MaterialRuleCompiler.createStoneDepthTest(
-          offset + 1, addSurfaceDepth, secondaryDepthRange, ceiling);
+          offset, addSurfaceDepth, secondaryDepthRange, ceiling);
     }
   }
 
