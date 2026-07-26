@@ -16,6 +16,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SimpleBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.TerracottaBandsMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
 import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
 
 public final class RuleExpansion {
@@ -89,6 +90,8 @@ public final class RuleExpansion {
       case MaterialRules.BiomeMaterialRule biome ->
           BiomePredicate.getSupplier(biome.biomes(), context);
       case StoneDepthMaterialCondition stone -> StoneDepthPredicate.create(stone, context);
+      case VerticalGradientMaterialCondition vertical ->
+          VerticalGradientPredicate.create(vertical, context);
       default -> condition.apply(context);
     };
   }
