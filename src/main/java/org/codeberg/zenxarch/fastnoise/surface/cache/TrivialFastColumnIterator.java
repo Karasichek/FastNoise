@@ -96,6 +96,7 @@ public class TrivialFastColumnIterator implements FastColumnIterator {
   private void recalculateSolidBlocksBelow() {
     if (localY >= size) return;
     step(this.isAir.numberOfTrailingOnes(localY));
+    context.air();
     if (localY >= size) return;
     solidBlocksBelow = this.isDefault.numberOfTrailingOnes(localY);
   }
