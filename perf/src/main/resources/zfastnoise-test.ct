@@ -26,3 +26,5 @@ accessible field net/minecraft/world/chunk/ChunkSection nonEmptyBlockCount S
 accessible field net/minecraft/world/chunk/ChunkSection nonEmptyFluidCount S
 accessible field net/minecraft/world/chunk/ChunkSection randomTickableBlockCount S
 accessible field net/minecraft/world/chunk/ChunkSection randomTickableFluidCount S
+
+accessible method net/minecraft/test/TestServer <init> (Ljava/lang/Thread;Lnet/minecraft/world/level/storage/LevelStorage$Session;Lnet/minecraft/resource/ResourcePackManager;Lnet/minecraft/server/SaveLoader;Ljava/util/Optional;ZI)V
