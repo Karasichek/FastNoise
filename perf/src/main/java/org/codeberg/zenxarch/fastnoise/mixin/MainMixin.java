@@ -30,7 +30,8 @@ public abstract class MainMixin {
   private static void zenxarch$forked(
       String[] args, CallbackInfo ci, @Local DynamicRegistryManager.Immutable manager) {
     ci.cancel();
-    if (BenchmarkMain.isForked()) BenchmarkMain.runForked(args, manager);
-    if (BenchmarkMain.isParityTest()) BenchmarkMain.runParityTest(manager);
+    TestGlobals.setManager(manager);
+    if (BenchmarkMain.isForked()) BenchmarkMain.runForked(args);
+    if (BenchmarkMain.isParityTest()) BenchmarkMain.runParityTest();
   }
 }

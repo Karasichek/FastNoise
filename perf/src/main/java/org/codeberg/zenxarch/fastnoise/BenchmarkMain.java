@@ -3,7 +3,6 @@ package org.codeberg.zenxarch.fastnoise;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import net.minecraft.registry.DynamicRegistryManager;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.results.RunResult;
 import org.openjdk.jmh.results.format.ResultFormatFactory;
@@ -50,9 +49,7 @@ public class BenchmarkMain {
     return System.getProperty("zforked") != null;
   }
 
-  public static void runForked(String[] args, DynamicRegistryManager manager) {
-    TestGlobals.setManager(manager);
-
+  public static void runForked(String[] args) {
     try {
       ForkedRunnerAccessor.main(args);
     } catch (Exception e) {
@@ -60,9 +57,7 @@ public class BenchmarkMain {
     }
   }
 
-  public static void runParityTest(DynamicRegistryManager manager) {
-    TestGlobals.setManager(manager);
-
+  public static void runParityTest() {
     ParityTest.doParityTest();
   }
 
