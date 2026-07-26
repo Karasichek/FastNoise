@@ -55,8 +55,9 @@ public final class ParityTest {
           if (ParityGlobals.isServer) {
             var pos = chunk.getPos();
             var against = ParityGlobals.get(new ChunkStorageKey(name, pos.x(), pos.z()));
-            if (!against.matches(chunk)) {
-              throw new IllegalStateException("Chunks don't match " + pos);
+            var err = against.matches(chunk);
+            if (err != null) {
+              throw new IllegalStateException("Chunks don't match " + pos + " " + err);
             }
           } else {
             var storage = new ChunkStorage(name, chunk);

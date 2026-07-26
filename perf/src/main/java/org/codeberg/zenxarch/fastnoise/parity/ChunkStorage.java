@@ -6,12 +6,16 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import net.minecraft.block.BlockState;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ProtoChunk;
+import org.codeberg.zenxarch.fastnoise.FastNoiseConstants;
 import org.codeberg.zenxarch.fastnoise.mixin.ChunkAccessor;
+import org.codeberg.zenxarch.fastnoise.parity.ChunkStorage.PalettedContainerStorage;
 
 public final class ChunkStorage implements Serializable {
   public String worldName;
@@ -44,38 +48,39 @@ public final class ChunkStorage implements Serializable {
     }
   }
 
-  public boolean matches(ProtoChunk chunk) {
+  public String matches(ProtoChunk chunk) {
     var pos = chunk.getPos();
-    if (pos.x() != chunkX || pos.z() != chunkZ) return false;
+    if (pos.x() != chunkX || pos.z() != chunkZ) return "Chunk Pos don't match";
 
+    FastNoiseConstants.LOGGER.info("matching sections {}", chunk.getPos());
     var sections = chunk.getSectionArray();
-    if (sections.length != this.sections.length) return false;
+    if (sections.length != this.sections.length) return "Chunk section's length don't match";
     for (int i = 0; i < sections.length; i++) {
-      if (!this.sections[i].matches(sections[i])) return false;
+      var err = this.sections[i].matches(sections[i]);
+      if (err != null) return err;
     }
 
     for (var heightmap : chunk.getHeightmaps()) {
       var key = heightmap.getKey();
       var value = heightmap.getValue();
-      if (!Arrays.equals(value.asLongArray(), this.heightmaps.get(key.asString()))) return false;
+      if (!Arrays.equals(value.asLongArray(), this.heightmaps.get(key.asString())))
+        return "Heightmap don't match";
     }
 
     var post = ((ChunkAccessor) chunk).zenxarch$postProcessingLists();
-    if (post.length != this.postProcessingList.length) return false;
+    if (post.length != this.postProcessingList.length)
+      return "Post processing lists length don't match";
 
     for (int i = 0; i < post.length; i++) {
-      if (!matches(post[i], this.postProcessingList[i])) return false;
+      if (!matches(post[i], this.postProcessingList[i])) return "Post processing lists don't match";
     }
 
-    return true;
+    return null;
   }
 
   public static final class ChunkStorageSection implements Serializable {
-    public String[] biomeKeys;
-    public int[] biomeData;
-
-    public String[] blockStateKeys;
-    public int[] blockStateData;
+    public PalettedContainerStorage biomes;
+    public PalettedContainerStorage blocks;
 
     public short nonEmptyBlockCount;
     public short nonEmptyFluidCount;
@@ -88,63 +93,67 @@ public final class ChunkStorage implements Serializable {
       this.randomTickableBlockCount = section.randomTickableBlockCount;
       this.randomTickableFluidCount = section.randomTickableFluidCount;
 
-      {
-        var biomes = ((PalettedContainer<RegistryEntry<Biome>>) section.biomeContainer);
-        this.biomeKeys = new String[biomes.data.palette().getSize()];
-        for (int i = 0; i < this.biomeKeys.length; i++) {
-          this.biomeKeys[i] = biomes.data.palette().get(i).getIdAsString();
-        }
-        this.biomeData = new int[biomes.data.storage().getSize()];
-        for (int i = 0; i < biomeData.length; i++) {
-          this.biomeData[i] = biomes.data.storage().get(i);
-        }
-      }
+      var biomes = ((PalettedContainer<RegistryEntry<Biome>>) section.biomeContainer);
+      this.biomes = new PalettedContainerStorage(biomes, RegistryEntry::getIdAsString);
 
-      var blocks = section.blockStateContainer;
-      this.blockStateKeys = new String[blocks.data.palette().getSize()];
-      for (int i = 0; i < this.blockStateKeys.length; i++) {
-        this.blockStateKeys[i] = blocks.data.palette().get(i).toString();
-      }
-      this.blockStateData = new int[blocks.data.storage().getSize()];
-      for (int i = 0; i < blockStateData.length; i++) {
-        this.blockStateData[i] = blocks.data.storage().get(i);
-      }
+      this.blocks = new PalettedContainerStorage(section.blockStateContainer, BlockState::toString);
     }
 
-    public boolean matches(ChunkSection section) {
-      if (this.nonEmptyBlockCount != section.nonEmptyBlockCount) return false;
-      if (this.nonEmptyFluidCount != section.nonEmptyFluidCount) return false;
-      if (this.randomTickableBlockCount != section.randomTickableBlockCount) return false;
-      if (this.randomTickableFluidCount != section.randomTickableFluidCount) return false;
+    public String matches(ChunkSection section) {
+      if (this.nonEmptyBlockCount != section.nonEmptyBlockCount)
+        return "nonEmptyBlockCount don't match";
+      if (this.nonEmptyFluidCount != section.nonEmptyFluidCount)
+        return "nonEmptyFluidCount don't match";
+      if (this.randomTickableBlockCount != section.randomTickableBlockCount)
+        return "randomTickableBlockCount don't match";
+      if (this.randomTickableFluidCount != section.randomTickableFluidCount)
+        return "randomTickableFluidCount don't match";
 
-      var blocks = section.blockStateContainer;
-      var blockStateKeys = new String[blocks.data.palette().getSize()];
-      for (int i = 0; i < blockStateKeys.length; i++) {
-        blockStateKeys[i] = blocks.data.palette().get(i).toString();
+      {
+        var blocksErr = this.blocks.matches(section.blockStateContainer, BlockState::toString);
+        if (blocksErr != null) return "Blocks " + blocksErr;
       }
 
-      for (int i = 0; i < this.blockStateData.length; i++) {
-        if (!Objects.equals(
-            this.blockStateKeys[this.blockStateData[i]],
-            blockStateKeys[blocks.data.storage().get(i)])) {
-          return false;
-        }
+      {
+        var biomesErr =
+            this.biomes.matches(
+                ((PalettedContainer<RegistryEntry<Biome>>) section.biomeContainer),
+                RegistryEntry::getIdAsString);
+        if (biomesErr != null) return "Biomes " + biomesErr;
       }
 
-      var biomes = ((PalettedContainer<RegistryEntry<Biome>>) section.biomeContainer);
-      var biomeKeys = new String[biomes.data.palette().getSize()];
-      for (int i = 0; i < biomeKeys.length; i++) {
-        biomeKeys[i] = biomes.data.palette().get(i).getIdAsString();
+      return null;
+    }
+  }
+
+  public static final class PalettedContainerStorage implements Serializable {
+    public String[] keys;
+    public int[] data;
+
+    public <T> PalettedContainerStorage(
+        PalettedContainer<T> container, Function<T, String> converter) {
+      var data = container.data;
+      keys = new String[data.palette().getSize()];
+      for (int i = 0; i < keys.length; i++) keys[i] = converter.apply(data.palette().get(i));
+
+      this.data = new int[data.storage().getSize()];
+      for (int i = 0; i < this.data.length; i++) this.data[i] = data.storage().get(i);
+    }
+
+    public <T> String matches(PalettedContainer<T> container, Function<T, String> converter) {
+      return matches(new PalettedContainerStorage(container, converter));
+    }
+
+    private String matches(PalettedContainerStorage other) {
+      for (int i = 0; i < other.data.length; i++) {
+        if (!Objects.equals(this.keys[this.data[i]], other.keys[other.data[i]]))
+          return "Storage entries don't match "
+              + this.keys[this.data[i]]
+              + " "
+              + other.keys[other.data[i]];
       }
 
-      for (int i = 0; i < this.biomeData.length; i++) {
-        if (!Objects.equals(
-            this.biomeKeys[this.biomeData[i]], biomeKeys[biomes.data.storage().get(i)])) {
-          return false;
-        }
-      }
-
-      return true;
+      return null;
     }
   }
 

@@ -73,7 +73,7 @@ public class ParityGlobals {
           }
         }
       }
-    }.run();
+    }.start();
   }
 
   static {
