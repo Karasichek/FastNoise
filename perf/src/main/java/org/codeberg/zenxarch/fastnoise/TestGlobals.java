@@ -1,9 +1,12 @@
 package org.codeberg.zenxarch.fastnoise;
 
 import com.mojang.serialization.Lifecycle;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -54,6 +57,10 @@ public final class TestGlobals {
       ResourcePackManager resourcePackManager,
       Session session,
       SaveLoader saveLoader) {
+    try {
+      Files.delete(FabricLoader.getInstance().getGameDir().resolve("world/session.lock"));
+    } catch (IOException e) {
+    }
     TestGlobals.manager = manager;
     TestGlobals.factory = PalettesFactory.fromRegistryManager(manager);
     TestGlobals.session = session;

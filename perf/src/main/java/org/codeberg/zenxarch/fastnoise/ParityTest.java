@@ -1,12 +1,15 @@
 package org.codeberg.zenxarch.fastnoise;
 
 import net.minecraft.world.chunk.ChunkStatus;
-import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
+import org.codeberg.zenxarch.fastnoise.parity.ChunkStorage;
+import org.codeberg.zenxarch.fastnoise.parity.ParityGlobals;
+import org.codeberg.zenxarch.fastnoise.parity.ParityGlobals.ChunkStorageKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class ParityTest {
-  public static final Logger LOGGER = LoggerFactory.getLogger(ParityTest.class);
+
+  public static final Logger LOGGER = LoggerFactory.getLogger(ParityGlobals.class);
 
   public static void doParityTest() {
     LOGGER.info("Starting parity test");
@@ -24,36 +27,11 @@ public final class ParityTest {
     var name = settings.dimensionOptions().getValue().getPath();
     LOGGER.info("Generating " + name);
 
-    FastNoiseConfig.ENABLED = false;
-
-    var original =
-        ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius());
-    var originalBiomes =
+    var base = ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius());
+    var biomes =
         ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius() + 1);
 
-    generateChunk(fakeWorld, original, originalBiomes, "Vanilla " + name);
-
-    FastNoiseConfig.ENABLED = true;
-
-    var modded =
-        ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius());
-    var moddedBiomes =
-        ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius() + 1);
-
-    generateChunk(fakeWorld, modded, moddedBiomes, "Modded " + name);
-
-    modded.forEach(
-        (a) -> {
-          var b = original.getChunk(a.getPos());
-
-          try {
-            TestWorld.matches(a, b);
-          } catch (Exception e) {
-            TestWorld.dumpSections("Modded", a);
-            TestWorld.dumpSections("Vanilla", b);
-            throw e;
-          }
-        });
+    generateChunk(fakeWorld, base, biomes, "Vanilla " + name);
     LOGGER.info(name + " matches");
   }
 
@@ -73,6 +51,17 @@ public final class ParityTest {
         (chunk) -> {
           world.noise(base, chunk);
           world.surface(chunk, biomeRegion);
+
+          if (ParityGlobals.isServer) {
+            var pos = chunk.getPos();
+            var against = ParityGlobals.get(new ChunkStorageKey(name, pos.x(), pos.z()));
+            if (!against.matches(chunk)) {
+              throw new IllegalStateException("Chunks don't match " + pos);
+            }
+          } else {
+            var storage = new ChunkStorage(name, chunk);
+            ParityGlobals.send(storage);
+          }
         });
 
     LOGGER.info("Generated " + name);
