@@ -7,6 +7,7 @@ import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.AboveYMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
 import org.jspecify.annotations.Nullable;
@@ -34,6 +35,7 @@ public interface StaticMaterialCondition {
               stone.addSurfaceDepth(),
               stone.secondaryDepthRange(),
               stone.surfaceType() == VerticalSurfaceType.CEILING);
+      case RegisteredCondition reg -> tryCreate(reg.holder().value(), context, config);
       default -> null;
     };
   }
