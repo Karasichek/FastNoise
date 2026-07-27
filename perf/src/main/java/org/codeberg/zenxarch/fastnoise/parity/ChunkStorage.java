@@ -1,7 +1,6 @@
 package org.codeberg.zenxarch.fastnoise.parity;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import it.unimi.dsi.fastutil.shorts.ShortList;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Map;
@@ -41,7 +40,7 @@ public final class ChunkStorage implements Serializable {
     var postProcessingList = ((ChunkAccessor) chunk).zenxarch$postProcessingLists();
 
     this.postProcessingList = new short[postProcessingList.length][];
-    for (int i = 0;i < postProcessingList.length;i++) {
+    for (int i = 0; i < postProcessingList.length; i++) {
       if (postProcessingList[i] == null) this.postProcessingList[i] = null;
       else this.postProcessingList[i] = postProcessingList[i].toShortArray();
     }
@@ -90,7 +89,8 @@ public final class ChunkStorage implements Serializable {
       return "Post processing lists length don't match";
 
     for (int i = 0; i < post.length; i++) {
-      if (!matches((post[i] == null) ? null : post[i].toShortArray(), this.postProcessingList[i])) return "Post processing lists don't match";
+      if (!matches((post[i] == null) ? null : post[i].toShortArray(), this.postProcessingList[i]))
+        return "Post processing lists don't match";
     }
 
     var sections = chunk.getSectionArray();
@@ -220,7 +220,7 @@ public final class ChunkStorage implements Serializable {
 
       res.append(Arrays.toString(this.keys)).append(",");
 
-      for (int i = 0;i < this.data.length;i++) res.append(Integer.toHexString(data[i]));
+      for (int i = 0; i < this.data.length; i++) res.append(Integer.toHexString(data[i]));
 
       res.append("]");
       return res.toString();

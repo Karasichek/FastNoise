@@ -1,7 +1,6 @@
 package org.codeberg.zenxarch.fastnoise;
 
 import net.minecraft.world.chunk.ChunkStatus;
-
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.parity.ChunkStorage;
 import org.codeberg.zenxarch.fastnoise.parity.ParityGlobals;
@@ -33,12 +32,23 @@ public final class ParityTest {
     var biomes =
         ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius() + 1);
 
-    generateChunk(fakeWorld, base, biomes, FastNoiseConfig.ENABLED ? "Modded " : "Vanilla " + name, settings.seed());
+    generateChunk(
+        fakeWorld,
+        base,
+        biomes,
+        FastNoiseConfig.ENABLED ? "Modded " : "Vanilla " + name,
+        settings.seed(),
+        name);
     LOGGER.info(name + " matches");
   }
 
   private static void generateChunk(
-      TestWorld world, ChunkRegion base, ChunkRegion biomeRegion, String name, long seed) {
+      TestWorld world,
+      ChunkRegion base,
+      ChunkRegion biomeRegion,
+      String name,
+      long seed,
+      String worldKey) {
     biomeRegion.forEach(
         (chunk) -> {
           world.biomes(biomeRegion, chunk);
@@ -56,15 +66,15 @@ public final class ParityTest {
 
           if (ParityGlobals.isServer) {
             var pos = chunk.getPos();
-            var against = ParityGlobals.get(new ChunkStorageKey(seed, name, pos.x(), pos.z()));
+            var against = ParityGlobals.get(new ChunkStorageKey(seed, worldKey, pos.x(), pos.z()));
             var err = against.matches(chunk);
             if (err != null) {
               FastNoiseConstants.LOGGER.info(
-                  "Ours: {} Theirs: {}", new ChunkStorage(seed, name, chunk), against);
+                  "Ours: {} Theirs: {}", new ChunkStorage(seed, worldKey, chunk), against);
               throw new IllegalStateException("Chunks don't match " + pos + " " + err);
             }
           } else {
-            var storage = new ChunkStorage(seed, name, chunk);
+            var storage = new ChunkStorage(seed, worldKey, chunk);
             ParityGlobals.send(storage);
           }
         });

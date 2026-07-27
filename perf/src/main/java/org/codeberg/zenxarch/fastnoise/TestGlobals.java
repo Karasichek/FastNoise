@@ -44,6 +44,9 @@ public final class TestGlobals {
   private static MinecraftServer server;
   private static Session session;
 
+  private static ResourcePackManager resourcePackManager;
+  private static SaveLoader saveLoader;
+
   public static DynamicRegistryManager getManager() {
     return manager;
   }
@@ -64,6 +67,8 @@ public final class TestGlobals {
     TestGlobals.manager = manager;
     TestGlobals.factory = PalettesFactory.fromRegistryManager(manager);
     TestGlobals.session = session;
+    TestGlobals.resourcePackManager = resourcePackManager;
+    TestGlobals.saveLoader = saveLoader;
     server =
         new TestServer(
             new Thread(() -> {}),
@@ -93,6 +98,7 @@ public final class TestGlobals {
                 DataConfiguration.SAFE_MODE),
             LevelProperties.SpecialProperty.NONE,
             Lifecycle.stable());
+    server.getWorldGenSettings().generatorOptions().seed = seed;
     return new ServerWorld(
         server,
         Util.getMainWorkerExecutor(),
@@ -103,7 +109,12 @@ public final class TestGlobals {
         false,
         BiomeAccess.hashSeed(seed),
         List.of(),
-        false);
+        false) {
+      @Override
+      public long getSeed() {
+        return seed;
+      }
+    };
   }
 
   public static BoundedRegionArray<FakeAbstractChunkHolder> createRegionArray(
