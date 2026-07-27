@@ -1,6 +1,8 @@
 package org.codeberg.zenxarch.fastnoise;
 
 import net.minecraft.world.chunk.ChunkStatus;
+
+import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.parity.ChunkStorage;
 import org.codeberg.zenxarch.fastnoise.parity.ParityGlobals;
 import org.codeberg.zenxarch.fastnoise.parity.ParityGlobals.ChunkStorageKey;
@@ -31,7 +33,7 @@ public final class ParityTest {
     var biomes =
         ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius() + 1);
 
-    generateChunk(fakeWorld, base, biomes, "Vanilla " + name, settings.seed());
+    generateChunk(fakeWorld, base, biomes, FastNoiseConfig.ENABLED ? "Modded " : "Vanilla " + name, settings.seed());
     LOGGER.info(name + " matches");
   }
 
