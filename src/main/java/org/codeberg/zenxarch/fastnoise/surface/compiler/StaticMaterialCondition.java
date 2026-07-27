@@ -7,6 +7,7 @@ import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.AboveYMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.NotMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
@@ -36,6 +37,11 @@ public interface StaticMaterialCondition {
               stone.secondaryDepthRange(),
               stone.surfaceType() == VerticalSurfaceType.CEILING);
       case RegisteredCondition reg -> tryCreate(reg.holder().value(), context, config);
+      case NotMaterialCondition not -> {
+        var original = tryCreate(not.target(), context, config);
+        if (original == null) yield null;
+        yield new InvertedCondition(original);
+      }
       default -> null;
     };
   }
@@ -65,6 +71,14 @@ public interface StaticMaterialCondition {
     public MethodHandle compiled() {
       return MaterialRuleCompiler.createVerticalGradientTest(
           trueAtAndBelow, falseAtAndAbove, splitter);
+    }
+  }
+
+  public static record InvertedCondition(StaticMaterialCondition original)
+      implements StaticMaterialCondition {
+    @Override
+    public MethodHandle compiled() {
+      return MaterialRuleCompiler.createInverted(original.compiled());
     }
   }
 }
