@@ -66,7 +66,8 @@ public class ParityGlobals {
           try {
             var next = server.read();
             synchronized (clientData) {
-              clientData.put(new ChunkStorageKey(next.worldName, next.chunkX, next.chunkZ), next);
+              clientData.put(
+                  new ChunkStorageKey(next.seed, next.worldName, next.chunkX, next.chunkZ), next);
             }
           } catch (Exception e) {
             break;
@@ -102,5 +103,5 @@ public class ParityGlobals {
     }
   }
 
-  public static record ChunkStorageKey(String worldName, int cx, int cz) {}
+  public static record ChunkStorageKey(long seed, String worldName, int cx, int cz) {}
 }

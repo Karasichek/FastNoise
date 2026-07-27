@@ -31,12 +31,12 @@ public final class ParityTest {
     var biomes =
         ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius() + 1);
 
-    generateChunk(fakeWorld, base, biomes, "Vanilla " + name);
+    generateChunk(fakeWorld, base, biomes, "Vanilla " + name, settings.seed());
     LOGGER.info(name + " matches");
   }
 
   private static void generateChunk(
-      TestWorld world, ChunkRegion base, ChunkRegion biomeRegion, String name) {
+      TestWorld world, ChunkRegion base, ChunkRegion biomeRegion, String name, long seed) {
     biomeRegion.forEach(
         (chunk) -> {
           world.biomes(biomeRegion, chunk);
@@ -54,13 +54,15 @@ public final class ParityTest {
 
           if (ParityGlobals.isServer) {
             var pos = chunk.getPos();
-            var against = ParityGlobals.get(new ChunkStorageKey(name, pos.x(), pos.z()));
+            var against = ParityGlobals.get(new ChunkStorageKey(seed, name, pos.x(), pos.z()));
             var err = against.matches(chunk);
             if (err != null) {
+              FastNoiseConstants.LOGGER.info(
+                  "Ours: {} Theirs: {}", new ChunkStorage(seed, name, chunk), against);
               throw new IllegalStateException("Chunks don't match " + pos + " " + err);
             }
           } else {
-            var storage = new ChunkStorage(name, chunk);
+            var storage = new ChunkStorage(seed, name, chunk);
             ParityGlobals.send(storage);
           }
         });
