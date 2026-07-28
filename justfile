@@ -57,13 +57,13 @@ prodServer:
 modrinth ptype="alpha":
     touch changelog.md
     $EDITOR changelog.md
-    ./gradlew publishCurseforge -Pzmtype="{{ptype}}"
+    ./gradlew publishModrinth -Pzmtype="{{ptype}}"
     rm changelog.md
 
 curseforge ptype="alpha":
     touch changelog.md
     $EDITOR changelog.md
-    ./gradlew publishModrinth -Pzmtype="{{ptype}}"
+    ./gradlew publishCurseforge -Pzmtype="{{ptype}}"
     rm changelog.md
 
 publish ptype="alpha":
