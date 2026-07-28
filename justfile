@@ -57,20 +57,19 @@ prodServer:
 modrinth ptype="alpha":
     touch changelog.md
     $EDITOR changelog.md
-    ./gradlew modrinth -Pzmtype="{{ptype}}"
+    ./gradlew publishCurseforge -Pzmtype="{{ptype}}"
     rm changelog.md
 
 curseforge ptype="alpha":
     touch changelog.md
     $EDITOR changelog.md
-    ./gradlew curseforge -Pzmtype="{{ptype}}"
+    ./gradlew publishModrinth -Pzmtype="{{ptype}}"
     rm changelog.md
 
 publish ptype="alpha":
     touch changelog.md
     $EDITOR changelog.md
-    ./gradlew modrinth -Pzmtype="{{ptype}}"
-    ./gradlew curseforge -Pzmtype="{{ptype}}"
+    ./gradlew publishMods -Pzmtype="{{ptype}}"
     rm changelog.md
 
 task taskName:
