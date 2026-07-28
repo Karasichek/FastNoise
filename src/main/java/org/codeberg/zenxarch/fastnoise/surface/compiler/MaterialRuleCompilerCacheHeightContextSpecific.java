@@ -48,19 +48,27 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
         }
       }
       case ConditionMaterialRule cond -> {
-        var condition = cond.ifTrue();
-        var staticCond = StaticMaterialCondition.tryCreate(condition, context, config);
-        if (staticCond != null) {
-          var idx = handles.size();
-          staticConditions.put(condition, idx);
-          handles.add(staticCond.compiled());
-        }
+        tryAddStaticRule(context, config, cond.ifTrue(), handles);
         createCache(context, config, cond.thenRun(), handles);
       }
       case RegisteredRule reg -> {
         createCache(context, config, reg.holder().value(), handles);
       }
       default -> {}
+    }
+  }
+
+  private void tryAddStaticRule(
+      HeightContext context,
+      NoiseConfig config,
+      MaterialCondition condition,
+      ObjectArrayList<MethodHandle> handles) {
+    if (staticConditions.containsKey(condition)) return;
+    var staticCond = StaticMaterialCondition.tryCreate(condition, context, config);
+    if (staticCond != null) {
+      var idx = handles.size();
+      staticConditions.put(condition, idx);
+      handles.add(staticCond.compiled());
     }
   }
 
