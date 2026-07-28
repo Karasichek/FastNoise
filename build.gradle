@@ -176,7 +176,7 @@ publishMods {
   curseforge {
     accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
     projectId = "1460602"
-    minecraftVersions.add(project.minecraft_version)
+    minecraftVersions.add(project.cf_mc_version)
 
     announcementTitle = "Download from Curseforge"
 
