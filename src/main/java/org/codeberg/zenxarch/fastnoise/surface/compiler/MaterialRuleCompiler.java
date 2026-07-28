@@ -53,6 +53,11 @@ public final class MaterialRuleCompiler {
   private static final MethodHandle checkedVerticalGradientTest =
       lookupCondition("checkedVerticalGradientTest", int.class, int.class, long.class);
   private static final MethodHandle invert = lookupCondition("invert", MethodHandle.class);
+  public static final MethodHandle negativeRunDepth = lookupCondition("negativeRunDepth");
+  public static final MethodHandle surfacePredicate = lookupCondition("surfacePredicate");
+  public static final MethodHandle biomeTemperaturePredicate =
+      lookupCondition("biomeTemperaturePredicate");
+  public static final MethodHandle steepSlopePredicate = lookupCondition("steepSlopePredicate");
 
   private static MethodHandle lookupCondition(String name, Class<?>... classes) {
     var list = ObjectArrayList.of(classes);
@@ -439,5 +444,49 @@ public final class MaterialRuleCompiler {
       MaterialRuleContext context)
       throws Throwable {
     return !(boolean) original.invokeExact(conditions, rules, states, x, y, z, context);
+  }
+
+  public static boolean negativeRunDepth(
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context) {
+    return context.negativeRunDepthCache;
+  }
+
+  public static boolean surfacePredicate(
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context) {
+    return context.blockY >= context.estimateSurfaceHeight();
+  }
+
+  public static boolean biomeTemperaturePredicate(
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context) {
+    return context.biomeTemperaturePredicate.get();
+  }
+
+  public static boolean steepSlopePredicate(
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context) {
+    return context.steepSlopePredicate.get();
   }
 }
