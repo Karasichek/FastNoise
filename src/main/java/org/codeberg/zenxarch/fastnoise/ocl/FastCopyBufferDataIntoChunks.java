@@ -87,7 +87,7 @@ public final class FastCopyBufferDataIntoChunks {
             reusableByteArray,
             batchSize);
 
-        chunk.setStatus(ChunkStatus.NOISE);
+        chunk.setStatus(ChunkStatus.BIOMES);
       }
     }
   }
