@@ -4,17 +4,22 @@ import it.unimi.dsi.fastutil.shorts.ShortList;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import net.minecraft.block.BlockState;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.collection.BoundedRegionArray;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import org.codeberg.zenxarch.fastnoise.heightmap.HeightmapUtil;
 import org.codeberg.zenxarch.fastnoise.noise.FastNoiseGen;
+import org.codeberg.zenxarch.fastnoise.noise.FastNoisePaletteHelper;
 
 public final class FastCopyBufferDataIntoChunks {
   /**
@@ -53,6 +58,96 @@ public final class FastCopyBufferDataIntoChunks {
             horizontalSize);
         chunk.setStatus(ChunkStatus.NOISE);
       }
+    }
+  }
+
+  public static void copyData(
+      BoundedRegionArray<ProtoChunk> chunks,
+      RegistryEntry<Biome>[] biomeMappings,
+      IntBuffer biomeOutBufferData,
+      ChunkPos startingPos,
+      int batchSize) {
+
+    @SuppressWarnings("unchecked")
+    RegistryEntry<Biome>[] reusablePaletteArray = new RegistryEntry[64];
+    byte[] reusableByteArray = new byte[64];
+
+    for (int chunkOffZ = 0; chunkOffZ < batchSize; chunkOffZ++) {
+      for (int chunkOffX = 0; chunkOffX < batchSize; chunkOffX++) {
+        var chunk = chunks.get(startingPos.x() + chunkOffX, startingPos.z() + chunkOffZ);
+        if (chunk.getStatus().isAtLeast(ChunkStatus.BIOMES)) continue;
+
+        copyDataIntoChunk(
+            chunkOffX,
+            chunkOffZ,
+            chunk,
+            biomeMappings,
+            biomeOutBufferData,
+            reusablePaletteArray,
+            reusableByteArray,
+            batchSize);
+
+        chunk.setStatus(ChunkStatus.NOISE);
+      }
+    }
+  }
+
+  private static void copyDataIntoChunk(
+      int chunkOffX,
+      int chunkOffZ,
+      ProtoChunk chunk,
+      RegistryEntry<Biome>[] biomeMappings,
+      IntBuffer rawData,
+      RegistryEntry<Biome>[] reusablePaletteArray,
+      byte[] reusableByteArray,
+      int batchSize) {
+    final int horizontalBiomeSize = 4 * batchSize;
+    final var baseOffset = (chunkOffZ * 4 * horizontalBiomeSize) + chunkOffX * 4;
+    final var sections = chunk.getSectionArray();
+    final var maxSy = sections.length;
+    final var ySize = horizontalBiomeSize * horizontalBiomeSize;
+
+    for (int sy = 0; sy < maxSy; sy++) {
+      var size = 0;
+
+      final var syOffset = (sy * ySize << 2) + baseOffset;
+
+      var idx = 0;
+      var lastRawIdx = -1;
+      var lastBidx = -1;
+
+      for (int y = 0; y < 4; y++) {
+        final var yOffset = (y * ySize) + syOffset;
+        for (int z = 0; z < 4; z++) {
+          final var zOffset = (z * horizontalBiomeSize) + yOffset;
+          for (int x = 0; x < 4; x++) {
+            var rawIdx = rawData.get(zOffset + x);
+            int bidx = -1;
+            if (rawIdx == lastRawIdx) {
+              bidx = lastBidx;
+            } else {
+              var value = biomeMappings[rawIdx];
+              for (int i = 0; i < size; i++)
+                if (reusablePaletteArray[i] == value) {
+                  bidx = i;
+                  break;
+                }
+
+              if (bidx == -1) reusablePaletteArray[(bidx = size++)] = value;
+            }
+
+            reusableByteArray[idx] = (byte) bidx;
+
+            idx++;
+          }
+        }
+      }
+
+      FastNoisePaletteHelper.pack(
+          (PalettedContainer<RegistryEntry<Biome>>) (sections[sy].biomeContainer),
+          reusablePaletteArray,
+          size,
+          reusableByteArray);
     }
   }
 
