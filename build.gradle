@@ -171,6 +171,7 @@ publishMods {
 
     incompatible("moonrise-opt")
     incompatible("anti-xray")
+    requires("zconfig")
   }
 
   curseforge {
@@ -193,6 +194,7 @@ publishMods {
 
     incompatible("moonrise-opt")
     incompatible("anti-xray")
+    requires("zconfig")
   }
 
   additionalFiles.from(sourcesJar)
