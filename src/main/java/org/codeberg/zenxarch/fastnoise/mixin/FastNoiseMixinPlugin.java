@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 public final class FastNoiseMixinPlugin implements IMixinConfigPlugin {
 
-  private Object2BooleanMap<String> config = FastNoiseConfig.loadConfig();
+  private Object2BooleanMap<String> config = FastNoiseConfig.CONFIG.loadMixinEntries();
   private String mixinPackage;
 
   @Override
