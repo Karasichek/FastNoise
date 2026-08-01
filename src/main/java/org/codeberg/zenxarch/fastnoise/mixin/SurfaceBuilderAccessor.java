@@ -2,6 +2,7 @@ package org.codeberg.zenxarch.fastnoise.mixin;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.chunk.BlockColumn;
@@ -36,4 +37,13 @@ public interface SurfaceBuilderAccessor {
       final int x,
       final int z,
       final int surfaceY);
+
+  @Accessor("badlandsPillarNoise")
+  public DoublePerlinNoiseSampler zenxarch$getBadlandsPillarNoise();
+
+  @Accessor("badlandsPillarRoofNoise")
+  public DoublePerlinNoiseSampler zenxarch$getBadlandsPillarRoofNoise();
+
+  @Accessor("badlandsSurfaceNoise")
+  public DoublePerlinNoiseSampler zenxarch$getBadlandsSurfaceNoise();
 }

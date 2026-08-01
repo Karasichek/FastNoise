@@ -1,6 +1,6 @@
 package org.codeberg.zenxarch.fastnoise.mixin.perf.surface;
 
-import net.minecraft.class_1_1397;
+import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.util.math.random.CheckedRandom;
 import net.minecraft.util.math.random.RandomSplitter;
 import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(SurfaceBuilder.class)
 public abstract class SurfaceBuilderMixin {
 
-  @Shadow @Final class_1_1397 surfaceNoise;
+  @Shadow @Final DoublePerlinNoiseSampler surfaceNoise;
   @Shadow @Final RandomSplitter randomDeriver;
 
   @Overwrite
