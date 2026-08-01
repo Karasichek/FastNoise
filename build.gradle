@@ -169,6 +169,10 @@ publishMods {
 
     announcementTitle = "Download from Modrinth"
 
+    additionalFile(sourcesJar) {
+      type = SOURCES_JAR
+    }
+
     incompatible("moonrise-opt")
     incompatible("anti-xray")
     requires("zconfig")
@@ -198,8 +202,6 @@ publishMods {
     requires("zconfig")
   }
 
-  additionalFiles.from(sourcesJar)
-  
   dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
 }
 
