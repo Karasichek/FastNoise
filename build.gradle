@@ -192,8 +192,9 @@ publishMods {
       name = "Sources Jar"
     }
 
-    incompatible("moonrise-opt")
-    incompatible("anti-xray")
+    incompatible("moonrise")
+    incompatible("antixray")
+    incompatible("antixray-forge")
     requires("zconfig")
   }
 
