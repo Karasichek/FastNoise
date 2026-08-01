@@ -52,6 +52,12 @@ public final class MaterialRuleCompiler {
       lookupCondition("xoroVerticalGradientTest", int.class, int.class, long.class, long.class);
   private static final MethodHandle checkedVerticalGradientTest =
       lookupCondition("checkedVerticalGradientTest", int.class, int.class, long.class);
+  private static final MethodHandle invert = lookupCondition("invert", MethodHandle.class);
+  public static final MethodHandle negativeRunDepth = lookupCondition("negativeRunDepth");
+  public static final MethodHandle surfacePredicate = lookupCondition("surfacePredicate");
+  public static final MethodHandle biomeTemperaturePredicate =
+      lookupCondition("biomeTemperaturePredicate");
+  public static final MethodHandle steepSlopePredicate = lookupCondition("steepSlopePredicate");
 
   private static MethodHandle lookupCondition(String name, Class<?>... classes) {
     var list = ObjectArrayList.of(classes);
@@ -225,6 +231,10 @@ public final class MaterialRuleCompiler {
       int trueAtAndBelow, int falseAtAndAbove, long seed) {
     return MethodHandles.insertArguments(
         checkedVerticalGradientTest, 0, trueAtAndBelow, falseAtAndAbove, seed);
+  }
+
+  public static MethodHandle createInverted(MethodHandle original) {
+    return MethodHandles.insertArguments(invert, 0, original);
   }
 
   public static boolean condition(
@@ -421,5 +431,62 @@ public final class MaterialRuleCompiler {
     var probability = VerticalGradientPredicate.map(blockY, trueAtAndBelow, falseAtAndAbove);
     return AllocFreeRandom.nextFloatChecked(seed, context.blockX, blockY, context.blockZ)
         < probability;
+  }
+
+  public static boolean invert(
+      MethodHandle original,
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context)
+      throws Throwable {
+    return !(boolean) original.invokeExact(conditions, rules, states, x, y, z, context);
+  }
+
+  public static boolean negativeRunDepth(
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context) {
+    return context.negativeRunDepthCache;
+  }
+
+  public static boolean surfacePredicate(
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context) {
+    return context.blockY >= context.estimateSurfaceHeight();
+  }
+
+  public static boolean biomeTemperaturePredicate(
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context) {
+    return context.biomeTemperaturePredicate.get();
+  }
+
+  public static boolean steepSlopePredicate(
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context) {
+    return context.steepSlopePredicate.get();
   }
 }

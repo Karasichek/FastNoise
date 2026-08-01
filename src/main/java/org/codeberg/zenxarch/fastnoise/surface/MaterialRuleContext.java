@@ -21,6 +21,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
   public int cachedBiomeIdx;
   private final FastBiomeCache biomeCache;
   private final Function<BlockPos, RegistryEntry<Biome>> fallback;
+  public boolean negativeRunDepthCache;
 
   @SuppressWarnings("unchecked")
   public MaterialRuleContext(
@@ -87,6 +88,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
     this.stoneDepthAbove = 0;
     this.fluidHeight = Integer.MIN_VALUE;
+    this.negativeRunDepthCache = this.runDepth <= 0;
   }
 
   @Override
