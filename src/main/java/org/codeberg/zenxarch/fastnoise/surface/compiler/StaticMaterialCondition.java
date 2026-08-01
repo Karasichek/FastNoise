@@ -10,7 +10,6 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.AboveYMaterialCondit
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.HoleMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.NotMaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
 import org.jspecify.annotations.Nullable;
@@ -38,7 +37,6 @@ public interface StaticMaterialCondition {
               stone.addSurfaceDepth(),
               stone.secondaryDepthRange(),
               stone.surfaceType() == VerticalSurfaceType.CEILING);
-      case RegisteredCondition reg -> tryCreate(reg.holder().value(), context, config);
       case NotMaterialCondition not -> {
         var original = tryCreate(not.target(), context, config);
         if (original == null) yield null;
