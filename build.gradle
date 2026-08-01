@@ -21,6 +21,7 @@ repositories {
   maven {
     url = "https://repo.codemc.io/repository/relativitymc/"
   }
+  mavenLocal()
 }
 
 loom {
@@ -67,8 +68,7 @@ dependencies {
 
   testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
 
-  include implementation("com.electronwill.night-config:toml:${project.night_config_version}")
-  include implementation("com.electronwill.night-config:core:${project.night_config_version}")
+  implementation "org.codeberg.zenxarch.zconfig:zconfig:1.0.0"
 }
 
 processResources {
@@ -171,6 +171,7 @@ publishMods {
 
     incompatible("moonrise-opt")
     incompatible("anti-xray")
+    requires("zconfig")
   }
 
   curseforge {
@@ -193,6 +194,7 @@ publishMods {
 
     incompatible("moonrise-opt")
     incompatible("anti-xray")
+    requires("zconfig")
   }
 
   additionalFiles.from(sourcesJar)

@@ -1,24 +1,24 @@
 package org.codeberg.zenxarch.fastnoise.config;
 
-import static org.codeberg.zenxarch.fastnoise.config.BooleanConfigEntry.*;
+import org.codeberg.zenxarch.zconfig.entry.BooleanConfigEntry;
+import org.codeberg.zenxarch.zconfig.entry.ConfigEntries;
+import org.codeberg.zenxarch.zconfig.entry.IntConfigEntry;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import java.util.List;
-
-public class FastNoiseConfigEntries {
+public final class FastNoiseConfigEntries extends ConfigEntries {
+  public static final FastNoiseConfigEntries INSTANCE = new FastNoiseConfigEntries();
   public static final BooleanConfigEntry OPTIMIZE_END_BIOMES =
       of(
-              "perf.biomes.end",
-              "Optimize end biome generation (2x speed) but may cause mod incompatibility",
-              true)
-          .incompatibleWith("biolith");
+          "perf.biomes.end",
+          "Optimize end biome generation (2x speed) but may cause mod incompatibility",
+          true,
+          "biolith");
 
   public static final BooleanConfigEntry OPTIMIZE_BIOME_TREE =
       of(
-              "perf.biomes.tree",
-              "Optimize biome tree by avoiding multiple calls to thread local",
-              false)
-          .incompatibleWith("biolith");
+          "perf.biomes.tree",
+          "Optimize biome tree by avoiding multiple calls to thread local",
+          false,
+          "biolith");
 
   public static final BooleanConfigEntry OPTIMIZE_FIXED_BIOMES =
       of(
@@ -48,8 +48,7 @@ public class FastNoiseConfigEntries {
       mixin("perf.noise", "Replace populateNoise with optimized implementation", true);
 
   public static final BooleanConfigEntry MIXIN_PERF_SURFACE =
-      mixin("perf.surface", "Replace buildSurface with optimized implementation", true)
-          .incompatibleWith("biolith");
+      mixin("perf.surface", "Replace buildSurface with optimized implementation", true, "biolith");
 
   public static final BooleanConfigEntry MIXIN_DEBUG_DISABLE_CARVE_FEATURES_AND_ENTITIES =
       mixin(
@@ -58,25 +57,35 @@ public class FastNoiseConfigEntries {
           false);
 
   public static final IntConfigEntry MAX_CACHE_SIZE_PER_GB =
-      IntConfigEntry.of(
-              "perf.surface.max_cache_size_per_gb",
-              "Max size of surface rule compiler cache per gb of allocated memory",
-              100)
-          .constraint(16, 65536);
+      INSTANCE.createIntEntry(
+          "perf.surface.max_cache_size_per_gb",
+          builder ->
+              builder
+                  .addComment("Max size of surface rule compiler cache per gb of allocated memory")
+                  .defaultValue(100)
+                  .constraints(16, 65536));
 
-  public static final List<BooleanConfigEntry> ENTRIES =
-      new ObjectArrayList<>(
-          List.of(
-              OPTIMIZE_END_BIOMES,
-              OPTIMIZE_BIOME_TREE,
-              OPTIMIZE_FIXED_BIOMES,
-              SKIP_TRIVIAL_SURFACE_BUILDER,
-              OPTIMIZE_BIOME_ACCESS,
-              MIXIN_PERF_BIOMES,
-              MIXIN_PERF_NOISE,
-              MIXIN_PERF_SURFACE,
-              MIXIN_DEBUG_DISABLE_CARVE_FEATURES_AND_ENTITIES));
+  private static BooleanConfigEntry of(String key, String comment, boolean defaultValue) {
+    return INSTANCE.createEntry(
+        key, (builder) -> builder.addComment(comment).defaultValue(defaultValue));
+  }
 
-  public static final List<IntConfigEntry> INT_ENTRIES =
-      new ObjectArrayList<>(List.of(MAX_CACHE_SIZE_PER_GB));
+  private static BooleanConfigEntry of(
+      String key, String comment, boolean defaultValue, String... incompats) {
+    return INSTANCE.createEntry(
+        key,
+        (builder) -> builder.addComment(comment).defaultValue(defaultValue).addIncompat(incompats));
+  }
+
+  private static BooleanConfigEntry mixin(String key, String comment, boolean defaultValue) {
+    return INSTANCE.createEntry(
+        "mixin." + key, (builder) -> builder.addComment(comment).defaultValue(defaultValue));
+  }
+
+  private static BooleanConfigEntry mixin(
+      String key, String comment, boolean defaultValue, String... incompats) {
+    return INSTANCE.createEntry(
+        "mixin." + key,
+        (builder) -> builder.addComment(comment).defaultValue(defaultValue).addIncompat(incompats));
+  }
 }
