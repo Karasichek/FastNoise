@@ -7,8 +7,18 @@ public class FastNoiseConfigEntries extends ConfigEntries {
   public static final FastNoiseConfigEntries INSTANCE = new FastNoiseConfigEntries();
 
   public final BooleanConfigEntry MIXIN_BIOME =
-      this.createEntry("mixin.perf.biome", builder -> builder.defaultValue(true));
+      this.createEntry(
+          "mixin.perf.biome",
+          builder ->
+              builder
+                  .defaultValue(true)
+                  .addComment("Replace populateBiomes with optimized implementation"));
 
   public final BooleanConfigEntry MIXIN_NOISE =
-      this.createEntry("mixin.perf.noise", builder -> builder.defaultValue(true));
+      this.createEntry(
+          "mixin.perf.noise",
+          builder ->
+              builder
+                  .defaultValue(true)
+                  .addComment("Replace populateNoise with optimized implementation"));
 }
