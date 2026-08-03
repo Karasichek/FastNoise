@@ -4,9 +4,7 @@
   "version": "${version}",
   "name": "Fast Noise",
   "description": "Vanilla worldgen optimization mod",
-  "authors": [
-    "ZenXArch"
-  ],
+  "authors": ["ZenXArch"],
   "contact": {
     "mastodon": "https://mastodon.social/@ZenXArch",
     "discord": "https://discord.gg/RFSmd7debX",
@@ -17,17 +15,14 @@
   "icon": "assets/zfastnoise/icon.png",
   "environment": "*",
   "entrypoints": {
-    "main": [
-      "org.codeberg.zenxarch.fastnoise.FastNoiseMod"
-    ]
+    "main": ["org.codeberg.zenxarch.fastnoise.FastNoiseMod"]
   },
-  "mixins": [
-    "zfastnoise.mixins.json"
-  ],
+  "mixins": ["zfastnoise.mixins.json"],
   "depends": {
     "fabricloader": ">=${loader_version}",
     "minecraft": "~${minecraft_version}",
-    "java": ">=25"
+    "java": ">=25",
+    "zconfig": "*"
   },
   "breaks": {
     "moonrise": "*",
