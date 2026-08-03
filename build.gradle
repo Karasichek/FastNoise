@@ -2,8 +2,7 @@ plugins {
   id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
   id 'maven-publish'
   id 'me.champeau.jmh' version "${jmh_version}"
-  id "com.modrinth.minotaur" version "${minotaur_version}"
-  id "net.darkhax.curseforgegradle" version "${cf_gradle_version}"
+  id "me.modmuss50.mod-publish-plugin" version "${mod_publish_plugin_version}"
 }
 
 version = project.mod_version + "+" + project.minecraft_version
@@ -19,6 +18,7 @@ repositories {
   // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
   // See https://docs.gradle.org/current/userguide/declaring_repositories.html
   // for more information about repositories.
+  mavenLocal()
 }
 
 loom {
@@ -56,6 +56,8 @@ dependencies {
   // Fabric API. This is technically optional, but you probably want it anyway.
 
   testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
+
+  modImplementation "org.codeberg.zenxarch.zconfig:zconfig:1.0.0+1.21.x"
 }
 
 processResources {
@@ -123,57 +125,82 @@ jmh {
   zip64 = true
 }
 
-modrinth {
-  token = System.getenv("MODRINTH_TOKEN")
-  projectId = "zfastnoise"
-  versionNumber = version
-  versionType = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
-
-  uploadFile = remapJar
-  additionalFiles = [sourcesJar]
+publishMods {
+  file = remapJar.archiveFile
+  modLoaders.add("fabric")
+  modLoaders.add("quilt")
 
   changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
-
-  gameVersions = [project.minecraft_version, "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8"]
-  loaders = ["fabric", "quilt"]
-  dependencies {
-    incompatible.project "noisiumforked"
-    incompatible.project "moonrise-opt"
-    incompatible.project "anti-xray"
+  def typeStr = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
+  type = switch(typeStr) {
+    case "stable" -> STABLE
+    case "release" -> STABLE
+    case "beta" -> BETA
+    default -> ALPHA
   }
-}
 
-task curseforge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge) {
-  dependsOn(remapJar)
-  dependsOn(sourcesJar)
+  displayName = "Fast Noise " + project.version
 
-  apiToken = System.getenv("CURSEFORGE_TOKEN")
-  def projectId = "1460602"
+  discord {
+    username = "Fast Noise"
+    webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
+    dryRunWebhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
+    avatarUrl = "https://cdn.modrinth.com/data/OnlVIpq5/6f2393cd87c37ef685efb82aacc5b0c9fae0c28d.png"
 
-  def mainFile = upload(projectId, remapJar)
+    content = "## " + displayName.get() + "\n" + changelog.get()
+  }
 
-  mainFile.changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
-  mainFile.changelogType = "markdown"
+  modrinth {
+    accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+    projectId = "OnlVIpq5"
 
-  mainFile.releaseType = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
-  mainFile.addModLoader("Quilt")
-  mainFile.addJavaVersion("Java 21")
+    minecraftVersionRange {
+      start = project.min_mc_version
+      end = project.max_mc_version
 
-  mainFile.addGameVersion("Client")
-  mainFile.addGameVersion("Server")
+      includeSnapshots = true
+    }
 
-  mainFile.addGameVersion("1.21.1")
-  mainFile.addGameVersion("1.21.2")
-  mainFile.addGameVersion("1.21.3")
-  mainFile.addGameVersion("1.21.4")
-  mainFile.addGameVersion("1.21.5")
-  mainFile.addGameVersion("1.21.6")
-  mainFile.addGameVersion("1.21.7")
-  mainFile.addGameVersion("1.21.8")
+    announcementTitle = "Download from Modrinth"
 
-  mainFile.addGameVersion(project.cf_mc_version)
+    additionalFile(sourcesJar) {
+      type = SOURCES_JAR
+    }
 
-  mainFile.withAdditionalFile(sourcesJar)
+    incompatible("moonrise-opt")
+    incompatible("anti-xray")
+    requires("zconfig")
+  }
+
+  curseforge {
+    accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+    projectId = "1460602"
+    
+    minecraftVersionRange {
+      start = project.min_mc_version
+      end = project.max_mc_version
+    }
+
+    announcementTitle = "Download from Curseforge"
+
+    javaVersions.add(JavaVersion.VERSION_21)
+
+    projectSlug = "zfastnoise"
+
+    client = true
+    server = true
+
+    additionalFile(sourcesJar) {
+      name = "Sources Jar"
+    }
+
+    incompatible("moonrise")
+    incompatible("antixray")
+    incompatible("antixray-forge")
+    requires("zconfig")
+  }
+
+  dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
 }
 
 tasks.register("prodClient", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
