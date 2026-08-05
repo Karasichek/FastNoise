@@ -161,9 +161,9 @@ public final class FastBiomeGen {
     }
 
     public double sampleAndStep() {
-      var result = sampler.method_40464(this);
+      var result = sampler.sample(this);
       this.y += 4;
-      return result;
+      return (double) result;
     }
   }
 

@@ -64,8 +64,7 @@ public class FastNoiseGen {
             int blockY = (minimumCellY + cellY) * verticalCellBlockCount + verticalCellBlock;
             int blockYInSection = blockY & 15;
 
-            double verticalCellProgress =
-                (double) verticalCellBlock / (double) verticalCellBlockCount;
+            float verticalCellProgress = (float) verticalCellBlock / (float) verticalCellBlockCount;
             chunkNoiseSampler.interpolateY(blockY, verticalCellProgress);
 
             iterateCellXZ(
@@ -130,13 +129,13 @@ public class FastNoiseGen {
     for (int cellBlockX = 0; cellBlockX < horizontalCellBlockCount; cellBlockX++) {
       int blockX = chunkStartX + cellX * horizontalCellBlockCount + cellBlockX;
       int blockXInSection = blockX & 15;
-      double cellXProgress = (double) cellBlockX / (double) horizontalCellBlockCount;
+      float cellXProgress = (float) cellBlockX / (float) horizontalCellBlockCount;
       chunkNoiseSampler.interpolateX(blockX, cellXProgress);
 
       for (int cellBlockZ = 0; cellBlockZ < horizontalCellBlockCount; cellBlockZ++) {
         int blockZ = chunkStartZ + cellZ * horizontalCellBlockCount + cellBlockZ;
         int blockZInSection = blockZ & 15;
-        double cellZProgress = (double) cellBlockZ / (double) horizontalCellBlockCount;
+        float cellZProgress = (float) cellBlockZ / (float) horizontalCellBlockCount;
 
         chunkNoiseSampler.interpolateZ(blockZ, cellZProgress);
 
