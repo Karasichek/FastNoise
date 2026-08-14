@@ -3,7 +3,6 @@ package org.codeberg.zenxarch.fastnoise.mixin.perf.biome;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.world.chunk.BelowZeroRetrogen;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.Blender;
@@ -40,6 +39,11 @@ public abstract class NoiseChunkGeneratorMixin {
       final StructureAccessor structureAccessor,
       final Chunk chunk,
       Operation<Void> op) {
+
+    if (blender != Blender.getNoBlending() || chunk.hasBelowZeroRetrogen()) {
+      op.call(blender, noiseConfig, structureAccessor, chunk);
+    }
+
     var sampler =
         chunk.getOrCreateChunkNoiseSampler(
             chunkx ->
@@ -47,13 +51,6 @@ public abstract class NoiseChunkGeneratorMixin {
 
     var original = ((ChunkGeneratorAccessor) this).zenxarch$getBiomeSource();
 
-    var supplier = BelowZeroRetrogen.getBiomeSupplier(blender.getBiomeSupplier(original), chunk);
-
-    if (supplier != original) {
-      op.call(blender, noiseConfig, structureAccessor, chunk);
-      return;
-    }
-
-    FastBiomeGen.populateBiomes(chunk, supplier, sampler, noiseConfig, this.settings);
+    FastBiomeGen.populateBiomes(chunk, original, sampler, noiseConfig, this.settings);
   }
 }
