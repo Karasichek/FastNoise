@@ -10,7 +10,16 @@ loom {
 }
 
 dependencies {
-  implementation "org.codeberg.zenxarch.zconfig:zconfig:1.0.0+26.x"
+  modImplementation project(":zconfig")
+}
+
+processResources {
+  inputs.property "version", project.version
+  inputs.property "zconfig_version", project(":zconfig").version
+
+  filesMatching("fabric.mod.json") {
+    expand(inputs.properties)
+  }
 }
 
 publishMods {
