@@ -64,7 +64,7 @@ public final class FastBiomeGen {
       return;
     }
 
-    populateBiomes(chunk, source.method_1_9606(createSampler(sampler, config, settings)));
+    populateBiomes(chunk, source.getBiomeSupplier(createSampler(sampler, config, settings)));
   }
 
   private static void populateBiomes(Chunk chunk, BiomeSupplier supplier) {
