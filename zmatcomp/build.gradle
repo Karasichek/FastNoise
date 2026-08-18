@@ -1,0 +1,91 @@
+version = project.mod_version + "+" + project.minecraft_version
+group = project.maven_group
+
+base {
+  archivesName = project.archives_base_name
+}
+
+loom {
+  accessWidenerPath = file("src/main/resources/zmatcomp.ct")
+}
+
+dependencies {
+  modImplementation project(":zconfig")
+}
+
+processResources {
+  inputs.property "version", project.version
+  inputs.property "zconfig_version", project(":zconfig").version
+
+  filesMatching("fabric.mod.json") {
+    expand(inputs.properties)
+  }
+}
+
+publishMods {
+  file = remapJar.archiveFile
+  modLoaders.add("fabric")
+  modLoaders.add("quilt")
+
+  changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
+  def typeStr = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
+  type = switch(typeStr) {
+    case "stable" -> STABLE
+    case "release" -> STABLE
+    case "beta" -> BETA
+    default -> ALPHA
+  }
+
+  displayName = "Material Rule Compiler " + project.version
+
+  // TODO: change the icon
+  discord {
+    username = "Material Rule Compiler"
+    webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
+    dryRunWebhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
+    avatarUrl = "https://cdn.modrinth.com/data/OnlVIpq5/6f2393cd87c37ef685efb82aacc5b0c9fae0c28d.png"
+
+    content = "## " + displayName.get() + "\n" + changelog.get()
+  }
+
+  // TODO: reconsider stuff
+  modrinth {
+    accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+    projectId = "OnlVIpq5"
+    minecraftVersions.add(project.minecraft_version)
+
+    announcementTitle = "Download from Modrinth"
+
+    additionalFile(sourcesJar) {
+      type = SOURCES_JAR
+    }
+
+    incompatible("moonrise-opt")
+    requires("zconfig")
+  }
+
+  // TODO: reconfigure stuff
+  curseforge {
+    accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+    projectId = "1460602"
+    minecraftVersions.add(project.cf_mc_version)
+
+    announcementTitle = "Download from Curseforge"
+
+    javaVersions.add(JavaVersion.VERSION_25)
+
+    projectSlug = "zfastnoise"
+
+    client = true
+    server = true
+
+    additionalFile(sourcesJar) {
+      name = "Sources Jar"
+    }
+
+    incompatible("moonrise")
+    requires("zconfig")
+  }
+
+  dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
+}

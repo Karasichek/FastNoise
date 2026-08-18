@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "zmatcomp",
+  "version": "${version}",
+  "name": "Material Rule Compiler",
+  "description": "A method handle based compiler for material rules",
+  "authors": ["ZenXArch"],
+  "contact": {
+    "mastodon": "https://mastodon.social/@ZenXArch",
+    "discord": "https://discord.gg/RFSmd7debX",
+    "sources": "https://codeberg.org/ZenXArch/FastNoise",
+    "modrinth": "https://modrinth.com/mod/zmatcomp",
+    "TODO": "fix the above link"
+  },
+  "license": "Mozilla Public License 2.0",
+  "icon": "assets/zmatcomp/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["org.codeberg.zenxarch.matcomp.MaterialRuleCompilerMod"]
+  },
+  "mixins": ["zmatcomp.mixins.json"],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=25",
+    "zconfig": ">=${zconfig_version}"
+  },
+  "breaks": {
+    "moonrise": "*"
+  },
+  "recommends": {
+    "c2me": "*"
+  },
+  "accessWidener": "zmatcomp.ct"
+}

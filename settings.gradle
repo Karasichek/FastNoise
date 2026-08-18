@@ -9,4 +9,4 @@ pluginManagement {
   }
 }
 
-include("zfastnoise", "zconfig")
+include("zfastnoise", "zconfig", "zmatcomp")
