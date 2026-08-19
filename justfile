@@ -1,26 +1,3 @@
-default: build
-
-build:
-    ./gradlew build
-
-serverBuild:
-    ./gradlew -PserverCompile=true build
-
-run:
-    ./gradlew runClient
-
-server:
-    ./gradlew runServer
-
-dap:
-    ./gradlew runDap
-
-hotswapDap:
-    JAVA_HOME=/usr/lib/jvm/jre-jetbrains ./gradlew runHotswapDap
-
-sources:
-    ./gradlew genSources
-
 wrapper:
     ./gradlew wrapper --gradle-version=latest && ./gradlew wrapper
 
@@ -47,30 +24,6 @@ stop:
 
 clean:
     ./gradlew clean
-
-prod:
-    ./gradlew prodClient
-
-prodServer:
-    ./gradlew prodServer
-
-modrinth ptype="alpha":
-    touch changelog.md
-    $EDITOR changelog.md
-    ./gradlew publishModrinth -Pzmtype="{{ptype}}"
-    rm changelog.md
-
-curseforge ptype="alpha":
-    touch changelog.md
-    $EDITOR changelog.md
-    ./gradlew publishCurseforge -Pzmtype="{{ptype}}"
-    rm changelog.md
-
-publish ptype="alpha":
-    touch changelog.md
-    $EDITOR changelog.md
-    ./gradlew publishMods -Pzmtype="{{ptype}}"
-    rm changelog.md
 
 task taskName:
     ./gradlew {{taskName}}
