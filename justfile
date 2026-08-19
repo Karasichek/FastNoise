@@ -1,7 +1,7 @@
 default: build
 
 task taskName options="":
-    ./gradlew {{options}} :zconfig:{{taskName}}
+    ./gradlew {{options}} :{{taskName}}
 
 build:
     just task build
