@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.zmatcomp;
+package org.codeberg.zenxarch.matcomp;
 
 import net.fabricmc.api.ModInitializer;
 
