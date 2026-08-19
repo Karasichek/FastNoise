@@ -1,3 +1,11 @@
+default: build
+
+task taskName options="":
+    ./gradlew {{options}} :zconfig:{{taskName}}
+
+build:
+    just task build
+
 wrapper:
     ./gradlew wrapper --gradle-version=latest && ./gradlew wrapper
 
@@ -24,9 +32,6 @@ stop:
 
 clean:
     ./gradlew clean
-
-task taskName:
-    ./gradlew {{taskName}}
 
 bytecode:
     ./bytecode.sh
