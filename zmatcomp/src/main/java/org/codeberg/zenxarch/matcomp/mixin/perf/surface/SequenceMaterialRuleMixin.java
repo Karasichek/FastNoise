@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.mixin.perf.surface;
+package org.codeberg.zenxarch.matcomp.mixin.perf.surface;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList;
@@ -8,7 +8,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
-import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
+import org.codeberg.zenxarch.matcomp.rules.BiomePredicate;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

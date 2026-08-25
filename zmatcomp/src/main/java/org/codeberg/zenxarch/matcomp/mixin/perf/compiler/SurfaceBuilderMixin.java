@@ -1,8 +1,8 @@
-package org.codeberg.zenxarch.fastnoise.mixin;
+package org.codeberg.zenxarch.matcomp.mixin.perf.compiler;
 
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
-import org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleCompilerCache;
-import org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleCompilerCacheHolder;
+import org.codeberg.zenxarch.matcomp.compiler.MaterialRuleCompilerCache;
+import org.codeberg.zenxarch.matcomp.compiler.MaterialRuleCompilerCacheHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 

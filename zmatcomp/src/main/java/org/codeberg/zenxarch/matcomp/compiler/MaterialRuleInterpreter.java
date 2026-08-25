@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.compiler;
+package org.codeberg.zenxarch.matcomp.compiler;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -13,11 +13,11 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
-import org.codeberg.zenxarch.fastnoise.FastNoiseConstants;
-import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
-import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
+import org.codeberg.zenxarch.matcomp.MaterialRuleCompilerConstants;
+import org.codeberg.zenxarch.matcomp.rules.BiomePredicate;
 import org.jspecify.annotations.Nullable;
 
 public final class MaterialRuleInterpreter implements BlockStateRule {
@@ -65,7 +65,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         return (BlockState) compiled.invokeExact(conditions, rules, states, x, y, z, context);
       } catch (Throwable e) {
         // TODO: handle crashes
-        FastNoiseConstants.LOGGER.error("Compiled surface rule failed", e);
+        MaterialRuleCompilerConstants.LOGGER.error("Compiled surface rule failed", e);
         hasNotCrashed = false;
       }
     }
@@ -91,13 +91,13 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             return states[instructions[instPointer + 2]];
           instPointer += 3;
         }
-        case BIOME_TEST -> {
-          var idx = context.getCurrentBiomeIdx();
-          instPointer +=
-              ((getLong(instructions, instPointer + 1) & (0x1L << idx)) == 0)
-                  ? instructions[instPointer + 3]
-                  : 4;
-        }
+        // case BIOME_TEST -> {
+        //   var idx = context.getCurrentBiomeIdx();
+        //   instPointer +=
+        //       ((getLong(instructions, instPointer + 1) & (0x1L << idx)) == 0)
+        //           ? instructions[instPointer + 3]
+        //           : 4;
+        // }
         case JUMP_IF_FALSE_STATIC -> {
           var idx = instructions[instPointer + 1];
           var offset = instructions[instPointer + 2];
@@ -148,7 +148,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   public static void debugPrint(int[] instructions) {
     var builder = new StringBuilder();
     toString0(builder, instructions);
-    FastNoiseConstants.LOGGER.info("Program : {}", builder.toString());
+    MaterialRuleCompilerConstants.LOGGER.info("Program : {}", builder.toString());
   }
 
   public static void toString0(StringBuilder builder, int[] instructions) {
@@ -271,9 +271,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
           push(rule.thenRun());
           return;
         }
-        if (cond instanceof BiomePredicate biomeCond) {
-          this.addInst(BIOME_TEST, (int) (biomeCond.mask >>> 32), (int) (biomeCond.mask), 0);
-        }
+        // if (cond instanceof BiomePredicate biomeCond) {
+        //   this.addInst(BIOME_TEST, (int) (biomeCond.mask >>> 32), (int) (biomeCond.mask), 0);
+        // }
         var instIndex = instructions.size() - 1;
 
         push(rule.thenRun());

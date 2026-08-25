@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.mixin.perf.surface;
+package org.codeberg.zenxarch.matcomp.mixin.perf.surface;
 
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionMaterialRule;
@@ -6,7 +6,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionalBlockStat
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
-import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
+import org.codeberg.zenxarch.matcomp.rules.BiomePredicate;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

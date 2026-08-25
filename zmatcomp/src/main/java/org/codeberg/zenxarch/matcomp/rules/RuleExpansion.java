@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.rules;
+package org.codeberg.zenxarch.matcomp.rules;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
@@ -11,6 +11,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionMaterialRul
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionalBlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
@@ -19,7 +20,8 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.SimpleBlockStateRule
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.TerracottaBandsMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
-import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
+
+// import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
 
 public final class RuleExpansion {
   public static BlockStateRule expand(MaterialRule rule, MaterialRuleContext context) {

@@ -1,10 +1,10 @@
-package org.codeberg.zenxarch.fastnoise.mixin.perf.surface;
+package org.codeberg.zenxarch.matcomp.mixin.perf.surface;
 
 import net.minecraft.world.gen.YOffset;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.AboveYMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
-import org.codeberg.zenxarch.fastnoise.surface.rules.AboveYPredicate;
+import org.codeberg.zenxarch.matcomp.rules.AboveYPredicate;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

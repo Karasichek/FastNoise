@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.rules;
+package org.codeberg.zenxarch.matcomp.rules;
 
 import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.world.biome.Biome;

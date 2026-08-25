@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.rules;
+package org.codeberg.zenxarch.matcomp.rules;
 
 import net.minecraft.util.math.random.CheckedRandom;
 import net.minecraft.util.math.random.RandomSplitter;
@@ -6,7 +6,7 @@ import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
-import org.codeberg.zenxarch.fastnoise.surface.AllocFreeRandom;
+import org.codeberg.zenxarch.matcomp.util.AllocFreeRandom;
 
 public record VerticalGradientPredicate(
     int trueAtAndBelow, int falseAtAndAbove, RandomSplitter splitter, MaterialRuleContext context)

@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.mixin.perf.surface;
+package org.codeberg.zenxarch.matcomp.mixin.perf.surface;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -8,9 +8,8 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BiomeMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
-import org.codeberg.zenxarch.fastnoise.surface.rules.BiomePredicate;
-import org.codeberg.zenxarch.fastnoise.surface.rules.VanillaBiomePredicate;
+import org.codeberg.zenxarch.matcomp.rules.BiomePredicate;
+import org.codeberg.zenxarch.matcomp.rules.VanillaBiomePredicate;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -27,9 +26,6 @@ public abstract class BiomeMaterialRuleMixin {
           "apply(Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext;)Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;")
   public BooleanSupplier zenxarch$apply(
       final MaterialRules.MaterialRuleContext ruleContext, Operation<BooleanSupplier> op) {
-    if (ruleContext instanceof MaterialRuleContext ctx) {
-      return BiomePredicate.getSupplier(((BiomeMaterialRule) (Object) this).biomes(), ctx);
-    }
     if (ruleContext.includedBiomes != null) {
       if (this.isDisjoint(ruleContext.includedBiomes)) return BiomePredicate.ALWAYS_FALSE;
       if (this.isSuperset(ruleContext.includedBiomes)) return BiomePredicate.ALWAYS_TRUE;

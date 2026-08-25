@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.compiler;
+package org.codeberg.zenxarch.matcomp.compiler;
 
 import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenCustomHashMap;
@@ -13,7 +13,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
-import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
+import org.codeberg.zenxarch.matcomp.config.MaterialRuleCompilerConfig;
 
 public class MaterialRuleCompilerCacheHeightContextSpecific {
   private final Reference2IntOpenHashMap<MaterialCondition> staticConditions =
@@ -23,7 +23,7 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
 
   private final Object2ObjectLinkedOpenCustomHashMap<int[], MethodHandle> cache =
       new Object2ObjectLinkedOpenCustomHashMap<>(
-          FastNoiseConfig.MAX_CACHE_SIZE,
+          MaterialRuleCompilerConfig.MAX_CACHE_SIZE,
           Object2ObjectOpenCustomHashMap.FAST_LOAD_FACTOR,
           IntArrays.HASH_STRATEGY);
 
@@ -85,7 +85,7 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
     if (res != null) return res;
     res = MaterialRuleCompiler.compile(program, this);
     cache.put(program, res);
-    while (cache.size() > FastNoiseConfig.MAX_CACHE_SIZE) cache.removeLast();
+    while (cache.size() > MaterialRuleCompilerConfig.MAX_CACHE_SIZE) cache.removeLast();
     return res;
   }
 }

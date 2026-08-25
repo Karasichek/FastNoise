@@ -1,11 +1,11 @@
-package org.codeberg.zenxarch.fastnoise.mixin.perf.surface;
+package org.codeberg.zenxarch.matcomp.mixin.perf.surface;
 
 import net.minecraft.class_1_1397;
 import net.minecraft.util.math.random.CheckedRandom;
 import net.minecraft.util.math.random.RandomSplitter;
 import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
-import org.codeberg.zenxarch.fastnoise.surface.AllocFreeRandom;
+import org.codeberg.zenxarch.matcomp.util.AllocFreeRandom;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

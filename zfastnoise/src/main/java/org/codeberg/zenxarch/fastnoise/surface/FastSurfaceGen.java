@@ -24,7 +24,8 @@ import org.codeberg.zenxarch.fastnoise.mixin.SurfaceBuilderAccessor;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastColumnIterator;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastIsFluidCache;
 import org.codeberg.zenxarch.fastnoise.surface.cache.FastPaletteIndexCache;
-import org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleInterpreter;
+
+// import org.codeberg.zenxarch.matcomp.compiler.MaterialRuleInterpreter;
 
 public class FastSurfaceGen {
 
@@ -121,19 +122,21 @@ public class FastSurfaceGen {
     var willUpdateHeightmap = true;
     var willAddWater = true;
     var willGrow = true;
-    var rule = MaterialRuleInterpreter.of(context, heightContext, noiseConfig, materialRule);
-    {
-      if (rule.rules.length == 0) {
-        willUpdateHeightmap = FastBlockColumn.willHeightmapUpdate(defaultState, rule.states);
-        willAddWater = willAddWater(rule.states);
+    var rule = materialRule.apply(context);
+    // var rule = MaterialRuleInterpreter.of(context, heightContext, noiseConfig, materialRule);
+    // {
+    //   if (rule.rules.length == 0) {
+    //     willUpdateHeightmap = FastBlockColumn.willHeightmapUpdate(defaultState, rule.states);
+    //     willAddWater = willAddWater(rule.states);
 
-        var maxStates = 0;
-        for (int i = 0; i < sections.length; i++)
-          maxStates = Math.max(maxStates, sections[i].blockStateContainer.data.palette().getSize());
+    //     var maxStates = 0;
+    //     for (int i = 0; i < sections.length; i++)
+    //       maxStates = Math.max(maxStates,
+    // sections[i].blockStateContainer.data.palette().getSize());
 
-        willGrow = (maxStates + rule.states.length) > 16;
-      }
-    }
+    //     willGrow = (maxStates + rule.states.length) > 16;
+    //   }
+    // }
 
     final int minY = chunk.getBottomY();
 

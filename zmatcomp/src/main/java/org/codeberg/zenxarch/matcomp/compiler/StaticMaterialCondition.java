@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.compiler;
+package org.codeberg.zenxarch.matcomp.compiler;
 
 import java.lang.invoke.MethodHandle;
 import net.minecraft.util.math.VerticalSurfaceType;
@@ -7,7 +7,6 @@ import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.AboveYMaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.HoleMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.NotMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredCondition;

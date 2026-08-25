@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface;
+package org.codeberg.zenxarch.matcomp.util;
 
 import net.minecraft.util.math.MathHelper;
 

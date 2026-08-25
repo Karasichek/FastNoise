@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.rules;
+package org.codeberg.zenxarch.matcomp.rules;
 
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;

@@ -3,6 +3,12 @@
   "package": "org.codeberg.zenxarch.matcomp.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "perf.compiler.SurfaceBuilderMixin",
+    "perf.surface.BiomeMaterialRuleMixin",
+    "perf.surface.ConditionMaterialRuleMixin",
+    "perf.surface.SequenceMaterialRuleMixin",
+    "perf.surface.AboveYMaterialConditionMixin",
+    "perf.surface.SurfaceBuilderMixin"
   ],
   "injectors": {
     "defaultRequire": 1

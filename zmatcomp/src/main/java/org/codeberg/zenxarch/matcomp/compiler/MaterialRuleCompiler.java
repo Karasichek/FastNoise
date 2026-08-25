@@ -1,6 +1,6 @@
-package org.codeberg.zenxarch.fastnoise.surface.compiler;
+package org.codeberg.zenxarch.matcomp.compiler;
 
-import static org.codeberg.zenxarch.fastnoise.surface.compiler.MaterialRuleInterpreter.*;
+import static org.codeberg.zenxarch.matcomp.compiler.MaterialRuleInterpreter.*;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -14,9 +14,9 @@ import net.minecraft.util.math.random.RandomSplitter;
 import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import org.codeberg.zenxarch.fastnoise.surface.AllocFreeRandom;
-import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
-import org.codeberg.zenxarch.fastnoise.surface.rules.VerticalGradientPredicate;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
+import org.codeberg.zenxarch.matcomp.rules.VerticalGradientPredicate;
+import org.codeberg.zenxarch.matcomp.util.AllocFreeRandom;
 
 public final class MaterialRuleCompiler {
   private MaterialRuleCompiler() {}
@@ -35,7 +35,7 @@ public final class MaterialRuleCompiler {
   private static final MethodHandle ret = lookup("ret", int.class);
   private static final MethodHandle tryRet = lookup("tryRet", int.class, MethodHandle.class);
   private static final MethodHandle retNull = lookup("retNull");
-  private static final MethodHandle biomeTest = lookupCondition("biomeTest", long.class);
+  // private static final MethodHandle biomeTest = lookupCondition("biomeTest", long.class);
 
   private static final MethodHandle aboveY = lookupCondition("aboveY", int.class);
   private static final MethodHandle aboveYWithRunDepth =
@@ -131,14 +131,14 @@ public final class MaterialRuleCompiler {
               createCondition(program[index + 1]),
               createRet(program[index + 2]),
               compile0(program, index + 3, cache, contextSpecificCache));
-      case BIOME_TEST ->
-          createTernary(
-              createBiomeTest(getLong(program, index + 1)),
-              program,
-              index + 4,
-              index + program[index + 3],
-              cache,
-              contextSpecificCache);
+      // case BIOME_TEST ->
+      //     createTernary(
+      //         createBiomeTest(getLong(program, index + 1)),
+      //         program,
+      //         index + 4,
+      //         index + program[index + 3],
+      //         cache,
+      //         contextSpecificCache);
       case JUMP_IF_FALSE_STATIC ->
           createTernary(
               contextSpecificCache.getHandle(program[index + 1]),
@@ -181,9 +181,9 @@ public final class MaterialRuleCompiler {
     return MethodHandles.insertArguments(tryRet, 0, index, orElse);
   }
 
-  private static MethodHandle createBiomeTest(long mask) {
-    return MethodHandles.insertArguments(biomeTest, 0, mask);
-  }
+  // private static MethodHandle createBiomeTest(long mask) {
+  //   return MethodHandles.insertArguments(biomeTest, 0, mask);
+  // }
 
   public static MethodHandle createAboveY(int y, int runDepthMultiplier, boolean addStoneDepth) {
     if (addStoneDepth) {
@@ -288,18 +288,18 @@ public final class MaterialRuleCompiler {
     return null;
   }
 
-  public static boolean biomeTest(
-      long mask,
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      BlockState[] states,
-      int x,
-      int y,
-      int z,
-      MaterialRuleContext context) {
-    var idx = context.getCurrentBiomeIdx();
-    return (mask & (0x1L << idx)) != 0;
-  }
+  // public static boolean biomeTest(
+  //     long mask,
+  //     BooleanSupplier[] conditions,
+  //     BlockStateRule[] rules,
+  //     BlockState[] states,
+  //     int x,
+  //     int y,
+  //     int z,
+  //     MaterialRuleContext context) {
+  //   var idx = context.getCurrentBiomeIdx();
+  //   return (mask & (0x1L << idx)) != 0;
+  // }
 
   public static boolean aboveY(
       int testY,
@@ -454,7 +454,7 @@ public final class MaterialRuleCompiler {
       int y,
       int z,
       MaterialRuleContext context) {
-    return context.negativeRunDepthCache;
+    return context.runDepth <= 0;
   }
 
   public static boolean surfacePredicate(

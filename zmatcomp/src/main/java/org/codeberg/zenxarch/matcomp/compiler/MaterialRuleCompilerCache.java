@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.compiler;
+package org.codeberg.zenxarch.matcomp.compiler;
 
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
