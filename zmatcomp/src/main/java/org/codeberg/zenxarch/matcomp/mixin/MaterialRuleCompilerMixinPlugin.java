@@ -1,13 +1,16 @@
 package org.codeberg.zenxarch.matcomp.mixin;
 
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import java.util.List;
 import java.util.Set;
+import org.codeberg.zenxarch.matcomp.config.MaterialRuleCompilerConfig;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 public class MaterialRuleCompilerMixinPlugin implements IMixinConfigPlugin {
 
+  private Object2BooleanMap<String> config = MaterialRuleCompilerConfig.CONFIG.loadMixinEntries();
   private String mixinPackage;
 
   @Override
@@ -22,6 +25,15 @@ public class MaterialRuleCompilerMixinPlugin implements IMixinConfigPlugin {
 
   @Override
   public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+    if (!mixinClassName.startsWith(mixinPackage)) return false;
+    var name = mixinClassName.substring(mixinPackage.length() - "mixin".length());
+
+    if (!name.startsWith("mixin.")) return false;
+
+    for (var key : config.keySet()) {
+      if (name.startsWith(key) && !config.getBoolean(key)) return false;
+    }
+
     return true;
   }
 
