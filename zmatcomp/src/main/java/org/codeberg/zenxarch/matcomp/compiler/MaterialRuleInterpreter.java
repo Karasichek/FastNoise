@@ -271,6 +271,11 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
           push(rule.thenRun());
           return;
         }
+
+        var index = this.conditions.size();
+        this.conditions.add(rule.ifTrue().apply(context));
+
+        this.addInst(JUMP_IF_FALSE, index, 0);
         // if (cond instanceof BiomePredicate biomeCond) {
         //   this.addInst(BIOME_TEST, (int) (biomeCond.mask >>> 32), (int) (biomeCond.mask), 0);
         // }
