@@ -20,7 +20,6 @@ import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastsurface.config.FastSurfaceConfig;
-import org.codeberg.zenxarch.fastsurface.mixin.MaterialRuleInterpreterAccessor;
 import org.codeberg.zenxarch.fastsurface.mixin.SurfaceBuilderAccessor;
 import org.codeberg.zenxarch.fastsurface.surface.cache.FastColumnIterator;
 import org.codeberg.zenxarch.fastsurface.surface.cache.FastIsFluidCache;
@@ -126,8 +125,8 @@ public class FastSurfaceGen {
     var rule = materialRule.apply(context);
 
     if (rule instanceof MaterialRuleInterpreterAccessor interpreter) {
-      if (interpreter.getRules().length == 0) {
-        var states = interpreter.getStates();
+      if (interpreter.zfastsurface$getRules().length == 0) {
+        var states = interpreter.zfastsurface$getStates();
 
         willUpdateHeightmap = FastBlockColumn.willHeightmapUpdate(defaultState, states);
         willAddWater = willAddWater(states);
