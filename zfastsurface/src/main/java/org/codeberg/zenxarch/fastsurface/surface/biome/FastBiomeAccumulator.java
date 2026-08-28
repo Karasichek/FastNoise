@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.biome;
+package org.codeberg.zenxarch.fastsurface.surface.biome;
 
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;

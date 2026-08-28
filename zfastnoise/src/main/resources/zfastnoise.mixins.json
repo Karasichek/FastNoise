@@ -5,15 +5,13 @@
   "mixins": [
     "perf.noise.NoiseChunkGeneratorMixin",
     "perf.biome.NoiseChunkGeneratorMixin",
-    "perf.surface.NoiseChunkGeneratorMixin",
     "debug.disable_carve_features_and_entities.ChunkGeneratingMixin",
     "HeightmapAccessor",
     "ChunkNoiseSamplerAccessor",
     "ChunkGeneratorAccessor",
     "SurfaceBuilderAccessor",
     "MultiNoiseBiomeSourceAccessor",
-    "EntriesAccessor",
-    "SurfaceBuilderMixin"
+    "EntriesAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

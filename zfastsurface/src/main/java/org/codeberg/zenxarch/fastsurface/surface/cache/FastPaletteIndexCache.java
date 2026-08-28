@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.cache;
+package org.codeberg.zenxarch.fastsurface.surface.cache;
 
 import java.util.Arrays;
 import net.minecraft.block.BlockState;

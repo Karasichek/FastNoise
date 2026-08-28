@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.cache;
+package org.codeberg.zenxarch.fastsurface.surface.cache;
 
 public final class FastColumnBitMask {
   private final long[] data;

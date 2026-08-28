@@ -1,9 +1,9 @@
-package org.codeberg.zenxarch.fastnoise.surface.cache;
+package org.codeberg.zenxarch.fastsurface.surface.cache;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.Palette;
-import org.codeberg.zenxarch.fastnoise.surface.MaterialRuleContext;
+import org.codeberg.zenxarch.fastsurface.surface.MaterialRuleContext;
 
 /*
   Explaination cause this gonna get confusing

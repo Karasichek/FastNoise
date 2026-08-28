@@ -1,0 +1,55 @@
+default: build
+
+task taskName options="":
+    ../gradlew {{options}} :zfastsurface:{{taskName}}
+
+build:
+    just task build
+
+serverBuild:
+    task build -PserverCompile=true
+
+run:
+    just task runClient
+
+server:
+    just task runServer
+
+dap:
+    just task runDap
+
+hotswapDap:
+    JAVA_HOME=/usr/lib/jvm/jre-jetbrains just task runHotswapDap
+
+sources:
+    just task genSources
+
+test:
+    just task test
+
+view_test_results:
+    cd build/reports/tests/test/ && python -m http.server
+
+prod:
+    just task prodClient
+
+prodServer:
+    just task prodServer
+
+modrinth ptype="alpha":
+    touch changelog.md
+    $EDITOR changelog.md
+    task publishModrinth -Pzmtype="{{ptype}}"
+    rm changelog.md
+
+curseforge ptype="alpha":
+    touch changelog.md
+    $EDITOR changelog.md
+    task publishCurseforge -Pzmtype="{{ptype}}"
+    rm changelog.md
+
+publish ptype="alpha":
+    touch changelog.md
+    $EDITOR changelog.md
+    task publishMods -Pzmtype="{{ptype}}"
+    rm changelog.md

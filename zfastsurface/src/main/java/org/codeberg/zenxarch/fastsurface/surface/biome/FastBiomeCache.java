@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface.biome;
+package org.codeberg.zenxarch.fastsurface.surface.biome;
 
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.MathHelper;

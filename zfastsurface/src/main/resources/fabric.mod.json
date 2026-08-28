@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "zfastsurface",
+  "version": "${version}",
+  "name": "Fast Surface",
+  "description": "vanilla surface builder optimizations",
+  "authors": ["ZenXArch"],
+  "contact": {
+    "mastodon": "https://mastodon.social/@ZenXArch",
+    "discord": "https://discord.gg/RFSmd7debX",
+    "sources": "https://codeberg.org/ZenXArch/FastNoise",
+    "modrinth": "https://modrinth.com/mod/zfastsurface",
+    "TODO": "fix the above link"
+  },
+  "license": "Mozilla Public License 2.0",
+  "icon": "assets/zfastsurface/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["org.codeberg.zenxarch.fastsurface.FastSurfaceMod"]
+  },
+  "mixins": ["zfastsurface.mixins.json"],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=25",
+    "zconfig": ">=${zconfig_version}"
+  },
+  "breaks": {
+    "moonrise": "*"
+  },
+  "recommends": {
+    "c2me": "*"
+  },
+  "accessWidener": "zfastsurface.ct"
+}

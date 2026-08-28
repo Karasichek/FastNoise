@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface;
+package org.codeberg.zenxarch.fastsurface.surface;
 
 import java.util.Set;
 import net.minecraft.block.BlockState;
@@ -19,11 +19,11 @@ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
-import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
-import org.codeberg.zenxarch.fastnoise.mixin.SurfaceBuilderAccessor;
-import org.codeberg.zenxarch.fastnoise.surface.cache.FastColumnIterator;
-import org.codeberg.zenxarch.fastnoise.surface.cache.FastIsFluidCache;
-import org.codeberg.zenxarch.fastnoise.surface.cache.FastPaletteIndexCache;
+import org.codeberg.zenxarch.fastsurface.config.FastSurfaceConfig;
+import org.codeberg.zenxarch.fastsurface.mixin.SurfaceBuilderAccessor;
+import org.codeberg.zenxarch.fastsurface.surface.cache.FastColumnIterator;
+import org.codeberg.zenxarch.fastsurface.surface.cache.FastIsFluidCache;
+import org.codeberg.zenxarch.fastsurface.surface.cache.FastPaletteIndexCache;
 
 // import org.codeberg.zenxarch.matcomp.compiler.MaterialRuleInterpreter;
 
@@ -190,7 +190,7 @@ public class FastSurfaceGen {
 
   private static boolean canSkipSurfaceBuilder(
       MaterialRules.MaterialRule rule, BlockState defaultState) {
-    if (!FastNoiseConfig.SKIP_TRIVIAL_SURFACE_BUILDER) return false;
+    if (!FastSurfaceConfig.SKIP_TRIVIAL_SURFACE_BUILDER) return false;
     if (rule instanceof MaterialRules.BlockMaterialRule block) {
       return block.resultState() == defaultState;
     }

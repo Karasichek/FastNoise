@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.mixin.perf.surface;
+package org.codeberg.zenxarch.fastsurface.mixin.perf.surface;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -17,9 +17,9 @@ import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import org.codeberg.zenxarch.fastnoise.mixin.SurfaceBuilderAccessor;
-import org.codeberg.zenxarch.fastnoise.surface.FastSurfaceGen;
-import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeAccumulator;
+import org.codeberg.zenxarch.fastsurface.mixin.SurfaceBuilderAccessor;
+import org.codeberg.zenxarch.fastsurface.surface.FastSurfaceGen;
+import org.codeberg.zenxarch.fastsurface.surface.biome.FastBiomeAccumulator;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

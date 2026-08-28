@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface;
+package org.codeberg.zenxarch.fastsurface.surface;
 
 import java.util.Set;
 import java.util.function.Function;
@@ -11,8 +11,8 @@ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
-import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
-import org.codeberg.zenxarch.fastnoise.surface.biome.FastBiomeCache;
+import org.codeberg.zenxarch.fastsurface.config.FastSurfaceConfig;
+import org.codeberg.zenxarch.fastsurface.surface.biome.FastBiomeCache;
 
 public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
@@ -37,7 +37,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
 
     FastBiomeCache biomeCache;
 
-    if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) {
+    if (FastSurfaceConfig.OPTIMIZE_BIOME_ACCESS) {
       biomeCache = biomes.length == 1 ? null : new FastBiomeCache(biomes, chunks);
     } else {
       biomeCache = null;
@@ -66,7 +66,7 @@ public class MaterialRuleContext extends MaterialRules.MaterialRuleContext {
       Function<BlockPos, RegistryEntry<Biome>> fallback,
       RegistryEntry<Biome>[] includedBiomes,
       final Chunk[] chunks) {
-    if (FastNoiseConfig.OPTIMIZE_BIOME_ACCESS) {
+    if (FastSurfaceConfig.OPTIMIZE_BIOME_ACCESS) {
       if (includedBiomes.length == 1) {
         return (_) -> includedBiomes[0];
       }

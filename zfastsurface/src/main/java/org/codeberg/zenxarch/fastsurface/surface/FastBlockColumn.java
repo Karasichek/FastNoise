@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.surface;
+package org.codeberg.zenxarch.fastsurface.surface;
 
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -10,8 +10,8 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.chunk.BlockColumn;
-import org.codeberg.zenxarch.fastnoise.heightmap.HeightmapUtil;
-import org.codeberg.zenxarch.fastnoise.mixin.HeightmapAccessor;
+import org.codeberg.zenxarch.fastsurface.heightmap.HeightmapUtil;
+import org.codeberg.zenxarch.fastsurface.mixin.HeightmapAccessor;
 
 public class FastBlockColumn implements BlockColumn {
 
