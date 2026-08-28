@@ -5,7 +5,8 @@
   "mixins": [
     "perf.surface.NoiseChunkGeneratorMixin",
     "HeightmapAccessor",
-    "SurfaceBuilderAccessor"
+    "SurfaceBuilderAccessor",
+    "MaterialRuleInterpreterAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

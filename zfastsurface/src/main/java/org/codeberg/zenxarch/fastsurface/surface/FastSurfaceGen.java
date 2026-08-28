@@ -20,6 +20,7 @@ import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastsurface.config.FastSurfaceConfig;
+import org.codeberg.zenxarch.fastsurface.mixin.MaterialRuleInterpreterAccessor;
 import org.codeberg.zenxarch.fastsurface.mixin.SurfaceBuilderAccessor;
 import org.codeberg.zenxarch.fastsurface.surface.cache.FastColumnIterator;
 import org.codeberg.zenxarch.fastsurface.surface.cache.FastIsFluidCache;
@@ -123,20 +124,21 @@ public class FastSurfaceGen {
     var willAddWater = true;
     var willGrow = true;
     var rule = materialRule.apply(context);
-    // var rule = MaterialRuleInterpreter.of(context, heightContext, noiseConfig, materialRule);
-    // {
-    //   if (rule.rules.length == 0) {
-    //     willUpdateHeightmap = FastBlockColumn.willHeightmapUpdate(defaultState, rule.states);
-    //     willAddWater = willAddWater(rule.states);
 
-    //     var maxStates = 0;
-    //     for (int i = 0; i < sections.length; i++)
-    //       maxStates = Math.max(maxStates,
-    // sections[i].blockStateContainer.data.palette().getSize());
+    if (rule instanceof MaterialRuleInterpreterAccessor interpreter) {
+      if (interpreter.getRules().length == 0) {
+        var states = interpreter.getStates();
 
-    //     willGrow = (maxStates + rule.states.length) > 16;
-    //   }
-    // }
+        willUpdateHeightmap = FastBlockColumn.willHeightmapUpdate(defaultState, states);
+        willAddWater = willAddWater(states);
+
+        var maxStates = 0;
+        for (int i = 0; i < sections.length; i++)
+          maxStates = Math.max(maxStates, sections[i].blockStateContainer.data.palette().getSize());
+
+        willGrow = (maxStates + states.length) > 16;
+      }
+    }
 
     final int minY = chunk.getBottomY();
 
