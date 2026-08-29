@@ -7,11 +7,7 @@
     "perf.biome.TheEndBiomeSourceMixin",
     "perf.biome.ChunkGeneratorMixin",
     "debug.disable_carve_features_and_entities.ChunkGeneratingMixin",
-    "HeightmapAccessor",
-    "ChunkNoiseSamplerAccessor",
-    "ChunkGeneratorAccessor",
-    "MultiNoiseBiomeSourceAccessor",
-    "EntriesAccessor"
+    "HeightmapAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -4,7 +4,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.SingularPalette;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -13,9 +12,6 @@ import org.codeberg.zenxarch.fastnoise.heightmap.HeightmapUtil;
 
 public class FastNoiseGen {
   public static final BlockState AIR = Blocks.AIR.getDefaultState();
-
-  private static final Heightmap.Type[] heightmaps =
-      HeightmapUtil.calculateHeightmaps(ChunkStatus.TERRAIN);
 
   public static boolean isEmpty(Chunk chunk) {
     var sections = chunk.getSectionArray();
@@ -71,12 +67,11 @@ public class FastNoiseGen {
             final var blockZInSection = blockZ & 0xF;
 
             if (state == null) {
-              fastSection.setDefaultBlockState(
-                  blockXInSection, blockYInSection, blockZInSection, defaultBlockState);
+              fastSection.setDefaultBlockState(x, blockYInSection, z, defaultBlockState);
               continue;
             }
 
-            fastSection.setBlockState(blockXInSection, blockYInSection, blockZInSection, state);
+            fastSection.setBlockState(x, blockYInSection, z, state);
 
             if (aquifer.needsFluidTick() && !state.getFluidState().isEmpty()) {
               Chunk.getList(postProcessingLists, cy)
@@ -95,8 +90,9 @@ public class FastNoiseGen {
     for (int i = 0; i < fastSections.length; i++)
       if (fastSections[i] != null) fastSections[i].recalculateCounts();
 
-    for (int i = 0; i < heightmaps.length; i++) {
-      HeightmapUtil.populateHeightmapPostNoise(chunk, heightmaps[i], defaultBlockState, AIR);
-    }
+    HeightmapUtil.populateHeightmapPostNoise(
+        chunk, Heightmap.Type.OCEAN_FLOOR_WG, defaultBlockState, AIR);
+    HeightmapUtil.populateHeightmapPostNoise(
+        chunk, Heightmap.Type.WORLD_SURFACE_WG, defaultBlockState, AIR);
   }
 }
