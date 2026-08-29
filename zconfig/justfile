@@ -39,7 +39,7 @@ prodServer:
 modrinth ptype="alpha":
     touch changelog.md
     $EDITOR changelog.md
-    task publishModrinth -Pzmtype="{{ptype}}"
+    just task publishModrinth -Pzmtype="{{ptype}}"
     rm changelog.md
 
 curseforge ptype="alpha":
