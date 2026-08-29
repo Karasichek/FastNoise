@@ -4,12 +4,12 @@
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "perf.noise.NoiseChunkGeneratorMixin",
-    "perf.biome.NoiseChunkGeneratorMixin",
+    "perf.biome.TheEndBiomeSourceMixin",
+    "perf.biome.ChunkGeneratorMixin",
     "debug.disable_carve_features_and_entities.ChunkGeneratingMixin",
     "HeightmapAccessor",
     "ChunkNoiseSamplerAccessor",
     "ChunkGeneratorAccessor",
-    "SurfaceBuilderAccessor",
     "MultiNoiseBiomeSourceAccessor",
     "EntriesAccessor"
   ],
