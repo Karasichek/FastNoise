@@ -10,7 +10,7 @@ loom {
 }
 
 dependencies {
-  modImplementation project(":zconfig")
+  implementation project(path: ":zconfig", configuration: "namedElements")
 }
 
 processResources {
