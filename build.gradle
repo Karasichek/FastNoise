@@ -1,123 +1,133 @@
 plugins {
-  id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+  id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
+  id 'net.fabricmc.fabric-loom-repositories' version "${loom_version}"
   id 'maven-publish'
   id 'me.champeau.jmh' version "${jmh_version}"
-  id "me.modmuss50.mod-publish-plugin" version "${mod_publish_plugin_version}"
+  id "me.modmuss50.mod-publish-plugin" version "${mod_publish_plugin_version}" apply false
 }
 
-version = project.mod_version + "+" + project.minecraft_version
-group = project.maven_group
-
-base {
-  archivesName = project.archives_base_name
-}
-
-repositories {
-  // Add repositories to retrieve artifacts from in here.
-  // You should only use this when depending on other mods because
-  // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-  // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-  // for more information about repositories.
-  maven {
-    url = "https://repo.codemc.io/repository/relativitymc/"
-  }
-  mavenLocal()
-}
-
-loom {
-  if (project.hasProperty("serverCompile")) {
-    serverOnlyMinecraftJar()
-  }
-
-  accessWidenerPath = file("src/main/resources/zfastnoise.ct")
-
-  decompilerOptions.named("vineflower") {
-    options.put("mark-corresponding-synthetics", "1")
-  }
-
-  intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
-  useIntermediateMappings = true
-
-  runs {
-    dap {
-      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
-      client()
-    }
-
-    hotswapDap {
-      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
-      vmArgs '-XX:+AllowEnhancedClassRedefinition'
-      client()
-    }
-  }
-}
-
-test {
-  useJUnitPlatform()
-  workingDir = mkdir(layout.buildDirectory.dir("testrun"))
-  jvmArgs += '-Dfabric.side=server'
-}
-
-dependencies {
-  // To change the versions see the gradle.properties file
-  minecraft "com.mojang:minecraft:${project.minecraft_version}"
-  mappings "org.relativitymc:modern-yarn:${project.yarn_mappings}:v2"
-  modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-  // Fabric API. This is technically optional, but you probably want it anyway.
-
-  testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
-
-  implementation "org.codeberg.zenxarch.zconfig:zconfig:1.0.0+26.x"
-}
-
-processResources {
-  inputs.property "version", project.version
-  inputs.property "loader_version", project.loader_version
-  inputs.property "minecraft_version", project.min_minecraft_version
-
-  filesMatching("fabric.mod.json") {
-    expand(inputs.properties)
-  }
-}
-
-tasks.withType(JavaCompile).configureEach {
-  it.options.release = 25
-}
-
-java {
-  // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-  // if it is present.
-  // If you remove this line, sources will not be generated.
-  withSourcesJar()
-
-  sourceCompatibility = JavaVersion.VERSION_25
-  targetCompatibility = JavaVersion.VERSION_25
-}
-
-jar {
-  inputs.property "archivesName", project.base.archivesName
-
-  from("LICENSE") {
-    rename { "${it}_${inputs.properties.archivesName}"}
-  }
-}
-
-// configure the maven publication
-publishing {
-  publications {
-    create("mavenJava", MavenPublication) {
-      artifactId = project.archives_base_name
-      from components.java
-    }
-  }
-
-  // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+configure(allprojects - project(":")) {
+  apply plugin: 'net.fabricmc.fabric-loom-remap'
+  apply plugin: "me.modmuss50.mod-publish-plugin"
+  apply plugin: 'maven-publish'
   repositories {
-    // Add repositories to publish to here.
-    // Notice: This block does NOT have the same function as the block in the top level.
-    // The repositories here will be used for publishing your artifact, not for
-    // retrieving dependencies.
+    // Add repositories to retrieve artifacts from in here.
+    // You should only use this when depending on other mods because
+    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
+    // for more information about repositories.
+    maven {
+      url = "https://repo.codemc.io/repository/relativitymc/"
+    }
+    mavenLocal()
+  }
+
+  loom {
+    if (project.hasProperty("serverCompile")) {
+      serverOnlyMinecraftJar()
+    }
+
+    decompilerOptions.named("vineflower") {
+      options.put("mark-corresponding-synthetics", "1")
+    }
+
+    intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
+    useIntermediateMappings = true
+
+    runs {
+      dap {
+        vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+        client()
+      }
+
+      hotswapDap {
+        vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+        vmArgs '-XX:+AllowEnhancedClassRedefinition'
+        client()
+      }
+    }
+  }
+
+  test {
+    useJUnitPlatform()
+    workingDir = mkdir(layout.buildDirectory.dir("testrun"))
+    jvmArgs += '-Dfabric.side=server'
+  }
+
+  dependencies {
+    // To change the versions see the gradle.properties file
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "org.relativitymc:modern-yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // Fabric API. This is technically optional, but you probably want it anyway.
+
+    testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
+  }
+
+  processResources {
+    inputs.property "loader_version", project.loader_version
+    inputs.property "minecraft_version", project.min_minecraft_version
+
+    filesMatching("fabric.mod.json") {
+      expand(inputs.properties)
+    }
+  }
+
+  tasks.withType(JavaCompile).configureEach {
+    it.options.release = 25
+  }
+
+  java {
+    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+    // if it is present.
+    // If you remove this line, sources will not be generated.
+    withSourcesJar()
+
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+  }
+
+  jar {
+    inputs.property "archivesName", project.base.archivesName
+
+    from("LICENSE") {
+      rename { "${it}_${inputs.properties.archivesName}"}
+    }
+  }
+
+  tasks.register("prodClient", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+    mods.from configurations.modImplementation
+    jvmArgs.add("-Xmx4G")
+    jvmArgs.add("-XX:+UseShenandoahGC")
+    jvmArgs.add("-XX:ShenandoahGCMode=generational")
+    doNotTrackState("prod client task")
+  }
+
+  tasks.register("prodServer", net.fabricmc.loom.task.prod.ServerProductionRunTask) {
+    mods.from configurations.modImplementation
+    jvmArgs.add("-Xmx4G")
+    jvmArgs.add("-XX:+UseShenandoahGC")
+    jvmArgs.add("-XX:ShenandoahGCMode=generational")
+    doNotTrackState("prod server task")
+  }
+
+  // configure the maven publication
+  publishing {
+    publications {
+      create("mavenJava", MavenPublication) {
+        artifactId = project.archives_base_name
+        from components.java
+      }
+    }
+
+    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+    repositories {
+      // Add repositories to publish to here.
+      // Notice: This block does NOT have the same function as the block in the top level.
+      // The repositories here will be used for publishing your artifact, not for
+      // retrieving dependencies.
+    }
   }
 }
 
@@ -135,88 +145,4 @@ jmh {
 
   zip64 = true
   includes = ['NumberOfTrailingOnes']
-}
-
-publishMods {
-  file = remapJar.archiveFile
-  modLoaders.add("fabric")
-  modLoaders.add("quilt")
-
-  changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
-  def typeStr = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
-  type = switch(typeStr) {
-    case "stable" -> STABLE
-    case "release" -> STABLE
-    case "beta" -> BETA
-    default -> ALPHA
-  }
-
-  displayName = "Fast Noise " + project.version
-
-  discord {
-    username = "Fast Noise"
-    webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-    dryRunWebhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-    avatarUrl = "https://cdn.modrinth.com/data/OnlVIpq5/6f2393cd87c37ef685efb82aacc5b0c9fae0c28d.png"
-
-    content = "## " + displayName.get() + "\n" + changelog.get()
-  }
-
-  modrinth {
-    accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-    projectId = "OnlVIpq5"
-    minecraftVersions.add(project.minecraft_version)
-
-    announcementTitle = "Download from Modrinth"
-
-    additionalFile(sourcesJar) {
-      type = SOURCES_JAR
-    }
-
-    incompatible("moonrise-opt")
-    incompatible("anti-xray")
-    requires("zconfig")
-  }
-
-  curseforge {
-    accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-    projectId = "1460602"
-    minecraftVersions.add(project.cf_mc_version)
-
-    announcementTitle = "Download from Curseforge"
-
-    javaVersions.add(JavaVersion.VERSION_25)
-
-    projectSlug = "zfastnoise"
-
-    client = true
-    server = true
-
-    additionalFile(sourcesJar) {
-      name = "Sources Jar"
-    }
-
-    incompatible("moonrise")
-    incompatible("antixray")
-    incompatible("antixray-forge")
-    requires("zconfig")
-  }
-
-  dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
-}
-
-tasks.register("prodClient", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
-  mods.from configurations.modImplementation
-  jvmArgs.add("-Xmx4G")
-  jvmArgs.add("-XX:+UseShenandoahGC")
-  jvmArgs.add("-XX:ShenandoahGCMode=generational")
-  doNotTrackState("prod client task")
-}
-
-tasks.register("prodServer", net.fabricmc.loom.task.prod.ServerProductionRunTask) {
-  mods.from configurations.modImplementation
-  jvmArgs.add("-Xmx4G")
-  jvmArgs.add("-XX:+UseShenandoahGC")
-  jvmArgs.add("-XX:ShenandoahGCMode=generational")
-  doNotTrackState("prod server task")
 }

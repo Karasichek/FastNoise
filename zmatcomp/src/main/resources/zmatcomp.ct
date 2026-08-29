@@ -1,0 +1,122 @@
+classTweaker v1 named
+
+accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler getHorizontalCellBlockCount ()I
+accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler getVerticalCellBlockCount ()I
+accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler sampleBlockState ()Lnet/minecraft/block/BlockState;
+accessible field net/minecraft/world/gen/chunk/ChunkNoiseSampler blockStateSampler Lnet/minecraft/world/gen/chunk/ChunkNoiseSampler$BlockStateSampler;
+
+accessible field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+mutable field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+
+accessible field net/minecraft/world/chunk/ChunkSection biomeContainer Lnet/minecraft/world/chunk/ReadableContainer;
+
+accessible field net/minecraft/world/chunk/PalettedContainer data Lnet/minecraft/world/chunk/PalettedContainer$Data;
+
+accessible class net/minecraft/world/chunk/PalettedContainer$Data
+
+accessible method net/minecraft/world/chunk/ArrayPalette <init> ([Ljava/lang/Object;II)V
+accessible field net/minecraft/world/chunk/ArrayPalette size I
+
+accessible field net/minecraft/world/chunk/SingularPalette entry Ljava/lang/Object;
+
+# Single biome skip
+accessible field net/minecraft/world/biome/source/TheEndBiomeSource centerBiome Lnet/minecraft/registry/entry/RegistryEntry;
+accessible field net/minecraft/world/biome/source/TheEndBiomeSource highlandsBiome Lnet/minecraft/registry/entry/RegistryEntry;
+accessible field net/minecraft/world/biome/source/TheEndBiomeSource midlandsBiome Lnet/minecraft/registry/entry/RegistryEntry;
+accessible field net/minecraft/world/biome/source/TheEndBiomeSource smallIslandsBiome Lnet/minecraft/registry/entry/RegistryEntry;
+accessible field net/minecraft/world/biome/source/TheEndBiomeSource barrensBiome Lnet/minecraft/registry/entry/RegistryEntry;
+
+accessible field net/minecraft/world/biome/source/FixedBiomeSource biome Lnet/minecraft/registry/entry/RegistryEntry;
+
+# block counting container
+accessible method net/minecraft/world/chunk/PalettedContainer <init> (Lnet/minecraft/world/chunk/PaletteProvider;Lnet/minecraft/world/chunk/PaletteType;Lnet/minecraft/util/collection/PaletteStorage;Lnet/minecraft/world/chunk/Palette;)V
+
+accessible field net/minecraft/world/chunk/PalettedContainer paletteProvider Lnet/minecraft/world/chunk/PaletteProvider;
+
+# surface builder
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
+extendable class net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule
+
+# MaterialRuleContext
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext uniquePosValue J
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockX I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockY I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockZ I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext pos Lnet/minecraft/util/math/BlockPos$Mutable;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext fluidHeight I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthBelow I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthAbove I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext runDepth I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext heightContext Lnet/minecraft/world/gen/HeightContext;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext currentBiome Lnet/minecraft/registry/entry/RegistryEntry;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext surfaceBuilder Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext biomeTemperaturePredicate Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext steepSlopePredicate Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext negativeRunDepthPredicate Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext surfacePredicate Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext noiseConfig Lnet/minecraft/world/gen/noise/NoiseConfig;
+
+accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext getSecondaryDepth ()D
+accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext estimateSurfaceHeight ()I
+
+# threadlocal
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree
+accessible field net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree firstNode Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode;
+accessible field net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree previousResultNode Ljava/lang/ThreadLocal;
+
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode
+accessible field net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode value Ljava/lang/Object;
+
+accessible method net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode getSquaredDistance ([J)J
+accessible method net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode getResultingNode ([JLnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode;Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction;)Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode;
+
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction
+
+## optimize surface rules
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier
+
+accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext getCurrentBiome ()Lnet/minecraft/registry/entry/RegistryEntry;
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BiomeMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$NoiseThresholdMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$VerticalGradientMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$AboveYMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$WaterMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$TemperatureMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SteepMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$NotMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$HoleMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SurfaceMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$StoneDepthMaterialCondition
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$RegisteredCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$RegisteredRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$InvertedBooleanSupplier
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$TerracottaBandsMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$ConditionMaterialRule
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$ConditionalBlockStateRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceBlockStateRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SimpleBlockStateRule
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext includedBiomes Ljava/util/Set;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext posToBiome Ljava/util/function/Function;
+## YOffset
+accessible class net/minecraft/world/gen/YOffset$AboveBottom
+accessible class net/minecraft/world/gen/YOffset$BelowTop
+accessible class net/minecraft/world/gen/YOffset$Fixed
+accessible class net/minecraft/world/gen/YOffset$RelativeToSeaLevel
+
+## Xoroshiro128PlusPlusRandom
+accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedLo J
+accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedHi J
+accessible field net/minecraft/util/math/random/CheckedRandom$Splitter seed J

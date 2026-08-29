@@ -8,3 +8,5 @@ pluginManagement {
     gradlePluginPortal()
   }
 }
+
+include("zfastnoise", "zconfig", "zmatcomp", "zfastsurface")
