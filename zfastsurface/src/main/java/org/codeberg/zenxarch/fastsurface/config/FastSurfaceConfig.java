@@ -25,12 +25,4 @@ public class FastSurfaceConfig {
       get(FastSurfaceConfigEntries.SKIP_TRIVIAL_SURFACE_BUILDER);
   public static final boolean OPTIMIZE_BIOME_ACCESS =
       get(FastSurfaceConfigEntries.OPTIMIZE_BIOME_ACCESS);
-
-  public static final int MAX_CACHE_SIZE =
-      scaleByMemory(get(FastSurfaceConfigEntries.MAX_CACHE_SIZE_PER_GB));
-
-  private static int scaleByMemory(int value) {
-    var memory = Runtime.getRuntime().maxMemory() / (1024.0 * 1024 * 1024);
-    return (int) (value * memory);
-  }
 }
