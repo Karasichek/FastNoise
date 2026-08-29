@@ -51,7 +51,7 @@ publishMods {
   // TODO: reconsider stuff
   modrinth {
     accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-    projectId = "OnlVIpq5"
+    projectId = "vnpqfrJN"
     minecraftVersions.add(project.minecraft_version)
 
     announcementTitle = "Download from Modrinth"
