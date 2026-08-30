@@ -35,7 +35,6 @@ public final class MaterialRuleCompiler {
   private static final MethodHandle ret = lookup("ret", int.class);
   private static final MethodHandle tryRet = lookup("tryRet", int.class, MethodHandle.class);
   private static final MethodHandle retNull = lookup("retNull");
-  // private static final MethodHandle biomeTest = lookupCondition("biomeTest", long.class);
 
   private static final MethodHandle aboveY = lookupCondition("aboveY", int.class);
   private static final MethodHandle aboveYWithRunDepth =
@@ -131,14 +130,6 @@ public final class MaterialRuleCompiler {
               createCondition(program[index + 1]),
               createRet(program[index + 2]),
               compile0(program, index + 3, cache, contextSpecificCache));
-      // case BIOME_TEST ->
-      //     createTernary(
-      //         createBiomeTest(getLong(program, index + 1)),
-      //         program,
-      //         index + 4,
-      //         index + program[index + 3],
-      //         cache,
-      //         contextSpecificCache);
       case JUMP_IF_FALSE_STATIC ->
           createTernary(
               contextSpecificCache.getHandle(program[index + 1]),
@@ -180,10 +171,6 @@ public final class MaterialRuleCompiler {
   private static MethodHandle createTryRet(int index, MethodHandle orElse) {
     return MethodHandles.insertArguments(tryRet, 0, index, orElse);
   }
-
-  // private static MethodHandle createBiomeTest(long mask) {
-  //   return MethodHandles.insertArguments(biomeTest, 0, mask);
-  // }
 
   public static MethodHandle createAboveY(int y, int runDepthMultiplier, boolean addStoneDepth) {
     if (addStoneDepth) {
@@ -287,19 +274,6 @@ public final class MaterialRuleCompiler {
       MaterialRuleContext context) {
     return null;
   }
-
-  // public static boolean biomeTest(
-  //     long mask,
-  //     BooleanSupplier[] conditions,
-  //     BlockStateRule[] rules,
-  //     BlockState[] states,
-  //     int x,
-  //     int y,
-  //     int z,
-  //     MaterialRuleContext context) {
-  //   var idx = context.getCurrentBiomeIdx();
-  //   return (mask & (0x1L << idx)) != 0;
-  // }
 
   public static boolean aboveY(
       int testY,

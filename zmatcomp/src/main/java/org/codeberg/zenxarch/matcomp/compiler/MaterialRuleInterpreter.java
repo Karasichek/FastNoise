@@ -34,11 +34,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   public static final int RETURN = 1; // return states[a];
   public static final int TRY_RETURN = 2; // if (rules[a] != null) return rules[a];
   public static final int RETURN_IF = 3; // if (conditions[a]) return states[b];
-  public static final int BIOME_TEST =
-      4; // if (!ctx.getCurrentBiomeIndex() matches a(mask)) jmp(b);
-  public static final int JUMP_IF_FALSE_STATIC = 5; // if (!staticConditions[a].get()) jmp(b);
+  public static final int JUMP_IF_FALSE_STATIC = 4; // if (!staticConditions[a].get()) jmp(b);
 
-  // private static final int NO_OP = 4;
+  // private static final int NO_OP = 5;
 
   private boolean hasNotCrashed = true;
 
@@ -64,7 +62,6 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       try {
         return (BlockState) compiled.invokeExact(conditions, rules, states, x, y, z, context);
       } catch (Throwable e) {
-        // TODO: handle crashes
         MaterialRuleCompilerConstants.LOGGER.error("Compiled surface rule failed", e);
         hasNotCrashed = false;
       }
@@ -91,13 +88,6 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             return states[instructions[instPointer + 2]];
           instPointer += 3;
         }
-        // case BIOME_TEST -> {
-        //   var idx = context.getCurrentBiomeIdx();
-        //   instPointer +=
-        //       ((getLong(instructions, instPointer + 1) & (0x1L << idx)) == 0)
-        //           ? instructions[instPointer + 3]
-        //           : 4;
-        // }
         case JUMP_IF_FALSE_STATIC -> {
           var idx = instructions[instPointer + 1];
           var offset = instructions[instPointer + 2];
@@ -189,15 +179,6 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             .append("]; } else {");
         toString1(builder, instructions, index + 3);
         builder.append("}");
-      }
-      case BIOME_TEST -> {
-        builder.append("idx = context.getCurrentBiomeIdx(); if ((");
-        builder.append(String.format("0x%xL", getLong(instructions, index + 1)));
-        builder.append(" & (0x1L << idx)) != 0) { ");
-        toString1(builder, instructions, index + 4);
-        builder.append(" } else { ");
-        toString1(builder, instructions, index + instructions[index + 3]);
-        builder.append(" }");
       }
       case JUMP_IF_FALSE_STATIC -> {
         builder
