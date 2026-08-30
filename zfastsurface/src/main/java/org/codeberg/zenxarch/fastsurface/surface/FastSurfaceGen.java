@@ -2,11 +2,12 @@ package org.codeberg.zenxarch.fastsurface.surface;
 
 import java.util.Set;
 import net.minecraft.block.BlockState;
-import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.noise.SamplingRegion;
 import net.minecraft.world.ChunkRegion;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeAccess;
@@ -17,24 +18,23 @@ import net.minecraft.world.chunk.SingularPalette;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules;
+import net.minecraft.world.gen.surfacebuilder.BlockMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastsurface.config.FastSurfaceConfig;
-import org.codeberg.zenxarch.fastsurface.mixin.SurfaceBuilderAccessor;
 import org.codeberg.zenxarch.fastsurface.surface.cache.FastColumnIterator;
 import org.codeberg.zenxarch.fastsurface.surface.cache.FastIsFluidCache;
 import org.codeberg.zenxarch.fastsurface.surface.cache.FastPaletteIndexCache;
-
-// import org.codeberg.zenxarch.matcomp.compiler.MaterialRuleInterpreter;
+import org.jspecify.annotations.Nullable;
 
 public class FastSurfaceGen {
 
   public static boolean canUseSurfaceBuilder(
-      Chunk chunk, Set<RegistryEntry<Biome>> includedBiomes, Registry<Biome> registry) {
+      Chunk chunk, Set<RegistryEntry<Biome>> includedBiomes) {
     if (chunk.hasBelowZeroRetrogen()) return false;
     if (includedBiomes.size() > 64) return false;
     if (containsAny(
-        registry,
         includedBiomes,
         BiomeKeys.ERODED_BADLANDS,
         BiomeKeys.FROZEN_OCEAN,
@@ -42,8 +42,7 @@ public class FastSurfaceGen {
     return sanityCheck(chunk);
   }
 
-  public static Chunk[] collectChunks(ChunkRegion chunkRegion, Chunk center) {
-    final var centerPos = center.getPos();
+  public static Chunk[] collectChunks(ChunkRegion chunkRegion, ChunkPos centerPos) {
     final var cx = centerPos.x();
     final var cz = centerPos.z();
     final var chunks = new Chunk[9];
@@ -62,11 +61,10 @@ public class FastSurfaceGen {
 
   @SafeVarargs
   private static boolean containsAny(
-      Registry<Biome> registry,
-      Set<RegistryEntry<Biome>> includedBiomes,
-      RegistryKey<Biome>... keys) {
-    for (int i = 0; i < keys.length; i++)
-      if (includedBiomes.contains(registry.getOrThrow(keys[i]))) return true;
+      Set<RegistryEntry<Biome>> includedBiomes, RegistryKey<Biome>... keys) {
+    for (var biome : includedBiomes) {
+      for (int i = 0; i < keys.length; i++) if (biome.matchesKey(keys[i])) return true;
+    }
     return false;
   }
 
@@ -83,19 +81,16 @@ public class FastSurfaceGen {
   }
 
   public static void buildSurface(
-      SurfaceBuilderAccessor builder,
+      final SurfaceBuilder surfaceBuilder,
       final NoiseConfig noiseConfig,
       final BiomeAccess biomeAccess,
-      final boolean useLegacyRandom,
       final HeightContext heightContext,
       final Chunk chunk,
       final ChunkNoiseSampler chunkNoiseSampler,
-      final MaterialRules.MaterialRule materialRule,
-      final Set<RegistryEntry<Biome>> includedBiomes,
-      final Chunk[] chunks,
-      final Registry<Biome> registry) {
+      final MaterialRule materialRule,
+      final @Nullable Set<RegistryEntry<Biome>> includedBiomes) {
 
-    final var defaultState = builder.zenxarch$getDefaultState();
+    final var defaultState = surfaceBuilder.defaultState;
 
     if (canSkipSurfaceBuilder(materialRule, defaultState)) {
       return;
@@ -106,23 +101,33 @@ public class FastSurfaceGen {
     int minBlockZ = chunkPos.getStartZ();
     var column = new FastBlockColumn(chunk);
 
-    var context =
+    int highestFilledSectionIndex = chunk.getHighestNonEmptySection();
+    int maxBlockY = chunk.sectionIndexToCoord(highestFilledSectionIndex) * 16 + 15;
+    SamplingRegion fullVolume = chunkNoiseSampler.getRegion();
+    SamplingRegion narrowedVolume =
+        new SamplingRegion(
+            fullVolume.sizeX(),
+            Math.max(maxBlockY - fullVolume.minBlockY() + 1, 1),
+            fullVolume.sizeZ(),
+            fullVolume.minBlockX(),
+            fullVolume.minBlockY(),
+            fullVolume.minBlockZ());
+    MaterialRuleContext context =
         new MaterialRuleContext(
-            (SurfaceBuilder) (Object) builder,
+            surfaceBuilder,
             noiseConfig,
-            chunk,
-            chunkNoiseSampler,
-            biomeAccess::getBiome,
+            narrowedVolume,
+            chunkNoiseSampler.getContextualSamplerProvider(),
+            MaterialRuleContextHelper.createPosToBiome(biomeAccess, chunk, includedBiomes),
             heightContext,
-            includedBiomes,
-            chunks);
+            includedBiomes);
 
     var sections = chunk.getSectionArray();
 
     var willUpdateHeightmap = true;
     var willAddWater = true;
     var willGrow = true;
-    var rule = materialRule.apply(context);
+    var rule = materialRule.getBlockStateRule(context);
 
     if (rule instanceof MaterialRuleInterpreterAccessor interpreter) {
       if (interpreter.zfastsurface$getRules().length == 0) {
@@ -154,7 +159,8 @@ public class FastSurfaceGen {
         int blockX = minBlockX + x;
         int blockZ = minBlockZ + z;
 
-        context.initHorizontalContext(blockX, blockZ);
+        context.initHorizontalContext(
+            blockX, blockZ, getSteepnessX(chunk, x, z), getSteepnessZ(chunk, x, z));
         column.updateXZ(x, z);
         iterator.start(x, z);
 
@@ -184,15 +190,24 @@ public class FastSurfaceGen {
     indexCache.finish(sections);
   }
 
+  private static int getSteepnessX(final Chunk chunk, final int localX, final int localZ) {
+    return chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, Math.min(localX + 1, 15), localZ)
+        - chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, Math.max(localX - 1, 0), localZ);
+  }
+
+  private static int getSteepnessZ(final Chunk chunk, final int localX, final int localZ) {
+    return chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, localX, Math.min(localZ + 1, 15))
+        - chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, localX, Math.max(localZ - 1, 0));
+  }
+
   private static boolean willAddWater(final BlockState[] states) {
     for (int i = 0; i < states.length; i++) if (!states[i].getFluidState().isEmpty()) return true;
     return false;
   }
 
-  private static boolean canSkipSurfaceBuilder(
-      MaterialRules.MaterialRule rule, BlockState defaultState) {
+  private static boolean canSkipSurfaceBuilder(MaterialRule rule, BlockState defaultState) {
     if (!FastSurfaceConfig.SKIP_TRIVIAL_SURFACE_BUILDER) return false;
-    if (rule instanceof MaterialRules.BlockMaterialRule block) {
+    if (rule instanceof BlockMaterialRule block) {
       return block.resultState() == defaultState;
     }
     return false;

@@ -28,7 +28,7 @@ public class FastBlockColumn implements BlockColumn {
   private final BlockState AIR = Blocks.AIR.getDefaultState();
 
   private static final Heightmap.Type[] heightmaps =
-      HeightmapUtil.calculateHeightmaps(ChunkStatus.SURFACE);
+      HeightmapUtil.calculateHeightmaps(ChunkStatus.TERRAIN);
 
   @SuppressWarnings("unchecked")
   private static final Predicate<BlockState>[] predicates =

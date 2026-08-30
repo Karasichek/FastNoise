@@ -3,7 +3,8 @@ package org.codeberg.zenxarch.fastsurface.surface.cache;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.Palette;
-import org.codeberg.zenxarch.fastsurface.surface.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import org.codeberg.zenxarch.fastsurface.surface.MaterialRuleContextHelper;
 
 /*
   Explaination cause this gonna get confusing
@@ -162,7 +163,7 @@ public final class GenericFastColumnIterator implements FastColumnIterator {
 
     while (solidBlocksBelow > 0) {
       if (this.isDefault.isSet(localY)) return true;
-      context.oreOrStone(globalY, solidBlocksBelow);
+      MaterialRuleContextHelper.oreOrStone(context, globalY, solidBlocksBelow);
       stepStone();
     }
 
@@ -171,7 +172,7 @@ public final class GenericFastColumnIterator implements FastColumnIterator {
 
   public int nextY() {
     var result = globalY;
-    context.oreOrStone(result, solidBlocksBelow);
+    MaterialRuleContextHelper.oreOrStone(context, result, solidBlocksBelow);
     stepStone();
     return result;
   }
@@ -204,10 +205,10 @@ public final class GenericFastColumnIterator implements FastColumnIterator {
 
     while (isAir || isLiquid) {
       if (isAir) {
-        context.air();
+        MaterialRuleContextHelper.air(context);
         step(this.isAir.numberOfTrailingOnes(localY));
       } else if (isLiquid) {
-        context.water(globalY);
+        MaterialRuleContextHelper.water(context, globalY);
         step(this.isLiquid.numberOfTrailingOnes(localY));
       }
 

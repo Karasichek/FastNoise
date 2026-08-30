@@ -2,7 +2,8 @@ package org.codeberg.zenxarch.fastsurface.surface.cache;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.world.chunk.ChunkSection;
-import org.codeberg.zenxarch.fastsurface.surface.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import org.codeberg.zenxarch.fastsurface.surface.MaterialRuleContextHelper;
 
 public class TrivialFastColumnIterator implements FastColumnIterator {
   private final FastColumnBitMask[] isAirPrefetch;
@@ -73,7 +74,7 @@ public class TrivialFastColumnIterator implements FastColumnIterator {
 
   public int nextY() {
     var result = globalY;
-    context.oreOrStone(result, solidBlocksBelow);
+    MaterialRuleContextHelper.oreOrStone(context, result, solidBlocksBelow);
     stepStone();
     return result;
   }
@@ -96,7 +97,7 @@ public class TrivialFastColumnIterator implements FastColumnIterator {
   private void recalculateSolidBlocksBelow() {
     if (localY >= size) return;
     step(this.isAir.numberOfTrailingOnes(localY));
-    context.air();
+    MaterialRuleContextHelper.air(context);
     if (localY >= size) return;
     solidBlocksBelow = this.isDefault.numberOfTrailingOnes(localY);
   }
