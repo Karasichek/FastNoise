@@ -5,7 +5,7 @@
   "mixins": [
     "perf.compiler.SurfaceBuilderMixin",
     "perf.compiler.SequenceMaterialRuleMixin",
-    "perf.surface.BiomeMaterialRuleMixin",
+    "perf.surface.BiomeMaterialConditionMixin",
     "perf.surface.ConditionMaterialRuleMixin",
     "perf.surface.AboveYMaterialConditionMixin",
     "perf.surface.SurfaceBuilderMixin"
