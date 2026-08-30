@@ -1,9 +1,9 @@
 package org.codeberg.zenxarch.matcomp.rules;
 
 import net.minecraft.util.math.VerticalSurfaceType;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.StoneDepthMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.StoneDepthMaterialCondition;
 
 /***
  *

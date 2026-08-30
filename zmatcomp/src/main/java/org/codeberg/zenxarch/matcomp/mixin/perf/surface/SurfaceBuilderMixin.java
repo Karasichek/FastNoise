@@ -1,6 +1,6 @@
 package org.codeberg.zenxarch.matcomp.mixin.perf.surface;
 
-import net.minecraft.class_1_1397;
+import net.minecraft.util.math.noise.NoiseSampler;
 import net.minecraft.util.math.random.CheckedRandom;
 import net.minecraft.util.math.random.RandomSplitter;
 import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
@@ -14,12 +14,12 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(SurfaceBuilder.class)
 public abstract class SurfaceBuilderMixin {
 
-  @Shadow @Final class_1_1397 surfaceNoise;
+  @Shadow @Final NoiseSampler surfaceNoise;
   @Shadow @Final RandomSplitter randomDeriver;
 
   @Overwrite
   public int sampleRunDepth(final int blockX, final int blockZ) {
-    double noiseValue = this.surfaceNoise.sample(blockX, 0.0, blockZ);
+    double noiseValue = (double) this.surfaceNoise.sample((double) blockX, 0.0D, (double) blockZ);
     var next =
         switch (this.randomDeriver) {
           case Xoroshiro128PlusPlusRandom.Splitter xoro ->
@@ -28,6 +28,6 @@ public abstract class SurfaceBuilderMixin {
               AllocFreeRandom.nextDoubleChecked(checked.seed, blockX, 0, blockZ);
           default -> this.randomDeriver.split(blockX, 0, blockZ).nextDouble();
         };
-    return (int) (noiseValue * 2.75 + 3.0 + next * 0.25);
+    return (int) (noiseValue * 2.75D + 3.0D + next * 0.25D);
   }
 }

@@ -12,9 +12,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.util.math.random.CheckedRandom;
 import net.minecraft.util.math.random.RandomSplitter;
 import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
+import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 import org.codeberg.zenxarch.matcomp.rules.VerticalGradientPredicate;
 import org.codeberg.zenxarch.matcomp.util.AllocFreeRandom;
 
@@ -476,7 +476,7 @@ public final class MaterialRuleCompiler {
       int y,
       int z,
       MaterialRuleContext context) {
-    return context.biomeTemperaturePredicate.get();
+    return context.getCurrentBiome().value().isCold(context.getBlockPos(), context.getSeaLevel());
   }
 
   public static boolean steepSlopePredicate(
@@ -487,6 +487,6 @@ public final class MaterialRuleCompiler {
       int y,
       int z,
       MaterialRuleContext context) {
-    return context.steepSlopePredicate.get();
+    return context.getSteepnessX() <= 4 || context.getSteepnessZ() >= 4;
   }
 }

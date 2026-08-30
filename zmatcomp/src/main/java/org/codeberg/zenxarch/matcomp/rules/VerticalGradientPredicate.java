@@ -1,31 +1,13 @@
 package org.codeberg.zenxarch.matcomp.rules;
 
-import net.minecraft.util.math.random.CheckedRandom;
 import net.minecraft.util.math.random.RandomSplitter;
-import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 import org.codeberg.zenxarch.matcomp.util.AllocFreeRandom;
 
 public record VerticalGradientPredicate(
     int trueAtAndBelow, int falseAtAndAbove, RandomSplitter splitter, MaterialRuleContext context)
     implements BooleanSupplier {
-
-  public static BooleanSupplier create(
-      VerticalGradientMaterialCondition condition, MaterialRuleContext context) {
-    var split = context.noiseConfig.getOrCreateRandomDeriver(condition.randomName());
-    var trueAtAndBelow = condition.trueAtAndBelow().getY(context.heightContext);
-    var falseAtAndAbove = condition.falseAtAndAbove().getY(context.heightContext);
-    if (split instanceof Xoroshiro128PlusPlusRandom.Splitter xoroshiro)
-      return new XoroshiroVerticalGradientPredicate(
-          trueAtAndBelow, falseAtAndAbove, xoroshiro.seedLo, xoroshiro.seedHi, context);
-    if (split instanceof CheckedRandom.Splitter checked)
-      return new CheckedVerticalGradientPredicate(
-          trueAtAndBelow, falseAtAndAbove, checked.seed, context);
-
-    return new VerticalGradientPredicate(trueAtAndBelow, falseAtAndAbove, split, context);
-  }
 
   @Override
   public boolean get() {

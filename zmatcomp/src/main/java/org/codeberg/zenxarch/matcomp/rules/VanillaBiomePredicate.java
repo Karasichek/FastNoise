@@ -2,8 +2,8 @@ package org.codeberg.zenxarch.matcomp.rules;
 
 import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 
 public record VanillaBiomePredicate(RegistryEntryList<Biome> biomes, MaterialRuleContext context)
     implements BooleanSupplier {

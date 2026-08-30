@@ -1,7 +1,7 @@
 package org.codeberg.zenxarch.matcomp.rules;
 
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 
 public record AboveYPredicate(
     int y, int surfaceDepthMultiplier, boolean addStoneDepth, MaterialRuleContext context)

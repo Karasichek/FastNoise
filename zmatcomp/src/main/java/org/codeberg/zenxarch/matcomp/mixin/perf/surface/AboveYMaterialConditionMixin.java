@@ -1,9 +1,9 @@
 package org.codeberg.zenxarch.matcomp.mixin.perf.surface;
 
 import net.minecraft.world.gen.YOffset;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.AboveYMaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.AboveYMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 import org.codeberg.zenxarch.matcomp.rules.AboveYPredicate;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,8 +17,8 @@ public abstract class AboveYMaterialConditionMixin {
   @Shadow @Final private boolean addStoneDepth;
 
   @Overwrite
-  public BooleanSupplier apply(final MaterialRuleContext ruleContext) {
+  public BooleanSupplier getPredicate(final MaterialRuleContext context) {
     return new AboveYPredicate(
-        anchor.getY(ruleContext.heightContext), surfaceDepthMultiplier, addStoneDepth, ruleContext);
+        anchor.getY(context.heightContext), surfaceDepthMultiplier, addStoneDepth, context);
   }
 }

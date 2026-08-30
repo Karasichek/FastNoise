@@ -1,54 +1,23 @@
 package org.codeberg.zenxarch.matcomp.mixin.perf.compiler;
 
 import java.util.List;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.SequenceMaterialRule;
 import org.codeberg.zenxarch.matcomp.compiler.MaterialRuleInterpreter;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-// import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-// import it.unimi.dsi.fastutil.objects.ObjectImmutableList;
-// import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceBlockStateRule;
-// import org.codeberg.zenxarch.matcomp.compiler.MaterialRuleCompiler;
-// import org.codeberg.zenxarch.matcomp.rules.BiomePredicate;
-
 @Mixin(value = SequenceMaterialRule.class, priority = 2000)
 public abstract class SequenceMaterialRuleMixin {
   @Shadow @Final private List<MaterialRule> sequence;
 
   @Overwrite
-  public BlockStateRule apply(final MaterialRuleContext context) {
+  public BlockStateRule getBlockStateRule(final MaterialRuleContext context) {
     return MaterialRuleInterpreter.of(
         context, context.heightContext, context.noiseConfig, (SequenceMaterialRule) (Object) this);
-    // var size = sequence.size();
-    // if (size == 1) {
-    //   return sequence.getFirst().apply(context);
-    // }
-
-    // var builder = ObjectArrayList.<BlockStateRule>of();
-
-    // for (int i = 0; i < size; i++) {
-    //   var rule = sequence.get(i).apply(context);
-    //   if (rule == BiomePredicate.ALWAYS_NULL) continue;
-    //   if (rule instanceof SequenceBlockStateRule sequenceBlockStateRule) {
-    //     var nsize = sequenceBlockStateRule.rules().size();
-    //     for (int j = 0; j < nsize; j++) {
-    //       var nrule = sequenceBlockStateRule.rules().get(j);
-    //       if (nrule == BiomePredicate.ALWAYS_NULL) continue;
-    //       builder.add(nrule);
-    //     }
-    //     continue;
-    //   }
-    //   builder.add(rule);
-    // }
-
-    // if (builder.isEmpty()) return BiomePredicate.ALWAYS_NULL;
-    // if (builder.size() == 1) return builder.getFirst();
-    // return new SequenceBlockStateRule(new ObjectImmutableList<BlockStateRule>(builder));
   }
 }

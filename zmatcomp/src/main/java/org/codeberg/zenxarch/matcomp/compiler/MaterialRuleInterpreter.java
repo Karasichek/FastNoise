@@ -7,15 +7,15 @@ import java.lang.invoke.MethodHandle;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BiomeMaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockMaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionMaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.RegisteredRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.BiomeMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.BlockMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
+import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
+import net.minecraft.world.gen.surfacebuilder.ConditionMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRule.RegisteredRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.SequenceMaterialRule;
 import org.codeberg.zenxarch.matcomp.MaterialRuleCompilerConstants;
 import org.codeberg.zenxarch.matcomp.rules.BiomePredicate;
 import org.jspecify.annotations.Nullable;
@@ -264,7 +264,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
     public void push(ConditionMaterialRule rule) {
       var startIndex = instructions.size();
-      if (rule.ifTrue() instanceof BiomeMaterialRule biome) {
+      if (rule.ifTrue() instanceof BiomeMaterialCondition biome) {
         var cond = BiomePredicate.getSupplier(biome.biomes(), context);
         if (cond == BiomePredicate.ALWAYS_FALSE) return;
         if (cond == BiomePredicate.ALWAYS_TRUE) {
@@ -273,12 +273,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         }
 
         var index = this.conditions.size();
-        this.conditions.add(rule.ifTrue().apply(context));
+        this.conditions.add(cond);
 
         this.addInst(JUMP_IF_FALSE, index, 0);
-        // if (cond instanceof BiomePredicate biomeCond) {
-        //   this.addInst(BIOME_TEST, (int) (biomeCond.mask >>> 32), (int) (biomeCond.mask), 0);
-        // }
         var instIndex = instructions.size() - 1;
 
         push(rule.thenRun());
@@ -310,7 +307,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       }
 
       var index = this.conditions.size();
-      this.conditions.add(rule.ifTrue().apply(context));
+      this.conditions.add(rule.ifTrue().getPredicate(context));
 
       if (rule.thenRun() instanceof BlockMaterialRule simple) {
         this.addInst(RETURN_IF, index, indexOf(simple.resultState()));
@@ -336,7 +333,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         case ConditionMaterialRule cond -> push(cond);
         case BlockMaterialRule simple -> addInst(RETURN, indexOf(simple.resultState()));
         case RegisteredRule registered -> push(registered.holder().value());
-        default -> addInst(TRY_RETURN, indexOf(rule.apply(context)));
+        default -> addInst(TRY_RETURN, indexOf(rule.getBlockStateRule(context)));
       }
     }
 
