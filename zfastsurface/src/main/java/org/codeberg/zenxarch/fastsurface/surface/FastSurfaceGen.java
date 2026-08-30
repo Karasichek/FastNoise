@@ -159,8 +159,8 @@ public class FastSurfaceGen {
         int blockX = minBlockX + x;
         int blockZ = minBlockZ + z;
 
-        context.initHorizontalContext(
-            blockX, blockZ, getSteepnessX(chunk, x, z), getSteepnessZ(chunk, x, z));
+        MaterialRuleContextHelper.initHorizontalContext(
+            context, blockX, blockZ, getSteepnessX(chunk, x, z), getSteepnessZ(chunk, x, z));
         column.updateXZ(x, z);
         iterator.start(x, z);
 
