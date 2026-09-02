@@ -14,9 +14,6 @@
   "license": "Mozilla Public License 2.0",
   "icon": "assets/zmatcomp/icon.png",
   "environment": "*",
-  "entrypoints": {
-    "main": ["org.codeberg.zenxarch.matcomp.MaterialRuleCompilerMod"]
-  },
   "mixins": ["zmatcomp.mixins.json"],
   "depends": {
     "fabricloader": ">=${loader_version}",

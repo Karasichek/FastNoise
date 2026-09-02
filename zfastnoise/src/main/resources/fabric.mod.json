@@ -14,9 +14,6 @@
   "license": "Mozilla Public License 2.0",
   "icon": "assets/zfastnoise/icon.png",
   "environment": "*",
-  "entrypoints": {
-    "main": ["org.codeberg.zenxarch.fastnoise.FastNoiseMod"]
-  },
   "mixins": ["zfastnoise.mixins.json"],
   "depends": {
     "fabricloader": ">=${loader_version}",
