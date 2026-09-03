@@ -5,7 +5,7 @@
   "mixins": [
     "perf.noise.NoiseChunkGeneratorMixin",
     "perf.biome.TheEndBiomeSourceMixin",
-    "perf.biome.ChunkGeneratorMixin",
+    "perf.biome.ChunkMixin",
     "debug.disable_carve_features_and_entities.ChunkGeneratingMixin",
     "HeightmapAccessor"
   ],
