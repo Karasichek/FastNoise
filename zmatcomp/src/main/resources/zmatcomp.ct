@@ -1,0 +1,48 @@
+classTweaker v1 named
+
+accessible field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+mutable field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+
+accessible field net/minecraft/world/chunk/ChunkSection biomeContainer Lnet/minecraft/world/chunk/ReadableContainer;
+
+accessible field net/minecraft/world/chunk/PalettedContainer data Lnet/minecraft/world/chunk/PalettedContainer$Data;
+
+accessible class net/minecraft/world/chunk/PalettedContainer$Data
+
+accessible method net/minecraft/world/chunk/ArrayPalette <init> ([Ljava/lang/Object;II)V
+accessible field net/minecraft/world/chunk/ArrayPalette size I
+
+accessible field net/minecraft/world/chunk/SingularPalette entry Ljava/lang/Object;
+
+# block counting container
+accessible method net/minecraft/world/chunk/PalettedContainer <init> (Lnet/minecraft/world/chunk/PaletteProvider;Lnet/minecraft/world/chunk/PaletteType;Lnet/minecraft/util/collection/PaletteStorage;Lnet/minecraft/world/chunk/Palette;)V
+
+accessible field net/minecraft/world/chunk/PalettedContainer paletteProvider Lnet/minecraft/world/chunk/PaletteProvider;
+
+# surface builder
+extendable class net/minecraft/world/gen/surfacebuilder/MaterialRuleContext
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext noiseConfig Lnet/minecraft/world/gen/noise/NoiseConfig;
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext heightContext Lnet/minecraft/world/gen/HeightContext;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext includedBiomes Ljava/util/Set;
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext blockX I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext blockY I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext blockZ I
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext stoneDepthAbove I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext stoneDepthBelow I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext runDepth I
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext surfaceBuilder Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;
+
+## YOffset
+accessible class net/minecraft/world/gen/YOffset$AboveBottom
+accessible class net/minecraft/world/gen/YOffset$BelowTop
+accessible class net/minecraft/world/gen/YOffset$Fixed
+accessible class net/minecraft/world/gen/YOffset$RelativeToSeaLevel
+
+## Xoroshiro128PlusPlusRandom
+accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedLo J
+accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedHi J
+accessible field net/minecraft/util/math/random/CheckedRandom$Splitter seed J

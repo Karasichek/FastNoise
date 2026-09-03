@@ -1,0 +1,31 @@
+version = project.mod_version + "+" + project.minecraft_version
+group = project.maven_group
+
+base {
+  archivesName = project.archives_base_name
+}
+
+loom {
+  accessWidenerPath = file("src/main/resources/zfastnoise-ocl.ct")
+}
+
+dependencies {
+  implementation project(path: ":zfastnoise", configuration: "namedElements")
+}
+
+processResources {
+  inputs.property "version", project.version
+
+  filesMatching("fabric.mod.json") {
+    expand(inputs.properties)
+  }
+}
+
+tasks.withType(JavaCompile).configureEach {
+  it.options.release = 25
+}
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_25
+  targetCompatibility = JavaVersion.VERSION_25
+}
