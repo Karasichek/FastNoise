@@ -237,17 +237,14 @@ public final class FastCopyBufferDataIntoChunks {
     }
   }
 
-  private static final Heightmap.Type[] heightmaps =
-      HeightmapUtil.calculateHeightmaps(ChunkStatus.TERRAIN);
-
   private static void finalizeChunks(
       FastChunkSection[] fastSections, Chunk chunk, BlockState defaultBlockState) {
     for (int i = 0; i < fastSections.length; i++)
       if (fastSections[i] != null) fastSections[i].recalculateCounts();
 
-    for (int i = 0; i < heightmaps.length; i++) {
-      HeightmapUtil.populateHeightmapPostNoise(
-          chunk, heightmaps[i], defaultBlockState, FastNoiseGen.AIR);
-    }
+    HeightmapUtil.populateHeightmapPostNoise(
+        chunk, Heightmap.Type.OCEAN_FLOOR_WG, defaultBlockState, FastNoiseGen.AIR);
+    HeightmapUtil.populateHeightmapPostNoise(
+        chunk, Heightmap.Type.WORLD_SURFACE_WG, defaultBlockState, FastNoiseGen.AIR);
   }
 }
