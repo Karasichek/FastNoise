@@ -7,7 +7,6 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.SingularPalette;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
-import net.minecraft.world.gen.sampler.PooledSampleBuffer;
 import org.codeberg.zenxarch.fastnoise.heightmap.HeightmapUtil;
 
 public class FastNoiseGen {

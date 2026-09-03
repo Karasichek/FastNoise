@@ -7,7 +7,6 @@ import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.AboveYMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.MaterialCondition.RegisteredCondition;
 import net.minecraft.world.gen.surfacebuilder.NegativeRunDepthPredicate;
 import net.minecraft.world.gen.surfacebuilder.NotMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.SteepSlopePredicate;

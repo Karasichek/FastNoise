@@ -13,7 +13,6 @@ import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.ConditionMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRule.RegisteredRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.SequenceMaterialRule;
 import org.codeberg.zenxarch.matcomp.MaterialRuleCompilerConstants;

@@ -9,29 +9,37 @@ import net.minecraft.world.biome.source.util.MultiNoiseUtil.MultiNoiseSampler;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.PalettedContainer;
-import net.minecraft.world.gen.sampler.Sampler.Contextual;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
+import net.minecraft.world.gen.densityfunction.DensityFunction.NoisePos;
 import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
 import org.codeberg.zenxarch.fastnoise.noise.FastNoisePaletteHelper;
 
 public final class FastBiomeGen {
 
-  public static void populateBiomes(Chunk chunk, BiomeSupplier supplier) {
+  public static void populateBiomes(
+      Chunk chunk, BiomeSupplier supplier, MultiNoiseSampler sampler) {
 
     if (FastNoiseConfig.OPTIMIZE_FIXED_BIOMES && supplier instanceof FixedBiomeSource fixed) {
       packSingleBiome(chunk.getSectionArray(), fixed.biome);
       return;
     }
 
-    if (FastNoiseConfig.OPTIMIZE_END_BIOMES && supplier instanceof TheEndBiomeSupplier theEnd) {
+    if (FastNoiseConfig.OPTIMIZE_END_BIOMES && supplier instanceof TheEndBiomeSource theEnd) {
       final var chunkPos = chunk.getPos();
-      populateEndBiomes(theEnd, chunk, chunk.getSectionArray(), chunkPos.x(), chunkPos.z());
+      populateEndBiomes(
+          new TheEndBiomeSupplier(theEnd, sampler),
+          chunk,
+          chunk.getSectionArray(),
+          chunkPos.x(),
+          chunkPos.z());
       return;
     }
 
-    populateBiomesImpl(chunk, supplier);
+    populateBiomesImpl(chunk, supplier, sampler);
   }
 
-  private static void populateBiomesImpl(Chunk chunk, BiomeSupplier supplier) {
+  private static void populateBiomesImpl(
+      Chunk chunk, BiomeSupplier supplier, MultiNoiseSampler sampler) {
 
     var sections = chunk.getSectionArray();
 
@@ -50,7 +58,7 @@ public final class FastBiomeGen {
 
     for (int i = 0; i < sections.length; i++) {
       var section = sections[i];
-      FastBiomeGen.populateBiomes(section, supplier, x, y, z, biomes, storage);
+      FastBiomeGen.populateBiomes(section, supplier, x, y, z, biomes, storage, sampler);
       y += 4;
     }
   }
@@ -69,7 +77,8 @@ public final class FastBiomeGen {
       int y,
       int z,
       RegistryEntry<Biome>[] biomes,
-      byte[] storage) {
+      byte[] storage,
+      MultiNoiseSampler sampler) {
 
     int size = 0;
 
@@ -77,7 +86,7 @@ public final class FastBiomeGen {
       for (int iy = 0; iy < 4; iy++) {
         for (int iz = 0; iz < 4; iz++) {
 
-          var biome = biomeSupplier.getBiomeForNoiseGen(x + ix, y + iy, z + iz);
+          var biome = biomeSupplier.getBiome(x + ix, y + iy, z + iz, sampler);
 
           int bidx = -1;
           for (int i = 0; i < size; i++)
@@ -96,11 +105,11 @@ public final class FastBiomeGen {
     }
   }
 
-  private static class EndBiomeNoisePos {
+  private static class EndBiomeNoisePos implements NoisePos {
     private final int x;
     private final int z;
     public int y;
-    private final Contextual erosion;
+    private final DensityFunction erosion;
 
     public EndBiomeNoisePos(int x, int y, int z, MultiNoiseSampler sampler) {
       this.x = x;
@@ -109,8 +118,23 @@ public final class FastBiomeGen {
       this.erosion = sampler.erosion();
     }
 
+    @Override
+    public int blockX() {
+      return this.x;
+    }
+
+    @Override
+    public int blockY() {
+      return this.y;
+    }
+
+    @Override
+    public int blockZ() {
+      return this.z;
+    }
+
     public double sampleAndStep() {
-      var result = erosion.sample(this.x, this.y, this.z);
+      var result = erosion.sample(this);
       this.y += 4;
       return (double) result;
     }

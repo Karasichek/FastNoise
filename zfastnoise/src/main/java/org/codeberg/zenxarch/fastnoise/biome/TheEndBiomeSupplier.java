@@ -10,7 +10,7 @@ public record TheEndBiomeSupplier(TheEndBiomeSource biomeSource, MultiNoiseSampl
     implements BiomeSupplier {
 
   @Override
-  public RegistryEntry<Biome> getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
-    return this.biomeSource.getBiome(biomeX, biomeY, biomeZ, sampler);
+  public RegistryEntry<Biome> getBiome(int x, int y, int z, MultiNoiseSampler sampler) {
+    return this.biomeSource.getBiome(x, y, z, sampler);
   }
 }
