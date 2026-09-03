@@ -1,6 +1,5 @@
 package org.codeberg.zenxarch.matcomp.mixin.perf.surface;
 
-import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.util.math.noise.NoiseSampler;
 import net.minecraft.util.math.random.CheckedRandom;
 import net.minecraft.util.math.random.RandomSplitter;
