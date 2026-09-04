@@ -55,9 +55,9 @@ public final class ParityTest {
 
     base.forEach(
         (chunk) -> {
-          // world.noise(base, chunk);
-          // world.surface(chunk, biomeRegion);
-          world.buildTerrain(chunk, biomeRegion);
+          world.noise(base, chunk);
+          world.surface(chunk, biomeRegion);
+          // world.buildTerrain(chunk, biomeRegion);
 
           if (ParityGlobals.isServer) {
             var pos = chunk.getPos();

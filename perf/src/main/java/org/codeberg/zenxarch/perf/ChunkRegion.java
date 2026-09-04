@@ -7,14 +7,14 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.collection.BoundedRegionArray;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.source.BiomeSupplier;
+import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ProtoChunk;
 import org.codeberg.zenxarch.perf.TestGlobals.FakeAbstractChunkHolder;
 import org.codeberg.zenxarch.perf.mixin.ChunkAccessor;
 
 public record ChunkRegion(BoundedRegionArray<FakeAbstractChunkHolder> storage)
-    implements BiomeSupplier {
+    implements BiomeAccess.Storage {
   public static ChunkRegion of(TestWorld world, int centerX, int centerZ, int radius) {
 
     var storage = TestGlobals.createRegionArray(world.serverWorld, centerX, centerZ, radius);

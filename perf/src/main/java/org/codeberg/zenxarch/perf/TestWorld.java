@@ -62,25 +62,25 @@ public final class TestWorld {
     for (int i = 0; i < data.length; i++) data[i].biomeContainer = data[i].biomeContainer.slice();
   }
 
-  @SuppressWarnings("unchecked")
-  public void buildTerrain(ProtoChunk chunk, ChunkRegion biomeSource) {
-    ChunkGenerating.buildSurface(
-        context,
-        ChunkGenerationSteps.GENERATION.get(ChunkStatus.TERRAIN),
-        (BoundedRegionArray<AbstractChunkHolder>) (Object) biomeSource.storage(),
-        chunk);
-    chunk.setStatus(ChunkStatus.TERRAIN);
-  }
-
   // @SuppressWarnings("unchecked")
-  // public void noise(ChunkRegion region, ProtoChunk chunk) {
-  //   ChunkGenerating.populateNoise(
+  // public void buildTerrain(ProtoChunk chunk, ChunkRegion biomeSource) {
+  //   ChunkGenerating.buildSurface(
   //       context,
-  //       ChunkGenerationSteps.GENERATION.get(ChunkStatus.NOISE),
-  //       (BoundedRegionArray<AbstractChunkHolder>) (Object) region.storage(),
+  //       ChunkGenerationSteps.GENERATION.get(ChunkStatus.TERRAIN),
+  //       (BoundedRegionArray<AbstractChunkHolder>) (Object) biomeSource.storage(),
   //       chunk);
-  //   chunk.setStatus(ChunkStatus.NOISE);
+  //   chunk.setStatus(ChunkStatus.TERRAIN);
   // }
+
+  @SuppressWarnings("unchecked")
+  public void noise(ChunkRegion region, ProtoChunk chunk) {
+    ChunkGenerating.populateNoise(
+        context,
+        ChunkGenerationSteps.GENERATION.get(ChunkStatus.NOISE),
+        (BoundedRegionArray<AbstractChunkHolder>) (Object) region.storage(),
+        chunk);
+    chunk.setStatus(ChunkStatus.NOISE);
+  }
 
   @SuppressWarnings("unchecked")
   public void biomes(ChunkRegion region, ProtoChunk chunk) {
@@ -92,15 +92,15 @@ public final class TestWorld {
     chunk.setStatus(ChunkStatus.BIOMES);
   }
 
-  // @SuppressWarnings("unchecked")
-  // public void surface(ProtoChunk chunk, ChunkRegion biomeSource) {
-  //   ChunkGenerating.buildSurface(
-  //       context,
-  //       ChunkGenerationSteps.GENERATION.get(ChunkStatus.SURFACE),
-  //       (BoundedRegionArray<AbstractChunkHolder>) (Object) biomeSource.storage(),
-  //       chunk);
-  //   chunk.setStatus(ChunkStatus.SURFACE);
-  // }
+  @SuppressWarnings("unchecked")
+  public void surface(ProtoChunk chunk, ChunkRegion biomeSource) {
+    ChunkGenerating.buildSurface(
+        context,
+        ChunkGenerationSteps.GENERATION.get(ChunkStatus.SURFACE),
+        (BoundedRegionArray<AbstractChunkHolder>) (Object) biomeSource.storage(),
+        chunk);
+    chunk.setStatus(ChunkStatus.SURFACE);
+  }
 
   public static void matches(ProtoChunk a, ProtoChunk b) {
     if (!a.getPos().equals(b.getPos())) {
