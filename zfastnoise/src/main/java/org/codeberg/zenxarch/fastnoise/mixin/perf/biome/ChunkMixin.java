@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Mixin;
 public abstract class ChunkMixin {
 
   @WrapMethod(method = "populateBiomes")
-  private void zenxarch$populateBiomes(Chunk chunk, BiomeSupplier supplier, Operation<Void> op) {
-    FastBiomeGen.populateBiomes(chunk, supplier);
+  private void zenxarch$populateBiomes(BiomeSupplier supplier, Operation<Void> op) {
+    FastBiomeGen.populateBiomes((Chunk) (Object) this, supplier);
   }
 }
