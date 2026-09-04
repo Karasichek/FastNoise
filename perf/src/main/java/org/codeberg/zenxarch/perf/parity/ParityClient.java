@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.parity;
+package org.codeberg.zenxarch.perf.parity;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise;
+package org.codeberg.zenxarch.perf;
 
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import java.util.Arrays;
@@ -21,9 +21,8 @@ import net.minecraft.world.chunk.Palette;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.dimension.DimensionOptions;
-import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
-import org.codeberg.zenxarch.fastnoise.mixin.ChunkAccessor;
+import org.codeberg.zenxarch.perf.mixin.ChunkAccessor;
 
 public final class TestWorld {
   public final ServerWorld serverWorld;
@@ -61,45 +60,45 @@ public final class TestWorld {
     for (int i = 0; i < data.length; i++) data[i].biomeContainer = data[i].biomeContainer.slice();
   }
 
-  public void createSampler(ProtoChunk chunk) {
-    chunk.getOrCreateChunkNoiseSampler(
-        _ ->
-            this.generator.createChunkNoiseSampler(
-                chunk,
-                this.serverWorld.getStructureAccessor(),
-                Blender.getNoBlending(),
-                this.serverWorld.getChunkManager().getNoiseConfig()));
+  @SuppressWarnings("unchecked")
+  public void buildTerrain(ProtoChunk chunk, ChunkRegion biomeSource) {
+    ChunkGenerating.buildSurface(
+        context,
+        ChunkGenerationSteps.GENERATION.get(ChunkStatus.TERRAIN),
+        (BoundedRegionArray<AbstractChunkHolder>) (Object) biomeSource.storage(),
+        chunk);
+    chunk.setStatus(ChunkStatus.TERRAIN);
   }
 
-  @SuppressWarnings("unchecked")
-  public void noise(ChunkRegion region, ProtoChunk chunk) {
-    ChunkGenerating.populateNoise(
-        context,
-        ChunkGenerationSteps.GENERATION.get(ChunkStatus.NOISE),
-        (BoundedRegionArray<AbstractChunkHolder>) (Object) region.storage(),
-        chunk);
-    chunk.setStatus(ChunkStatus.NOISE);
-  }
+  // @SuppressWarnings("unchecked")
+  // public void noise(ChunkRegion region, ProtoChunk chunk) {
+  //   ChunkGenerating.populateNoise(
+  //       context,
+  //       ChunkGenerationSteps.GENERATION.get(ChunkStatus.NOISE),
+  //       (BoundedRegionArray<AbstractChunkHolder>) (Object) region.storage(),
+  //       chunk);
+  //   chunk.setStatus(ChunkStatus.NOISE);
+  // }
 
   @SuppressWarnings("unchecked")
   public void biomes(ChunkRegion region, ProtoChunk chunk) {
     ChunkGenerating.populateBiomes(
         context,
-        ChunkGenerationSteps.GENERATION.get(ChunkStatus.NOISE),
+        ChunkGenerationSteps.GENERATION.get(ChunkStatus.BIOMES),
         (BoundedRegionArray<AbstractChunkHolder>) (Object) region.storage(),
         chunk);
     chunk.setStatus(ChunkStatus.BIOMES);
   }
 
-  @SuppressWarnings("unchecked")
-  public void surface(ProtoChunk chunk, ChunkRegion biomeSource) {
-    ChunkGenerating.buildSurface(
-        context,
-        ChunkGenerationSteps.GENERATION.get(ChunkStatus.NOISE),
-        (BoundedRegionArray<AbstractChunkHolder>) (Object) biomeSource.storage(),
-        chunk);
-    chunk.setStatus(ChunkStatus.SURFACE);
-  }
+  // @SuppressWarnings("unchecked")
+  // public void surface(ProtoChunk chunk, ChunkRegion biomeSource) {
+  //   ChunkGenerating.buildSurface(
+  //       context,
+  //       ChunkGenerationSteps.GENERATION.get(ChunkStatus.NOISE),
+  //       (BoundedRegionArray<AbstractChunkHolder>) (Object) biomeSource.storage(),
+  //       chunk);
+  //   chunk.setStatus(ChunkStatus.SURFACE);
+  // }
 
   public static void matches(ProtoChunk a, ProtoChunk b) {
     if (!a.getPos().equals(b.getPos())) {

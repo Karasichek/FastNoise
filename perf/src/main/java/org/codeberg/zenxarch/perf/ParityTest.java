@@ -1,10 +1,9 @@
-package org.codeberg.zenxarch.fastnoise;
+package org.codeberg.zenxarch.perf;
 
 import net.minecraft.world.chunk.ChunkStatus;
-import org.codeberg.zenxarch.fastnoise.config.FastNoiseConfig;
-import org.codeberg.zenxarch.fastnoise.parity.ChunkStorage;
-import org.codeberg.zenxarch.fastnoise.parity.ParityGlobals;
-import org.codeberg.zenxarch.fastnoise.parity.ParityGlobals.ChunkStorageKey;
+import org.codeberg.zenxarch.perf.parity.ChunkStorage;
+import org.codeberg.zenxarch.perf.parity.ParityGlobals;
+import org.codeberg.zenxarch.perf.parity.ParityGlobals.ChunkStorageKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +35,9 @@ public final class ParityTest {
         fakeWorld,
         base,
         biomes,
-        FastNoiseConfig.ENABLED ? "Modded " : "Vanilla " + name,
+        // TODO: fix name
+        // FastNoiseConfig.ENABLED ? "Modded " : "Vanilla " + name,
+        name,
         settings.seed(),
         name);
     LOGGER.info(name + " matches");
@@ -61,15 +62,16 @@ public final class ParityTest {
 
     base.forEach(
         (chunk) -> {
-          world.noise(base, chunk);
-          world.surface(chunk, biomeRegion);
+          // world.noise(base, chunk);
+          // world.surface(chunk, biomeRegion);
+          world.buildTerrain(chunk, biomeRegion);
 
           if (ParityGlobals.isServer) {
             var pos = chunk.getPos();
             var against = ParityGlobals.get(new ChunkStorageKey(seed, worldKey, pos.x(), pos.z()));
             var err = against.matches(chunk);
             if (err != null) {
-              FastNoiseConstants.LOGGER.info(
+              ParityGlobals.LOGGER.info(
                   "Ours: {} Theirs: {}", new ChunkStorage(seed, worldKey, chunk), against);
               throw new IllegalStateException("Chunks don't match " + pos + " " + err);
             }

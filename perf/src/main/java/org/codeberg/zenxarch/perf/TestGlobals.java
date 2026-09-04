@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise;
+package org.codeberg.zenxarch.perf;
 
 import com.mojang.serialization.Lifecycle;
 import java.io.IOException;

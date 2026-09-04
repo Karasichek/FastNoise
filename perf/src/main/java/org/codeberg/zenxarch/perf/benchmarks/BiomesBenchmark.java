@@ -1,8 +1,8 @@
-package org.codeberg.zenxarch.fastnoise.benchmarks;
+package org.codeberg.zenxarch.perf.benchmarks;
 
-import org.codeberg.zenxarch.fastnoise.BenchmarkSettings;
-import org.codeberg.zenxarch.fastnoise.ChunkRegion;
-import org.codeberg.zenxarch.fastnoise.TestWorld;
+import org.codeberg.zenxarch.perf.BenchmarkSettings;
+import org.codeberg.zenxarch.perf.ChunkRegion;
+import org.codeberg.zenxarch.perf.TestWorld;
 import org.openjdk.jmh.annotations.*;
 
 @State(Scope.Thread)

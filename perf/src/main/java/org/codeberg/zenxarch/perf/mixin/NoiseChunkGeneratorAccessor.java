@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.mixin;
+package org.codeberg.zenxarch.perf.mixin;
 
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.StructureAccessor;

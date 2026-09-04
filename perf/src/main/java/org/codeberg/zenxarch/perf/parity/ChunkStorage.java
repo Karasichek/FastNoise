@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.parity;
+package org.codeberg.zenxarch.perf.parity;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import java.io.Serializable;
@@ -12,7 +12,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ProtoChunk;
-import org.codeberg.zenxarch.fastnoise.mixin.ChunkAccessor;
+import org.codeberg.zenxarch.perf.mixin.ChunkAccessor;
 
 public final class ChunkStorage implements Serializable {
   public long seed;

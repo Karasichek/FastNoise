@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.mixin;
+package org.codeberg.zenxarch.perf.mixin;
 
 import java.util.concurrent.Executor;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;

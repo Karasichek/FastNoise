@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.mixin;
+package org.codeberg.zenxarch.perf.mixin;
 
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.world.chunk.Chunk;

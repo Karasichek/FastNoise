@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise;
+package org.codeberg.zenxarch.perf;
 
 import java.util.Collection;
 import java.util.Optional;

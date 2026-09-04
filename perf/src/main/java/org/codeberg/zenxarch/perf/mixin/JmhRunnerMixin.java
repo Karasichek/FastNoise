@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.mixin;
+package org.codeberg.zenxarch.perf.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;

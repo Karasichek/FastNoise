@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastnoise.parity;
+package org.codeberg.zenxarch.perf.parity;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.io.IOException;
