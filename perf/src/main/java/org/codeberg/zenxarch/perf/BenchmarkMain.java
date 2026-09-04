@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 public class BenchmarkMain {
   public static final Logger LOGGER = LoggerFactory.getLogger(BenchmarkMain.class);
 
-  private static Optional<Boolean> getBooleanProperty(String name) {
+  public static Optional<Boolean> getBooleanProperty(String name) {
     var value = System.getProperty(name);
     if (value == null) return Optional.empty();
     try {
@@ -86,7 +86,6 @@ public class BenchmarkMain {
     ChainedOptionsBuilder options =
         new OptionsBuilder()
             .forks(getIntProperty("zforks", 1, 1))
-            .jvmArgsAppend("-Dzforked=true", "-Dzmixin=" + zmod)
             .mode(getMode())
             .warmupTime(TimeValue.seconds(getIntProperty("zwarmuptime", 5, 1)))
             .measurementTime(TimeValue.seconds(getIntProperty("zmeasuretime", 5, 1)))
@@ -94,6 +93,12 @@ public class BenchmarkMain {
             .measurementIterations(getIntProperty("zmeasures", 5, 1))
             .timeUnit(TimeUnit.MILLISECONDS)
             .threads(getIntProperty("zthreads", 1, 1));
+
+    options =
+        zmod
+            ? options.jvmArgsAppend("-Dzforked=true")
+            : options.jvmArgsAppend(
+                "-Dzforked=true", "-Dfabric.debug.disableModIds=zfastnoise,zfastsurface,zmatcomp");
 
     var benchmarkName = "Vanilla";
 

@@ -53,6 +53,8 @@ public final class TestWorld {
     chunk.setHeightmap(Type.OCEAN_FLOOR_WG, new long[len]);
     len = chunk.getHeightmap(Type.WORLD_SURFACE_WG).asLongArray().length;
     chunk.setHeightmap(Type.WORLD_SURFACE_WG, new long[len]);
+
+    Arrays.fill(chunk.getPostProcessingLists(), null);
   }
 
   public static void resetBiomes(ProtoChunk chunk) {
@@ -94,7 +96,7 @@ public final class TestWorld {
   // public void surface(ProtoChunk chunk, ChunkRegion biomeSource) {
   //   ChunkGenerating.buildSurface(
   //       context,
-  //       ChunkGenerationSteps.GENERATION.get(ChunkStatus.NOISE),
+  //       ChunkGenerationSteps.GENERATION.get(ChunkStatus.SURFACE),
   //       (BoundedRegionArray<AbstractChunkHolder>) (Object) biomeSource.storage(),
   //       chunk);
   //   chunk.setStatus(ChunkStatus.SURFACE);

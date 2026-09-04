@@ -31,6 +31,14 @@ dependencies {
   annotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
   
   implementation project(path: ":zconfig", configuration: "namedElements")
+
+  def loadMods = project.hasProperty("zmod") ? project.getProperty("zmod") == "true" : true
+
+  if (loadMods) {
+    implementation project(path: ":zfastnoise", configuration: "namedElements")
+    implementation project(path: ":zfastsurface", configuration: "namedElements")
+    implementation project(path: ":zmatcomp", configuration: "namedElements")
+  }
 }
 
 processResources {

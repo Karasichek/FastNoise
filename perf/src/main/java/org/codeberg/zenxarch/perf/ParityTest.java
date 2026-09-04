@@ -1,6 +1,5 @@
 package org.codeberg.zenxarch.perf;
 
-import net.minecraft.world.chunk.ChunkStatus;
 import org.codeberg.zenxarch.perf.parity.ChunkStorage;
 import org.codeberg.zenxarch.perf.parity.ParityGlobals;
 import org.codeberg.zenxarch.perf.parity.ParityGlobals.ChunkStorageKey;
@@ -10,6 +9,8 @@ import org.slf4j.LoggerFactory;
 public final class ParityTest {
 
   public static final Logger LOGGER = LoggerFactory.getLogger(ParityGlobals.class);
+
+  private static final boolean MOD_LOADED = BenchmarkMain.getBooleanProperty("zmod").orElse(false);
 
   public static void doParityTest() {
     LOGGER.info("Starting parity test");
@@ -32,14 +33,7 @@ public final class ParityTest {
         ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius() + 1);
 
     generateChunk(
-        fakeWorld,
-        base,
-        biomes,
-        // TODO: fix name
-        // FastNoiseConfig.ENABLED ? "Modded " : "Vanilla " + name,
-        name,
-        settings.seed(),
-        name);
+        fakeWorld, base, biomes, MOD_LOADED ? "Modded " : "Vanilla " + name, settings.seed(), name);
     LOGGER.info(name + " matches");
   }
 
@@ -53,7 +47,6 @@ public final class ParityTest {
     biomeRegion.forEach(
         (chunk) -> {
           world.biomes(biomeRegion, chunk);
-          chunk.setStatus(ChunkStatus.BIOMES);
         });
 
     LOGGER.info("Generated Biomes for " + name);
