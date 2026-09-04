@@ -1,7 +1,7 @@
 package org.codeberg.zenxarch.fastsurface.surface;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 
 public interface MaterialRuleInterpreterAccessor {
   public BlockStateRule[] zfastsurface$getRules();

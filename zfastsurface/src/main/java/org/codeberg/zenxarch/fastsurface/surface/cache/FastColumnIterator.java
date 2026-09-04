@@ -3,7 +3,7 @@ package org.codeberg.zenxarch.fastsurface.surface.cache;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 
 public interface FastColumnIterator {
 

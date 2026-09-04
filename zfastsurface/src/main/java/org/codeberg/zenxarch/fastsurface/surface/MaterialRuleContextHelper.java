@@ -8,7 +8,7 @@ import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import org.codeberg.zenxarch.fastsurface.config.FastSurfaceConfig;
 import org.codeberg.zenxarch.fastsurface.surface.biome.FastBiomeCache;
 
@@ -61,12 +61,8 @@ public class MaterialRuleContextHelper {
   }
 
   public static void initHorizontalContext(
-      MaterialRuleContext context,
-      final int blockX,
-      final int blockZ,
-      final int steepnessX,
-      final int steepnessZ) {
-    context.initHorizontalContext(blockX, blockZ, steepnessX, steepnessZ);
+      MaterialRuleContext context, final int blockX, final int blockZ) {
+    context.initHorizontalContext(blockX, blockZ);
     context.stoneDepthAbove = 0;
     context.fluidHeight = Integer.MIN_VALUE;
   }

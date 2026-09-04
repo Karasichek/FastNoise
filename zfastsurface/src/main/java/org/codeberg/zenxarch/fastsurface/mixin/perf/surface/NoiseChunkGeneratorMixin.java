@@ -11,7 +11,7 @@ import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import net.minecraft.world.gen.surfacebuilder.MaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastsurface.surface.FastSurfaceGen;
 import org.jspecify.annotations.Nullable;

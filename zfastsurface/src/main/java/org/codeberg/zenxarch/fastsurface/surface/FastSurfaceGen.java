@@ -5,9 +5,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.noise.SamplingRegion;
 import net.minecraft.world.ChunkRegion;
-import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeAccess;
@@ -18,9 +16,9 @@ import net.minecraft.world.chunk.SingularPalette;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import net.minecraft.world.gen.surfacebuilder.BlockMaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
 import org.codeberg.zenxarch.fastsurface.config.FastSurfaceConfig;
 import org.codeberg.zenxarch.fastsurface.surface.cache.FastColumnIterator;
@@ -103,21 +101,12 @@ public class FastSurfaceGen {
 
     int highestFilledSectionIndex = chunk.getHighestNonEmptySection();
     int maxBlockY = chunk.sectionIndexToCoord(highestFilledSectionIndex) * 16 + 15;
-    SamplingRegion fullVolume = chunkNoiseSampler.getRegion();
-    SamplingRegion narrowedVolume =
-        new SamplingRegion(
-            fullVolume.sizeX(),
-            Math.max(maxBlockY - fullVolume.minBlockY() + 1, 1),
-            fullVolume.sizeZ(),
-            fullVolume.minBlockX(),
-            fullVolume.minBlockY(),
-            fullVolume.minBlockZ());
     MaterialRuleContext context =
         new MaterialRuleContext(
             surfaceBuilder,
             noiseConfig,
-            narrowedVolume,
-            chunkNoiseSampler.getContextualSamplerProvider(),
+            chunk,
+            chunkNoiseSampler,
             MaterialRuleContextHelper.createPosToBiome(biomeAccess, chunk, includedBiomes),
             heightContext,
             includedBiomes);
@@ -127,7 +116,7 @@ public class FastSurfaceGen {
     var willUpdateHeightmap = true;
     var willAddWater = true;
     var willGrow = true;
-    var rule = materialRule.getBlockStateRule(context);
+    var rule = materialRule.apply(context);
 
     if (rule instanceof MaterialRuleInterpreterAccessor interpreter) {
       if (interpreter.zfastsurface$getRules().length == 0) {
@@ -159,8 +148,7 @@ public class FastSurfaceGen {
         int blockX = minBlockX + x;
         int blockZ = minBlockZ + z;
 
-        MaterialRuleContextHelper.initHorizontalContext(
-            context, blockX, blockZ, getSteepnessX(chunk, x, z), getSteepnessZ(chunk, x, z));
+        MaterialRuleContextHelper.initHorizontalContext(context, blockX, blockZ);
         column.updateXZ(x, z);
         iterator.start(x, z);
 
@@ -188,16 +176,6 @@ public class FastSurfaceGen {
     }
 
     indexCache.finish(sections);
-  }
-
-  private static int getSteepnessX(final Chunk chunk, final int localX, final int localZ) {
-    return chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, Math.min(localX + 1, 15), localZ)
-        - chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, Math.max(localX - 1, 0), localZ);
-  }
-
-  private static int getSteepnessZ(final Chunk chunk, final int localX, final int localZ) {
-    return chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, localX, Math.min(localZ + 1, 15))
-        - chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE_WG, localX, Math.max(localZ - 1, 0));
   }
 
   private static boolean willAddWater(final BlockState[] states) {
