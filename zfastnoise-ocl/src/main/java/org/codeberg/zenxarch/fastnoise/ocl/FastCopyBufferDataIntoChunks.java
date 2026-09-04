@@ -47,7 +47,7 @@ public final class FastCopyBufferDataIntoChunks {
     for (int chunkOffZ = 0; chunkOffZ < batchSize; chunkOffZ++) {
       for (int chunkOffX = 0; chunkOffX < batchSize; chunkOffX++) {
         var chunk = chunks.get(startingPos.x() + chunkOffX, startingPos.z() + chunkOffZ);
-        if (chunk.getStatus().isAtLeast(ChunkStatus.TERRAIN)) continue;
+        if (chunk.getStatus().isAtLeast(ChunkStatus.NOISE)) continue;
         copyDataIntoChunk(
             chunkOffX,
             chunkOffZ,
@@ -56,7 +56,7 @@ public final class FastCopyBufferDataIntoChunks {
             verticalSize,
             blockDataSegment,
             horizontalSize);
-        chunk.setStatus(ChunkStatus.TERRAIN);
+        chunk.setStatus(ChunkStatus.NOISE);
       }
     }
   }

@@ -7,9 +7,12 @@ import net.minecraft.SharedConstants;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.gen.StructureAccessor;
+import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
+import net.minecraft.world.gen.noise.NoiseConfig;
 import org.codeberg.zenxarch.fastnoise.noise.FastNoiseGen;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -36,20 +39,37 @@ public abstract class NoiseChunkGeneratorMixin {
     return false;
   }
 
+  @Shadow
+  protected abstract ChunkNoiseSampler createChunkNoiseSampler(
+      Chunk chunk, StructureAccessor world, Blender blender, NoiseConfig noiseConfig);
+
   @WrapMethod(method = "populateNoise")
   private void zenxarch$populateNoise(
-      final ChunkNoiseSampler chunkNoiseSampler, final Chunk chunk, final Operation<Void> op) {
+      final Blender blender,
+      final StructureAccessor structureAccessor,
+      final NoiseConfig noiseConfig,
+      final Chunk chunk,
+      final int minimumCellY,
+      final int cellHeight,
+      final Operation<Void> op) {
+
+    if (SharedConstants.isOutsideGenerationArea(chunk.getPos())) return;
+
     var defaultBlock = this.settings.value().defaultBlock();
     if (((Object) this.getClass()) != NoiseChunkGenerator.class
         || SharedConstants.AQUIFERS
         || defaultBlock == FastNoiseGen.AIR
         || chunk.hasBelowZeroRetrogen()
         || !FastNoiseGen.isEmpty(chunk)) {
-      op.call(chunkNoiseSampler, chunk);
+      op.call(blender, structureAccessor, noiseConfig, chunk, minimumCellY, cellHeight);
       return;
     }
 
-    FastNoiseGen.populateNoise(
-        chunkNoiseSampler, chunk, defaultBlock, this.settings.value().noiseRouter().finalDensity());
+    var sampler =
+        chunk.getOrCreateChunkNoiseSampler(
+            chunkx ->
+                this.createChunkNoiseSampler(chunkx, structureAccessor, blender, noiseConfig));
+
+    FastNoiseGen.populateNoise(sampler, chunk, defaultBlock, minimumCellY, cellHeight);
   }
 }

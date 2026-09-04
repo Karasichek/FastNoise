@@ -2,11 +2,12 @@ package org.codeberg.zenxarch.fastnoise.noise;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.SingularPalette;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
-import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.codeberg.zenxarch.fastnoise.heightmap.HeightmapUtil;
 
 public class FastNoiseGen {
@@ -25,7 +26,8 @@ public class FastNoiseGen {
       ChunkNoiseSampler chunkNoiseSampler,
       Chunk chunk,
       BlockState defaultBlockState,
-      DensityFunction finalDensityFunc) {
+      final int minimumCellY,
+      final int cellHeight) {
 
     var sections = chunk.getSectionArray();
     var fastSections = new FastChunkSection[sections.length];
@@ -33,53 +35,86 @@ public class FastNoiseGen {
     final var postProcessingLists = chunk.getPostProcessingLists();
 
     final var aquifer = chunkNoiseSampler.getAquiferSampler();
-    final var volume = chunkNoiseSampler.getRegion();
-    final var finalDensity =
-        chunkNoiseSampler.getContextualSamplerProvider().getSampler(finalDensityFunc);
+
+    ChunkPos chunkPos = chunk.getPos();
+    int chunkStartBlockX = chunkPos.getStartX();
+    int chunkStartBlockZ = chunkPos.getStartZ();
+
+    chunkNoiseSampler.sampleStartDensity();
+
+    int horizontalCellBlockCount = chunkNoiseSampler.getHorizontalCellBlockCount();
+    int verticalCellBlockCount = chunkNoiseSampler.getVerticalCellBlockCount();
+
+    int cellWidth = 16 / horizontalCellBlockCount;
 
     final var minY = chunk.getBottomY();
 
-    try (PooledSampleBuffer densityBuffer = finalDensity.getFilledBuffer(volume)) {
-      for (int z = 0; z < volume.sizeZ(); z++) {
-        int blockZ = volume.translateZ(z);
+    for (int cellXIndex = 0; cellXIndex < cellWidth; cellXIndex++) {
+      chunkNoiseSampler.sampleEndDensity(cellXIndex);
 
-        for (int x = 0; x < volume.sizeX(); x++) {
-          int blockX = volume.translateX(x);
+      for (int cellZIndex = 0; cellZIndex < cellWidth; cellZIndex++) {
+        int lastSectionIndex = chunk.countVerticalSections() - 1;
+        ChunkSection section = chunk.getSection(lastSectionIndex);
 
-          for (int y = volume.sizeY() - 1; y >= 0; y--) {
-            int blockY = volume.translateY(y);
+        for (int cellYIndex = cellHeight - 1; cellYIndex >= 0; cellYIndex--) {
+          chunkNoiseSampler.onSampledCellCorners(cellYIndex, cellZIndex);
 
-            var state =
-                aquifer.apply(blockX, blockY, blockZ, densityBuffer.get(volume.getIndex(x, y, z)));
+          for (int yInCell = verticalCellBlockCount - 1; yInCell >= 0; yInCell--) {
+            int blockY = (minimumCellY + cellYIndex) * verticalCellBlockCount + yInCell;
+            int blockYInSection = blockY & 15;
+            int sectionIndex = chunk.getSectionIndex(blockY);
+            if (lastSectionIndex != sectionIndex) {
+              lastSectionIndex = sectionIndex;
+              section = chunk.getSection(sectionIndex);
+            }
+
+            double factorY = (double) yInCell / verticalCellBlockCount;
+            chunkNoiseSampler.interpolateY(blockY, factorY);
 
             var cy = (blockY - minY) >> 4;
             var fastSection = fastSections[cy];
 
-            if (state == AIR) continue;
+            for (int xInCell = 0; xInCell < horizontalCellBlockCount; xInCell++) {
+              int blockX = chunkStartBlockX + cellXIndex * horizontalCellBlockCount + xInCell;
+              int blockXInSection = blockX & 15;
+              double factorX = (double) xInCell / horizontalCellBlockCount;
+              chunkNoiseSampler.interpolateX(blockX, factorX);
 
-            if (fastSection == null) {
-              fastSection = (fastSections[cy] = new FastChunkSection(sections[cy]));
-            }
+              for (int zInCell = 0; zInCell < horizontalCellBlockCount; zInCell++) {
+                int blockZ = chunkStartBlockZ + cellZIndex * horizontalCellBlockCount + zInCell;
+                int blockZInSection = blockZ & 15;
+                double factorZ = (double) zInCell / horizontalCellBlockCount;
+                chunkNoiseSampler.interpolateZ(blockZ, factorZ);
 
-            final var blockXInSection = blockX & 0xF;
-            final var blockYInSection = blockY & 0xF;
-            final var blockZInSection = blockZ & 0xF;
+                var state = chunkNoiseSampler.sampleBlockState();
 
-            if (state == null) {
-              fastSection.setDefaultBlockState(x, blockYInSection, z, defaultBlockState);
-              continue;
-            }
+                if (state == AIR) continue;
 
-            fastSection.setBlockState(x, blockYInSection, z, state);
+                if (fastSection == null) {
+                  fastSection = (fastSections[cy] = new FastChunkSection(sections[cy]));
+                }
 
-            if (aquifer.needsFluidTick() && !state.getFluidState().isEmpty()) {
-              Chunk.getList(postProcessingLists, cy)
-                  .add((short) (blockXInSection | blockYInSection << 4 | blockZInSection << 8));
+                if (state == null) {
+                  fastSection.setDefaultBlockState(
+                      blockXInSection, blockYInSection, blockZInSection, defaultBlockState);
+                  continue;
+                }
+
+                fastSection.setBlockState(blockXInSection, blockYInSection, blockZInSection, state);
+
+                if (aquifer.needsFluidTick() && !state.getFluidState().isEmpty()) {
+                  Chunk.getList(postProcessingLists, cy)
+                      .add((short) (blockXInSection | blockYInSection << 4 | blockZInSection << 8));
+                }
+              }
             }
           }
         }
       }
+      chunkNoiseSampler.swapBuffers();
     }
+
+    chunkNoiseSampler.stopInterpolation();
 
     finalizeChunks(fastSections, chunk, defaultBlockState);
   }
