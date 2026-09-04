@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "org.codeberg.zenxarch.perf.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "MainMixin",
+    "JmhRunnerMixin",
+    "ChunkAccessor",
+    "NoiseChunkGeneratorMixin",
+    "ChunkGeneratorMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
