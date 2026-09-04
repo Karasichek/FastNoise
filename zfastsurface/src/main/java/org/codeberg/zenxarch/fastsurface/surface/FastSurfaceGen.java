@@ -82,6 +82,7 @@ public class FastSurfaceGen {
       final SurfaceBuilder surfaceBuilder,
       final NoiseConfig noiseConfig,
       final BiomeAccess biomeAccess,
+      final boolean useLegacyRandom,
       final HeightContext heightContext,
       final Chunk chunk,
       final ChunkNoiseSampler chunkNoiseSampler,

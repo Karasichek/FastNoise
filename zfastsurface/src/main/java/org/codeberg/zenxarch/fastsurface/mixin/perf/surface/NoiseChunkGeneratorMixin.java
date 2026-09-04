@@ -22,16 +22,18 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class NoiseChunkGeneratorMixin {
 
   @WrapOperation(
-      method = "buildSurface",
+      method =
+          "buildSurface(Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/HeightContext;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/biome/source/BiomeAccess;Lnet/minecraft/world/gen/chunk/Blender;Ljava/util/Set;)V",
       at =
           @At(
               value = "INVOKE",
               target =
-                  "Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;buildSurface(Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/biome/source/BiomeAccess;Lnet/minecraft/world/gen/HeightContext;Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/chunk/ChunkNoiseSampler;Lnet/minecraft/world/gen/surfacebuilder/MaterialRule;Ljava/util/Set;)V"))
+                  "Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;buildSurface(Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/biome/source/BiomeAccess;ZLnet/minecraft/world/gen/HeightContext;Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/chunk/ChunkNoiseSampler;Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRule;Ljava/util/Set;)V"))
   private void zenxarch$buildSurface(
       final SurfaceBuilder surfaceBuilder,
       final NoiseConfig noiseConfig,
       final BiomeAccess biomeAccess,
+      final boolean useLegacyRandom,
       final HeightContext heightContext,
       final Chunk chunk,
       final ChunkNoiseSampler chunkNoiseSampler,
@@ -43,6 +45,7 @@ public abstract class NoiseChunkGeneratorMixin {
           surfaceBuilder,
           noiseConfig,
           biomeAccess,
+          useLegacyRandom,
           heightContext,
           chunk,
           chunkNoiseSampler,
@@ -55,6 +58,7 @@ public abstract class NoiseChunkGeneratorMixin {
         surfaceBuilder,
         noiseConfig,
         biomeAccess,
+        useLegacyRandom,
         heightContext,
         chunk,
         chunkNoiseSampler,

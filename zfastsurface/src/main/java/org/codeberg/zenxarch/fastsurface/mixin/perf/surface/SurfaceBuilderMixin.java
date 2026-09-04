@@ -23,7 +23,7 @@ public abstract class SurfaceBuilderMixin {
           @At(
               value = "INVOKE",
               target =
-                  "Lnet/minecraft/world/gen/surfacebuilder/MaterialRuleContext;<init>(Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/util/math/noise/SamplingRegion;Lnet/minecraft/world/gen/sampler/ContextualSamplerProvider;Ljava/util/function/Function;Lnet/minecraft/world/gen/HeightContext;Ljava/util/Set;)V"),
+                  "Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext;<init>(Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/chunk/ChunkNoiseSampler;Ljava/util/function/Function;Lnet/minecraft/world/gen/HeightContext;Ljava/util/Set;)V"),
       index = 4)
   private Function<BlockPos, RegistryEntry<Biome>> zenxarch$setPosToBiome(
       Function<BlockPos, RegistryEntry<Biome>> posToBiome,
