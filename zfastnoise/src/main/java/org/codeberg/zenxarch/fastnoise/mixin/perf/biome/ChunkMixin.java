@@ -13,10 +13,7 @@ public abstract class ChunkMixin {
 
   @WrapMethod(method = "populateBiomes")
   private void zenxarch$populateBiomes(
-      Chunk chunk,
-      final BiomeSupplier biomeSupplier,
-      final MultiNoiseSampler sampler,
-      Operation<Void> op) {
-    FastBiomeGen.populateBiomes(chunk, biomeSupplier, sampler);
+      final BiomeSupplier biomeSupplier, final MultiNoiseSampler sampler, Operation<Void> op) {
+    FastBiomeGen.populateBiomes((Chunk) (Object) this, biomeSupplier, sampler);
   }
 }
