@@ -27,13 +27,13 @@ public abstract class NoiseChunkGeneratorMixin {
 
   @Redirect(
       method =
-          "method_1_10091(Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/gen/chunk/GenerationShapeConfig;Lnet/minecraft/world/biome/source/BiomeAccess;Ljava/util/Set;Lnet/minecraft/world/ChunkRegion;)Lnet/minecraft/world/chunk/Chunk;",
+          "method_38332(Lnet/minecraft/world/chunk/Chunk;ILnet/minecraft/world/gen/chunk/GenerationShapeConfig;ILnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/gen/noise/NoiseConfig;I)Lnet/minecraft/world/chunk/Chunk;",
       at = @At(target = "Lnet/minecraft/world/chunk/ChunkSection;lock()V", value = "INVOKE"))
   private void zenxarch$cancelLocking(ChunkSection section) {}
 
   @Redirect(
       method =
-          "method_1_10091(Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/gen/chunk/GenerationShapeConfig;Lnet/minecraft/world/biome/source/BiomeAccess;Ljava/util/Set;Lnet/minecraft/world/ChunkRegion;)Lnet/minecraft/world/chunk/Chunk;",
+          "method_38332(Lnet/minecraft/world/chunk/Chunk;ILnet/minecraft/world/gen/chunk/GenerationShapeConfig;ILnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/gen/noise/NoiseConfig;I)Lnet/minecraft/world/chunk/Chunk;",
       at = @At(target = "Ljava/util/Set;add(Ljava/lang/Object;)Z", value = "INVOKE"))
   private boolean zenxarch$cancelSetAdd(Set<?> set, Object unused) {
     return false;
@@ -43,17 +43,19 @@ public abstract class NoiseChunkGeneratorMixin {
   protected abstract ChunkNoiseSampler createChunkNoiseSampler(
       Chunk chunk, StructureAccessor world, Blender blender, NoiseConfig noiseConfig);
 
-  @WrapMethod(method = "populateNoise")
-  private void zenxarch$populateNoise(
+  @WrapMethod(
+      method =
+          "Lnet/minecraft/world/gen/chunk/NoiseChunkGenerator;populateNoise(Lnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/chunk/Chunk;II)Lnet/minecraft/world/chunk/Chunk;")
+  private Chunk zenxarch$populateNoise(
       final Blender blender,
       final StructureAccessor structureAccessor,
       final NoiseConfig noiseConfig,
       final Chunk chunk,
       final int minimumCellY,
       final int cellHeight,
-      final Operation<Void> op) {
+      final Operation<Chunk> op) {
 
-    if (SharedConstants.isOutsideGenerationArea(chunk.getPos())) return;
+    if (SharedConstants.isOutsideGenerationArea(chunk.getPos())) return chunk;
 
     var defaultBlock = this.settings.value().defaultBlock();
     if (((Object) this.getClass()) != NoiseChunkGenerator.class
@@ -61,8 +63,7 @@ public abstract class NoiseChunkGeneratorMixin {
         || defaultBlock == FastNoiseGen.AIR
         || chunk.hasBelowZeroRetrogen()
         || !FastNoiseGen.isEmpty(chunk)) {
-      op.call(blender, structureAccessor, noiseConfig, chunk, minimumCellY, cellHeight);
-      return;
+      return op.call(blender, structureAccessor, noiseConfig, chunk, minimumCellY, cellHeight);
     }
 
     var sampler =
@@ -71,5 +72,6 @@ public abstract class NoiseChunkGeneratorMixin {
                 this.createChunkNoiseSampler(chunkx, structureAccessor, blender, noiseConfig));
 
     FastNoiseGen.populateNoise(sampler, chunk, defaultBlock, minimumCellY, cellHeight);
+    return chunk;
   }
 }
