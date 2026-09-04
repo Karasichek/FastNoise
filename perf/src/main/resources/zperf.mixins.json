@@ -4,10 +4,10 @@
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "MainMixin",
-    "NoiseChunkGeneratorAccessor",
     "JmhRunnerMixin",
     "ChunkAccessor",
-    "NoiseChunkGeneratorMixin"
+    "NoiseChunkGeneratorMixin",
+    "ChunkGeneratorMixin"
   ],
   "injectors": {
     "defaultRequire": 1

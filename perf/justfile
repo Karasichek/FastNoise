@@ -1,0 +1,19 @@
+default: build
+
+task taskName options="":
+    ../gradlew {{options}} :perf:{{taskName}}
+
+build:
+    just task build
+
+serverBuild:
+    just task build -PserverCompile=true
+
+sources:
+    just task genSources
+
+test:
+    just task test
+
+view_test_results:
+    cd build/reports/tests/test/ && python -m http.server

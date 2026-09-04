@@ -10,25 +10,13 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 public abstract class NoiseChunkGeneratorMixin {
   @ModifyArg(
       method =
-          "populateNoise(Lnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;",
+          "Lnet/minecraft/world/gen/chunk/NoiseChunkGenerator;buildTerrain(Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/biome/source/BiomeAccess;Lnet/minecraft/world/ChunkRegion;Ljava/util/Set;)Ljava/util/concurrent/CompletableFuture;",
       at =
           @At(
               value = "INVOKE",
               target =
                   "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
   private Executor redirectPopulateNoiseExecutor(Executor executor) {
-    return Runnable::run;
-  }
-
-  @ModifyArg(
-      method =
-          "populateBiomes(Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;",
-      at =
-          @At(
-              value = "INVOKE",
-              target =
-                  "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
-  private Executor redirectBiomeExecutor(Executor executor) {
     return Runnable::run;
   }
 }
