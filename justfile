@@ -53,10 +53,10 @@ perfBiomesAsync +args="":
 
 # Available props zperfbenchmark zuseasync zworldname zbenchmode zwarmuptime zmeasuretime zwarmups zforks zthreads zseed zworldradius zendcenter zworldcenter zseedcount
 parityServer +args="":
-    ./gradlew :perf:runServer -Pzparity="true" -Pzparityserver="true" -Pzmixin="true" {{args}}
+    ./gradlew :perf:runServer -Pzparity="true" -Pzparityserver="true" -Pzmod="true" {{args}}
 
 parityClient +args="":
-    ./gradlew :perf:runServer -Pzparity="true" -Pzparityserver="false" -Pzmixin="false" {{args}}
+    ./gradlew :perf:runServer -Pzparity="true" -Pzparityserver="false" -Pzmod="false" {{args}}
 
 bytecode:
     ./bytecode.sh
