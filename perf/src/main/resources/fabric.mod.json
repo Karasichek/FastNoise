@@ -1,0 +1,16 @@
+{
+	"schemaVersion": 1,
+	"id": "zfastnoise-test",
+	"version": "0.0.1",
+	"name": "Test Fast Noise Mod",
+	"description": "This mod tests fast noise",
+	"authors": [
+		"ZenXArch"
+	],
+	"license": "Mozilla Public License 2.0",
+	"environment": "*",
+	"mixins": [
+		"zfastnoise-test.mixins.json"
+	],
+	"accessWidener": "zfastnoise-test.ct"
+}

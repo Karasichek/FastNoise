@@ -1,0 +1,35 @@
+classTweaker v1 named
+
+accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler getHorizontalCellBlockCount ()I
+accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler getVerticalCellBlockCount ()I
+accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler sampleBlockState ()Lnet/minecraft/block/BlockState;
+
+accessible field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+mutable field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+
+accessible field net/minecraft/world/chunk/ChunkSection biomeContainer Lnet/minecraft/world/chunk/ReadableContainer;
+
+accessible field net/minecraft/world/chunk/PalettedContainer data Lnet/minecraft/world/chunk/PalettedContainer$Data;
+
+accessible class net/minecraft/world/chunk/PalettedContainer$Data
+
+accessible method net/minecraft/world/chunk/ArrayPalette <init> ([Ljava/lang/Object;II)V
+
+accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler createMultiNoiseSampler (Lnet/minecraft/world/gen/noise/NoiseRouter;Ljava/util/List;)Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$MultiNoiseSampler;
+
+accessible field net/minecraft/world/chunk/Chunk chunkNoiseSampler Lnet/minecraft/world/gen/chunk/ChunkNoiseSampler;
+accessible method net/minecraft/world/gen/chunk/NoiseChunkGenerator populateBiomes (Lnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/chunk/Chunk;)V
+
+## section
+
+accessible field net/minecraft/world/chunk/ChunkSection nonEmptyBlockCount S
+accessible field net/minecraft/world/chunk/ChunkSection nonEmptyFluidCount S
+accessible field net/minecraft/world/chunk/ChunkSection randomTickableBlockCount S
+accessible field net/minecraft/world/chunk/ChunkSection randomTickableFluidCount S
+
+accessible method net/minecraft/test/TestServer <init> (Ljava/lang/Thread;Lnet/minecraft/world/level/storage/LevelStorage$Session;Lnet/minecraft/resource/ResourcePackManager;Lnet/minecraft/server/SaveLoader;Ljava/util/Optional;ZI)V
+
+accessible method net/minecraft/world/gen/chunk/NoiseChunkGenerator createChunkNoiseSampler (Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/gen/chunk/Blender;Lnet/minecraft/world/gen/noise/NoiseConfig;)Lnet/minecraft/world/gen/chunk/ChunkNoiseSampler;
+
+accessible field net/minecraft/world/gen/GeneratorOptions seed J
+mutable field net/minecraft/world/gen/GeneratorOptions seed J
