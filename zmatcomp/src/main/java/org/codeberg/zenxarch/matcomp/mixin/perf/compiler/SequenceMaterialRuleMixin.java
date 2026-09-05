@@ -16,7 +16,7 @@ public abstract class SequenceMaterialRuleMixin {
   @Shadow @Final private List<MaterialRule> sequence;
 
   @Overwrite
-  public BlockStateRule getBlockStateRule(final MaterialRuleContext context) {
+  public BlockStateRule apply(final MaterialRuleContext context) {
     return MaterialRuleInterpreter.of(
         context, context.heightContext, context.noiseConfig, (SequenceMaterialRule) (Object) this);
   }

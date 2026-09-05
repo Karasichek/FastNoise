@@ -6,9 +6,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
-import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import org.jspecify.annotations.Nullable;
 
 public final class BiomePredicate {
@@ -47,7 +47,7 @@ public final class BiomePredicate {
 
   public static BooleanSupplier getSupplier(
       RegistryEntryList<Biome> predicates, MaterialRuleContext context) {
-    var includedBiomes = context.getIncludedBiomes();
+    var includedBiomes = context.includedBiomes;
     if (includedBiomes != null) {
       if (isDisjoint(includedBiomes, predicates)) return BiomePredicate.ALWAYS_FALSE;
       if (isSuperset(includedBiomes, predicates)) return BiomePredicate.ALWAYS_TRUE;

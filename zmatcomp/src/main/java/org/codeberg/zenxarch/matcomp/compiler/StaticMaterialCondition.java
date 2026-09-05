@@ -7,9 +7,7 @@ import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.AboveYMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.NegativeRunDepthPredicate;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.NotMaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.SteepSlopePredicate;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
 import org.jspecify.annotations.Nullable;
@@ -25,7 +23,7 @@ public interface StaticMaterialCondition {
           new VerticalGradientCondition(
               vertical.trueAtAndBelow().getY(context),
               vertical.falseAtAndAbove().getY(context),
-              config.getOrCreateRandomSplitter(vertical.randomName()));
+              config.getOrCreateRandomDeriver(vertical.randomName()));
       case AboveYMaterialCondition aboveY ->
           new AboveYCondition(
               aboveY.anchor().getY(context),
@@ -42,12 +40,14 @@ public interface StaticMaterialCondition {
         if (original == null) yield null;
         yield new InvertedCondition(original);
       }
-      case NegativeRunDepthPredicate _ -> HoleMaterialCondition.instance;
-      case net.minecraft.world.gen.surfacebuilder.SurfaceMaterialCondition _ ->
+      case net.minecraft.world.gen.surfacebuilder.MaterialRules.HoleMaterialCondition _ ->
+          HoleMaterialCondition.instance;
+      case net.minecraft.world.gen.surfacebuilder.MaterialRules.SurfaceMaterialCondition _ ->
           SurfaceMaterialCondition.instance;
-      case net.minecraft.world.gen.surfacebuilder.TemperatureMaterialCondition _ ->
+      case net.minecraft.world.gen.surfacebuilder.MaterialRules.TemperatureMaterialCondition _ ->
           TemperatureMaterialCondition.instance;
-      case SteepSlopePredicate _ -> SteepMaterialCondition.instance;
+      case net.minecraft.world.gen.surfacebuilder.MaterialRules.SteepMaterialCondition _ ->
+          SteepMaterialCondition.instance;
       default -> null;
     };
   }

@@ -18,10 +18,10 @@ public abstract class ConditionMaterialRuleMixin {
   @Shadow @Final private MaterialRule thenRun;
 
   @Overwrite
-  public BlockStateRule getBlockStateRule(final MaterialRuleContext context) {
-    var condition = ifTrue.getPredicate(context);
+  public BlockStateRule apply(final MaterialRuleContext context) {
+    var condition = ifTrue.apply(context);
     if (condition == BiomePredicate.ALWAYS_FALSE) return BiomePredicate.ALWAYS_NULL;
-    var rule = thenRun.getBlockStateRule(context);
+    var rule = thenRun.apply(context);
     if (rule == BiomePredicate.ALWAYS_NULL) return rule;
     if (condition == BiomePredicate.ALWAYS_TRUE) return rule;
 

@@ -7,7 +7,7 @@ import java.lang.invoke.MethodHandle;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BiomeMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BiomeMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
@@ -244,7 +244,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
     public void push(ConditionMaterialRule rule) {
       var startIndex = instructions.size();
-      if (rule.ifTrue() instanceof BiomeMaterialCondition biome) {
+      if (rule.ifTrue() instanceof BiomeMaterialRule biome) {
         var cond = BiomePredicate.getSupplier(biome.biomes(), context);
         if (cond == BiomePredicate.ALWAYS_FALSE) return;
         if (cond == BiomePredicate.ALWAYS_TRUE) {
@@ -287,7 +287,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       }
 
       var index = this.conditions.size();
-      this.conditions.add(rule.ifTrue().getPredicate(context));
+      this.conditions.add(rule.ifTrue().apply(context));
 
       if (rule.thenRun() instanceof BlockMaterialRule simple) {
         this.addInst(RETURN_IF, index, indexOf(simple.resultState()));
@@ -312,7 +312,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         case SequenceMaterialRule seq -> push(seq);
         case ConditionMaterialRule cond -> push(cond);
         case BlockMaterialRule simple -> addInst(RETURN, indexOf(simple.resultState()));
-        default -> addInst(TRY_RETURN, indexOf(rule.getBlockStateRule(context)));
+        default -> addInst(TRY_RETURN, indexOf(rule.apply(context)));
       }
     }
 

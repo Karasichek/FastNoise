@@ -17,7 +17,7 @@ public abstract class AboveYMaterialConditionMixin {
   @Shadow @Final private boolean addStoneDepth;
 
   @Overwrite
-  public BooleanSupplier getPredicate(final MaterialRuleContext context) {
+  public BooleanSupplier apply(final MaterialRuleContext context) {
     return new AboveYPredicate(
         anchor.getY(context.heightContext), surfaceDepthMultiplier, addStoneDepth, context);
   }

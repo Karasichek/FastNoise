@@ -450,7 +450,11 @@ public final class MaterialRuleCompiler {
       int y,
       int z,
       MaterialRuleContext context) {
-    return context.getCurrentBiome().value().isCold(context.getBlockPos(), context.getSeaLevel());
+    return context
+        .getCurrentBiome()
+        .value()
+        .isCold(
+            context.pos.set(context.blockX, context.blockY, context.blockZ), context.getSeaLevel());
   }
 
   public static boolean steepSlopePredicate(
@@ -461,6 +465,6 @@ public final class MaterialRuleCompiler {
       int y,
       int z,
       MaterialRuleContext context) {
-    return context.getSteepnessX() <= 4 || context.getSteepnessZ() >= 4;
+    return context.steepSlopePredicate.get();
   }
 }
