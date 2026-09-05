@@ -1,5 +1,7 @@
 package org.codeberg.zenxarch.fastsurface.surface;
 
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.Set;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.RegistryKey;
@@ -13,6 +15,7 @@ import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.ArrayPalette;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.SingularPalette;
 import net.minecraft.world.gen.HeightContext;
@@ -130,17 +133,11 @@ public class FastSurfaceGen {
     var rule = materialRule.getBlockStateRule(context);
 
     if (rule instanceof MaterialRuleInterpreterAccessor interpreter) {
-      if (interpreter.zfastsurface$getRules().length == 0) {
-        var states = interpreter.zfastsurface$getStates();
-
-        willUpdateHeightmap = FastBlockColumn.willHeightmapUpdate(defaultState, states);
-        willAddWater = willAddWater(states);
-
-        var maxStates = 0;
-        for (int i = 0; i < sections.length; i++)
-          maxStates = Math.max(maxStates, sections[i].blockStateContainer.data.palette().getSize());
-
-        willGrow = (maxStates + states.length) > 16;
+      var expected = interpreter.zfastsurface$getExpectedStates();
+      if (expected != null) {
+        willUpdateHeightmap = FastBlockColumn.willHeightmapUpdate(defaultState, expected);
+        willAddWater = willAddWater(expected);
+        willGrow = willGrow(expected, sections);
       }
     }
 
@@ -202,6 +199,18 @@ public class FastSurfaceGen {
 
   private static boolean willAddWater(final BlockState[] states) {
     for (int i = 0; i < states.length; i++) if (!states[i].getFluidState().isEmpty()) return true;
+    return false;
+  }
+
+  private static boolean willGrow(final BlockState[] states, final ChunkSection[] sections) {
+    if (states.length > 16) return true;
+    var set = new ObjectOpenHashSet<>(states, Hash.FAST_LOAD_FACTOR);
+
+    for (int i = 0; i < sections.length; i++) {
+      sections[i].blockStateContainer.forPaletteElements(set::add);
+      if (set.size() > 16) return true;
+    }
+
     return false;
   }
 
