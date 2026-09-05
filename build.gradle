@@ -97,6 +97,7 @@ configure(allprojects - project(":")) {
 
   tasks.register("prodClient", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
     mods.from configurations.modImplementation
+    mods.from project(":zconfig").tasks.named("remapJar")
     jvmArgs.add("-Xmx4G")
     jvmArgs.add("-XX:+UseShenandoahGC")
     jvmArgs.add("-XX:ShenandoahGCMode=generational")
@@ -105,6 +106,7 @@ configure(allprojects - project(":")) {
 
   tasks.register("prodServer", net.fabricmc.loom.task.prod.ServerProductionRunTask) {
     mods.from configurations.modImplementation
+    mods.from project(":zconfig").tasks.named("remapJar")
     jvmArgs.add("-Xmx4G")
     jvmArgs.add("-XX:+UseShenandoahGC")
     jvmArgs.add("-XX:ShenandoahGCMode=generational")
