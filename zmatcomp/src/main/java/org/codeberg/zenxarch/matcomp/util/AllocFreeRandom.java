@@ -3,6 +3,43 @@ package org.codeberg.zenxarch.matcomp.util;
 import net.minecraft.util.math.MathHelper;
 
 public class AllocFreeRandom {
+
+  public static final class XoroshiroSeed {
+    public long seedLo;
+    public long seedHi;
+  }
+
+  public static void splitXoroshiro(
+      long seedLo, long seedHi, int x, int y, int z, XoroshiroSeed seed) {
+    seedLo = MathHelper.hashCode(x, y, z) ^ seedLo;
+
+    if ((seedLo | seedHi) == 0L) {
+      seedLo = -7046029254386353131L;
+      seedHi = 7640891576956012809L;
+    }
+
+    seed.seedLo = seedLo;
+    seed.seedHi = seedHi;
+  }
+
+  public static long nextXoroshiro(XoroshiroSeed seed) {
+    long s0 = seed.seedLo;
+    long s1 = seed.seedHi;
+    long result = Long.rotateLeft(s0 + s1, 17) + s0;
+    s1 ^= s0;
+    seed.seedLo = Long.rotateLeft(s0, 49) ^ s1 ^ s1 << 21;
+    seed.seedHi = Long.rotateLeft(s1, 28);
+    return result;
+  }
+
+  public static long nextXoroshiro(long s0, long s1) {
+    return Long.rotateLeft(s0 + s1, 17) + s0;
+  }
+
+  public static float nextFloatXoroshiro(long result) {
+    return (float) (result >>> 64 - 24) * 5.9604645E-8F;
+  }
+
   public static float nextFloatXoroshiro(long seedLo, long seedHi, int x, int y, int z) {
     seedLo = MathHelper.hashCode(x, y, z) ^ seedLo;
 
@@ -11,8 +48,7 @@ public class AllocFreeRandom {
       seedHi = 7640891576956012809L;
     }
 
-    final var next = Long.rotateLeft(seedLo + seedHi, 17) + seedLo;
-    return (float) (next >>> (64 - 24)) * 5.9604645E-8F;
+    return nextFloatXoroshiro(nextXoroshiro(seedLo, seedHi));
   }
 
   public static float nextFloatChecked(long seed, int x, int y, int z) {
