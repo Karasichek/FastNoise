@@ -49,15 +49,11 @@ public record OreVeinMaterialRule(
     if (density <= 0.0F) return null;
     AllocFreeRandom.splitXoroshiro(seedLo, seedHi, x, y, z, seed);
 
-    if (AllocFreeRandom.nextFloatXoroshiro(AllocFreeRandom.nextXoroshiro(seed)) > density)
-      return null;
+    if (AllocFreeRandom.nextFloatXoroshiro(seed) > density) return null;
 
-    if (AllocFreeRandom.nextFloatXoroshiro(AllocFreeRandom.nextXoroshiro(seed))
-            < richnessSampler.get()
+    if (AllocFreeRandom.nextFloatXoroshiro(seed) < richnessSampler.get()
         && fillerGapSampler.get() < 0.0F)
-      return AllocFreeRandom.nextFloatXoroshiro(
-                  AllocFreeRandom.nextXoroshiro(seed.seedLo, seed.seedHi))
-              < this.rawOreChance
+      return AllocFreeRandom.nextFloatXoroshiroLast(seed) < this.rawOreChance
           ? this.rawOreBlock
           : this.oreBlock;
 

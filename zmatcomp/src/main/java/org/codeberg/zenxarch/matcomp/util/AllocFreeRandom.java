@@ -22,21 +22,20 @@ public class AllocFreeRandom {
     seed.seedHi = seedHi;
   }
 
-  public static long nextXoroshiro(XoroshiroSeed seed) {
+  public static float nextFloatXoroshiro(XoroshiroSeed seed) {
     long s0 = seed.seedLo;
     long s1 = seed.seedHi;
     long result = Long.rotateLeft(s0 + s1, 17) + s0;
     s1 ^= s0;
     seed.seedLo = Long.rotateLeft(s0, 49) ^ s1 ^ s1 << 21;
     seed.seedHi = Long.rotateLeft(s1, 28);
-    return result;
+    return (float) (result >>> 64 - 24) * 5.9604645E-8F;
   }
 
-  public static long nextXoroshiro(long s0, long s1) {
-    return Long.rotateLeft(s0 + s1, 17) + s0;
-  }
-
-  public static float nextFloatXoroshiro(long result) {
+  public static float nextFloatXoroshiroLast(XoroshiroSeed seed) {
+    long s0 = seed.seedLo;
+    long s1 = seed.seedHi;
+    long result = Long.rotateLeft(s0 + s1, 17) + s0;
     return (float) (result >>> 64 - 24) * 5.9604645E-8F;
   }
 
@@ -48,7 +47,8 @@ public class AllocFreeRandom {
       seedHi = 7640891576956012809L;
     }
 
-    return nextFloatXoroshiro(nextXoroshiro(seedLo, seedHi));
+    long result = Long.rotateLeft(seedLo + seedHi, 17) + seedLo;
+    return (float) (result >>> 64 - 24) * 5.9604645E-8F;
   }
 
   public static float nextFloatChecked(long seed, int x, int y, int z) {
