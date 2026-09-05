@@ -20,29 +20,57 @@ accessible method net/minecraft/world/chunk/PalettedContainer <init> (Lnet/minec
 accessible field net/minecraft/world/chunk/PalettedContainer paletteProvider Lnet/minecraft/world/chunk/PaletteProvider;
 
 # surface builder
-extendable class net/minecraft/world/gen/surfacebuilder/MaterialRuleContext
-accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext noiseConfig Lnet/minecraft/world/gen/noise/NoiseConfig;
+extendable class net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext noiseConfig Lnet/minecraft/world/gen/noise/NoiseConfig;
 
-accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext heightContext Lnet/minecraft/world/gen/HeightContext;
-accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext includedBiomes Ljava/util/Set;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext heightContext Lnet/minecraft/world/gen/HeightContext;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext includedBiomes Ljava/util/Set;
 
-accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext blockX I
-accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext blockY I
-accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext blockZ I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockX I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockY I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockZ I
 
-accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext stoneDepthAbove I
-accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext stoneDepthBelow I
-accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext runDepth I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthAbove I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthBelow I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext runDepth I
 
-accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext surfaceBuilder Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext surfaceBuilder Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;
 
 ## YOffset
 accessible class net/minecraft/world/gen/YOffset$AboveBottom
 accessible class net/minecraft/world/gen/YOffset$BelowTop
 accessible class net/minecraft/world/gen/YOffset$Fixed
-accessible class net/minecraft/world/gen/YOffset$RelativeToSeaLevel
 
 ## Xoroshiro128PlusPlusRandom
 accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedLo J
 accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedHi J
 accessible field net/minecraft/util/math/random/CheckedRandom$Splitter seed J
+
+## rules
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BiomeMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$NoiseThresholdMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$VerticalGradientMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$AboveYMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$WaterMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$TemperatureMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SteepMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$NotMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$HoleMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SurfaceMaterialCondition
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$StoneDepthMaterialCondition
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$InvertedBooleanSupplier
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$TerracottaBandsMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$ConditionMaterialRule
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$ConditionalBlockStateRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceBlockStateRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SimpleBlockStateRule

@@ -5,13 +5,13 @@ import net.minecraft.util.math.VerticalSurfaceType;
 import net.minecraft.util.math.random.RandomSplitter;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import net.minecraft.world.gen.surfacebuilder.AboveYMaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.MaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.NegativeRunDepthPredicate;
-import net.minecraft.world.gen.surfacebuilder.NotMaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.SteepSlopePredicate;
-import net.minecraft.world.gen.surfacebuilder.StoneDepthMaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.VerticalGradientMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.AboveYMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.NegativeRunDepthPredicate;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.NotMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.SteepSlopePredicate;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.StoneDepthMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
 import org.jspecify.annotations.Nullable;
 
 public interface StaticMaterialCondition {

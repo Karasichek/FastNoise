@@ -1,9 +1,9 @@
 package org.codeberg.zenxarch.matcomp.mixin.perf.surface;
 
 import net.minecraft.world.gen.YOffset;
-import net.minecraft.world.gen.surfacebuilder.AboveYMaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.AboveYMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import org.codeberg.zenxarch.matcomp.rules.AboveYPredicate;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

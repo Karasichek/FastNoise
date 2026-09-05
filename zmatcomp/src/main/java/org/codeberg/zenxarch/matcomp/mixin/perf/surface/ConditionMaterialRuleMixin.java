@@ -1,10 +1,10 @@
 package org.codeberg.zenxarch.matcomp.mixin.perf.surface;
 
-import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
-import net.minecraft.world.gen.surfacebuilder.ConditionMaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.MaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import org.codeberg.zenxarch.matcomp.rules.BiomePredicate;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

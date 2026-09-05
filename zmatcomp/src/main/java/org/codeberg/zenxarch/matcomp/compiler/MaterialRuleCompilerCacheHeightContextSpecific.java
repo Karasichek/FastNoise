@@ -8,10 +8,10 @@ import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import java.lang.invoke.MethodHandle;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import net.minecraft.world.gen.surfacebuilder.ConditionMaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.MaterialRule;
-import net.minecraft.world.gen.surfacebuilder.SequenceMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
 import org.codeberg.zenxarch.matcomp.config.MaterialRuleCompilerConfig;
 
 public class MaterialRuleCompilerCacheHeightContextSpecific {
