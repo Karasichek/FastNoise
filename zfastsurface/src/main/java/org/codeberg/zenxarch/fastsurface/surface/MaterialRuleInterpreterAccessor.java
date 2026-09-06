@@ -4,7 +4,5 @@ import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 
 public interface MaterialRuleInterpreterAccessor {
-  public BlockStateRule[] zfastsurface$getRules();
-
-  public BlockState[] zfastsurface$getStates();
+  public BlockState[] zfastsurface$getExpectedStates();
 }

@@ -11,6 +11,10 @@ loom {
 
 dependencies {
   implementation project(path: ":zconfig", configuration: "namedElements")
+
+  if (project.hasProperty("zfastsurface")) {
+    modImplementation project(":zfastsurface")
+  }
 }
 
 processResources {

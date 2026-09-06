@@ -5,14 +5,11 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import org.codeberg.zenxarch.fastsurface.surface.MaterialRuleInterpreterAccessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Pseudo
 @Mixin(targets = "org.codeberg.zenxarch.matcomp.compiler.MaterialRuleInterpreter")
 public interface MaterialRuleInterpreterMixin extends MaterialRuleInterpreterAccessor {
-  @Accessor("rules")
-  public BlockStateRule[] zfastsurface$getRules();
-
-  @Accessor("states")
-  public BlockState[] zfastsurface$getStates();
+  @Invoker("getExpectedStates")
+  public BlockState[] zfastsurface$getExpectedStates();
 }
