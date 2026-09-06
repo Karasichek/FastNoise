@@ -48,3 +48,16 @@ accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistan
 accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler getHorizontalCellBlockCount ()I
 accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler getVerticalCellBlockCount ()I
 accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler sampleBlockState ()Lnet/minecraft/block/BlockState;
+
+# ore
+accessible class net/minecraft/world/gen/OreVeinSampler$VeinType
+accessible field net/minecraft/world/gen/OreVeinSampler$VeinType ore Lnet/minecraft/block/BlockState;
+accessible field net/minecraft/world/gen/OreVeinSampler$VeinType rawOreBlock Lnet/minecraft/block/BlockState;
+accessible field net/minecraft/world/gen/OreVeinSampler$VeinType stone Lnet/minecraft/block/BlockState;
+accessible field net/minecraft/world/gen/OreVeinSampler$VeinType minY I
+accessible field net/minecraft/world/gen/OreVeinSampler$VeinType maxY I
+
+## Xoroshiro128PlusPlusRandom
+accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedLo J
+accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedHi J
+accessible field net/minecraft/util/math/random/CheckedRandom$Splitter seed J

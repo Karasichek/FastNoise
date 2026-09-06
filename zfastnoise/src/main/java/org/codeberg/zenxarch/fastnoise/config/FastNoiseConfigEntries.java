@@ -31,6 +31,9 @@ public final class FastNoiseConfigEntries extends ConfigEntries {
   public static final BooleanConfigEntry MIXIN_PERF_NOISE =
       mixin("perf.noise", "Replace populateNoise with optimized implementation", true);
 
+  public static final BooleanConfigEntry MIXIN_PERF_ORE =
+      mixin("perf.ore", "Replace ore vein sampler impl with allocation free version", true);
+
   public static final BooleanConfigEntry MIXIN_DEBUG_DISABLE_CARVE_FEATURES_AND_ENTITIES =
       mixin(
           "debug.disable_carve_features_and_entities",

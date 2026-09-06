@@ -1,7 +1,6 @@
 package org.codeberg.zenxarch.fastsurface.mixin;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import org.codeberg.zenxarch.fastsurface.surface.MaterialRuleInterpreterAccessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;

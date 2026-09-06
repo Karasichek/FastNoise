@@ -1,9 +1,7 @@
 package org.codeberg.zenxarch.matcomp.compiler;
 
-import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.lang.invoke.MethodHandle;
 import net.minecraft.block.BlockState;
