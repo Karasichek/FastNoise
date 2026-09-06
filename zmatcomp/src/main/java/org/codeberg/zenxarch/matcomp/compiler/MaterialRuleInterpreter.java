@@ -19,7 +19,6 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
 import org.codeberg.zenxarch.matcomp.MaterialRuleCompilerConstants;
 import org.codeberg.zenxarch.matcomp.rules.BiomePredicate;
-import org.codeberg.zenxarch.matcomp.rules.OreVeinMaterialRule;
 import org.jspecify.annotations.Nullable;
 
 public final class MaterialRuleInterpreter implements BlockStateRule {
@@ -201,19 +200,20 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
   public BlockState[] getExpectedStates() {
     if (rules.length == 0) return states;
-    for (int i = 0; i < rules.length; i++) {
-      if (!(rules[i] instanceof OreVeinMaterialRule)) return null;
-    }
+    return null;
+    // for (int i = 0; i < rules.length; i++) {
+    //   if (!(rules[i] instanceof OreVeinMaterialRule)) return null;
+    // }
 
-    var result = new ObjectOpenHashSet<>(this.states, Hash.FAST_LOAD_FACTOR);
+    // var result = new ObjectOpenHashSet<>(this.states, Hash.FAST_LOAD_FACTOR);
 
-    for (int i = 0; i < rules.length; i++) {
-      var ore = (OreVeinMaterialRule) rules[i];
-      result.add(ore.oreBlock());
-      result.add(ore.rawOreBlock());
-      result.add(ore.fillerBlock());
-    }
-    return result.toArray(BlockState[]::new);
+    // for (int i = 0; i < rules.length; i++) {
+    //   var ore = (OreVeinMaterialRule) rules[i];
+    //   result.add(ore.oreBlock());
+    //   result.add(ore.rawOreBlock());
+    //   result.add(ore.fillerBlock());
+    // }
+    // return result.toArray(BlockState[]::new);
   }
 
   private static class Builder {
