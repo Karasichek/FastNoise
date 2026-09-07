@@ -1,0 +1,51 @@
+classTweaker v1 named
+
+accessible field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+mutable field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+
+accessible field net/minecraft/world/chunk/ChunkSection biomeContainer Lnet/minecraft/world/chunk/ReadableContainer;
+
+accessible field net/minecraft/world/chunk/PalettedContainer data Lnet/minecraft/world/chunk/PalettedContainer$Data;
+
+accessible class net/minecraft/world/chunk/PalettedContainer$Data
+
+accessible method net/minecraft/world/chunk/ArrayPalette <init> ([Ljava/lang/Object;II)V
+accessible field net/minecraft/world/chunk/ArrayPalette size I
+
+accessible field net/minecraft/world/chunk/SingularPalette entry Ljava/lang/Object;
+
+# block counting container
+accessible method net/minecraft/world/chunk/PalettedContainer <init> (Lnet/minecraft/world/chunk/PaletteProvider;Lnet/minecraft/world/chunk/PaletteType;Lnet/minecraft/util/collection/PaletteStorage;Lnet/minecraft/world/chunk/Palette;)V
+
+accessible field net/minecraft/world/chunk/PalettedContainer paletteProvider Lnet/minecraft/world/chunk/PaletteProvider;
+
+# surface builder
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
+extendable class net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext noiseConfig Lnet/minecraft/world/gen/noise/NoiseConfig;
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext heightContext Lnet/minecraft/world/gen/HeightContext;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext includedBiomes Ljava/util/Set;
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockX I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockY I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockZ I
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthAbove I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthBelow I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext fluidHeight I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext runDepth I
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext surfaceBuilder Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;
+
+accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext initHorizontalContext (II)V
+accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext initVerticalContext (IIII)V
+
+accessible field net/minecraft/world/biome/source/BiomeAccess storage Lnet/minecraft/world/biome/source/BiomeAccess$Storage;
+
+accessible field net/minecraft/world/gen/surfacebuilder/SurfaceBuilder defaultState Lnet/minecraft/block/BlockState;
+
+accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext <init> (Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;Lnet/minecraft/world/gen/noise/NoiseConfig;Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/world/gen/chunk/ChunkNoiseSampler;Ljava/util/function/Function;Lnet/minecraft/world/gen/HeightContext;Ljava/util/Set;)V
+
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule

@@ -1,0 +1,79 @@
+package org.codeberg.zenxarch.perf;
+
+import org.codeberg.zenxarch.perf.parity.ChunkStorage;
+import org.codeberg.zenxarch.perf.parity.ParityGlobals;
+import org.codeberg.zenxarch.perf.parity.ParityGlobals.ChunkStorageKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public final class ParityTest {
+
+  public static final Logger LOGGER = LoggerFactory.getLogger(ParityGlobals.class);
+
+  private static final boolean MOD_LOADED = BenchmarkMain.getBooleanProperty("zmod").orElse(false);
+
+  public static void doParityTest() {
+    LOGGER.info("Starting parity test");
+    for (long i = 0; i < BenchmarkSettings.seedCount; i++) {
+      LOGGER.info("Testing seed: {}", BenchmarkSettings.defaultSeed + i);
+      doParityTest(BenchmarkSettings.overworld(BenchmarkSettings.defaultSeed + i));
+      doParityTest(BenchmarkSettings.nether(BenchmarkSettings.defaultSeed + i));
+      doParityTest(BenchmarkSettings.end(BenchmarkSettings.defaultSeed + i));
+    }
+  }
+
+  private static void doParityTest(BenchmarkSettings settings) {
+    var fakeWorld = new TestWorld(settings);
+
+    var name = settings.dimensionOptions().getValue().getPath();
+    LOGGER.info("Generating " + name);
+
+    var base = ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius());
+    var biomes =
+        ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius() + 1);
+
+    generateChunk(
+        fakeWorld, base, biomes, MOD_LOADED ? "Modded " : "Vanilla " + name, settings.seed(), name);
+    LOGGER.info(name + " matches");
+  }
+
+  private static void generateChunk(
+      TestWorld world,
+      ChunkRegion base,
+      ChunkRegion biomeRegion,
+      String name,
+      long seed,
+      String worldKey) {
+    biomeRegion.forEach(
+        (chunk) -> {
+          world.biomes(biomeRegion, chunk);
+        });
+
+    LOGGER.info("Generated Biomes for " + name);
+
+    base.copyBiomes(biomeRegion);
+
+    base.forEach(
+        (chunk) -> {
+          world.noise(base, chunk);
+          world.surface(chunk, biomeRegion);
+          // world.buildTerrain(chunk, biomeRegion);
+
+          if (ParityGlobals.isServer) {
+            var pos = chunk.getPos();
+            var against = ParityGlobals.get(new ChunkStorageKey(seed, worldKey, pos.x(), pos.z()));
+            var err = against.matches(chunk);
+            if (err != null) {
+              ParityGlobals.LOGGER.info(
+                  "Ours: {} Theirs: {}", new ChunkStorage(seed, worldKey, chunk), against);
+              throw new IllegalStateException("Chunks don't match " + pos + " " + err);
+            }
+          } else {
+            var storage = new ChunkStorage(seed, worldKey, chunk);
+            ParityGlobals.send(storage);
+          }
+        });
+
+    LOGGER.info("Generated " + name);
+  }
+}

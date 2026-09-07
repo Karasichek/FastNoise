@@ -1,0 +1,19 @@
+classTweaker v1 named
+
+accessible field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+mutable field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+
+accessible field net/minecraft/world/chunk/ChunkSection biomeContainer Lnet/minecraft/world/chunk/ReadableContainer;
+
+accessible field net/minecraft/world/chunk/PalettedContainer data Lnet/minecraft/world/chunk/PalettedContainer$Data;
+
+accessible class net/minecraft/world/chunk/PalettedContainer$Data
+
+accessible method net/minecraft/world/chunk/ArrayPalette <init> ([Ljava/lang/Object;II)V
+accessible field net/minecraft/world/chunk/ArrayPalette size I
+
+accessible field net/minecraft/world/chunk/SingularPalette entry Ljava/lang/Object;
+
+accessible method net/minecraft/world/chunk/PalettedContainer <init> (Lnet/minecraft/world/chunk/PaletteProvider;Lnet/minecraft/world/chunk/PaletteType;Lnet/minecraft/util/collection/PaletteStorage;Lnet/minecraft/world/chunk/Palette;)V
+
+accessible field net/minecraft/world/chunk/PalettedContainer paletteProvider Lnet/minecraft/world/chunk/PaletteProvider;
