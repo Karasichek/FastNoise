@@ -6,7 +6,6 @@
     "perf.noise.NoiseChunkGeneratorMixin",
     "perf.biome.ChunkMixin",
     "perf.ore.OreVeinSamplerMixin",
-    "perf.surface.BiomeMaterialConditionMixin",
     "debug.disable_carve_features_and_entities.ChunkGeneratingMixin",
     "HeightmapAccessor"
   ],
