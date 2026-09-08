@@ -15,7 +15,8 @@
     "defaultRequire": 1
   },
   "overwrites": {
-    "requireAnnotations": true
+    "requireAnnotations": true,
+    "conformVisibility": true
   },
   "plugin": "org.codeberg.zenxarch.matcomp.mixin.MaterialRuleCompilerMixinPlugin",
   "mixinextras": {"minVersion": "0.5.0"}

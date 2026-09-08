@@ -12,7 +12,8 @@
     "defaultRequire": 1
   },
   "overwrites": {
-    "requireAnnotations": true
+    "requireAnnotations": true,
+    "conformVisibility": true
   },
   "plugin": "org.codeberg.zenxarch.fastsurface.mixin.FastSurfaceMixinPlugin",
   "mixinextras": {"minVersion": "0.5.0"}
