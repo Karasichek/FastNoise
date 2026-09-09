@@ -46,3 +46,5 @@ accessible class net/minecraft/world/gen/YOffset$RelativeToSeaLevel
 accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedLo J
 accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedHi J
 accessible field net/minecraft/util/math/random/CheckedRandom$Splitter seed J
+
+accessible field net/minecraft/world/biome/source/BiomeAccess storage Lnet/minecraft/world/biome/source/BiomeSupplier;

@@ -9,7 +9,8 @@
     "perf.surface.ConditionMaterialRuleMixin",
     "perf.surface.AboveYMaterialConditionMixin",
     "perf.surface.SurfaceBuilderMixin",
-    "perf.surface.OreVeinSamplerMixin"
+    "perf.surface.OreVeinSamplerMixin",
+    "perf.biome.SurfaceBuilderMixin"
   ],
   "injectors": {
     "defaultRequire": 1

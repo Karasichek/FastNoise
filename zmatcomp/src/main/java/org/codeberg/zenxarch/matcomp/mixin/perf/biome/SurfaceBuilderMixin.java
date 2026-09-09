@@ -1,4 +1,4 @@
-package org.codeberg.zenxarch.fastsurface.mixin.perf.surface;
+package org.codeberg.zenxarch.matcomp.mixin.perf.biome;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import java.util.Set;
@@ -9,7 +9,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.surfacebuilder.SurfaceBuilder;
-import org.codeberg.zenxarch.fastsurface.surface.MaterialRuleContextHelper;
+import org.codeberg.zenxarch.matcomp.biome.FastPosToBiome;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
@@ -30,6 +30,6 @@ public abstract class SurfaceBuilderMixin {
       @Local BiomeAccess biomeAccess,
       @Local Chunk chunk,
       @Local Set<RegistryEntry<Biome>> includedBiomes) {
-    return MaterialRuleContextHelper.createPosToBiome(biomeAccess, chunk, includedBiomes);
+    return FastPosToBiome.createPosToBiome(biomeAccess, chunk, includedBiomes);
   }
 }

@@ -4,7 +4,6 @@
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "perf.surface.NoiseChunkGeneratorMixin",
-    "perf.surface.SurfaceBuilderMixin",
     "HeightmapAccessor",
     "MaterialRuleInterpreterMixin"
   ],
