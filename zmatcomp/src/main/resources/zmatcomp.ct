@@ -85,3 +85,5 @@ accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext surfacePredicate Lnet/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier;
 
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext pos Lnet/minecraft/util/math/BlockPos$Mutable;
+
+accessible field net/minecraft/world/biome/source/BiomeAccess storage Lnet/minecraft/world/biome/source/BiomeAccess$Storage;

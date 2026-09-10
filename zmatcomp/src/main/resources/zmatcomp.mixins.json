@@ -8,13 +8,15 @@
     "perf.surface.BiomeMaterialConditionMixin",
     "perf.surface.ConditionMaterialRuleMixin",
     "perf.surface.AboveYMaterialConditionMixin",
-    "perf.surface.SurfaceBuilderMixin"
+    "perf.surface.SurfaceBuilderMixin",
+    "perf.biome.SurfaceBuilderMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "overwrites": {
-    "requireAnnotations": true
+    "requireAnnotations": true,
+    "conformVisibility": true
   },
   "plugin": "org.codeberg.zenxarch.matcomp.mixin.MaterialRuleCompilerMixinPlugin",
   "mixinextras": {"minVersion": "0.5.0"}
