@@ -26,4 +26,23 @@ public class MaterialRuleCompilerConfigEntries extends ConfigEntries {
       INSTANCE.createEntry(
           "mixin.perf.surface",
           builder -> builder.addComment("Optimize surface rules").defaultValue(true));
+
+  public static final BooleanConfigEntry MIXIN_BIOME =
+      INSTANCE.createEntry(
+          "mixin.perf.biome",
+          builder ->
+              builder
+                  .addComment("Replace biome access in material rule context w/ optimized variant")
+                  .defaultValue(true));
+
+  public static final BooleanConfigEntry OPTIMIZE_BIOME_ACCESS =
+      INSTANCE.createEntry(
+          "perf.surface.biome",
+          builder ->
+              builder
+                  .addComment(
+                      "Predict biomes in advance in surface builder. Major speedup for surface"
+                          + " builder")
+                  .addComment(" (depends on surface builder mixin)")
+                  .defaultValue(true));
 }

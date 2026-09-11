@@ -22,6 +22,9 @@ public class MaterialRuleCompilerConfig {
     return CONFIG.get(entry);
   }
 
+  public static final boolean OPTIMIZE_BIOME_ACCESS =
+      get(MaterialRuleCompilerConfigEntries.OPTIMIZE_BIOME_ACCESS);
+
   public static final int MAX_CACHE_SIZE =
       scaleByMemory(get(MaterialRuleCompilerConfigEntries.MAX_CACHE_SIZE_PER_GB));
 

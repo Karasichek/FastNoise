@@ -4,7 +4,6 @@
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "perf.surface.NoiseChunkGeneratorMixin",
-    "perf.surface.SurfaceBuilderMixin",
     "HeightmapAccessor",
     "MaterialRuleInterpreterMixin"
   ],
@@ -12,7 +11,8 @@
     "defaultRequire": 1
   },
   "overwrites": {
-    "requireAnnotations": true
+    "requireAnnotations": true,
+    "conformVisibility": true
   },
   "plugin": "org.codeberg.zenxarch.fastsurface.mixin.FastSurfaceMixinPlugin",
   "mixinextras": {"minVersion": "0.5.0"}

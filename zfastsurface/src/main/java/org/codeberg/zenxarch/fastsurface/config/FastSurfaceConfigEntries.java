@@ -25,15 +25,4 @@ public class FastSurfaceConfigEntries extends ConfigEntries {
                           + " surface builder")
                   .addComment(" (depends on surface builder mixin)")
                   .defaultValue(true));
-
-  public static final BooleanConfigEntry OPTIMIZE_BIOME_ACCESS =
-      INSTANCE.createEntry(
-          "perf.surface.biome",
-          builder ->
-              builder
-                  .addComment(
-                      "Predict biomes in advance in surface builder. Major speedup for surface"
-                          + " builder")
-                  .addComment(" (depends on surface builder mixin)")
-                  .defaultValue(true));
 }

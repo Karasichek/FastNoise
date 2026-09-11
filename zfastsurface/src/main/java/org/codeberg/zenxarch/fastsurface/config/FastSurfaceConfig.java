@@ -23,6 +23,4 @@ public class FastSurfaceConfig {
 
   public static final boolean SKIP_TRIVIAL_SURFACE_BUILDER =
       get(FastSurfaceConfigEntries.SKIP_TRIVIAL_SURFACE_BUILDER);
-  public static final boolean OPTIMIZE_BIOME_ACCESS =
-      get(FastSurfaceConfigEntries.OPTIMIZE_BIOME_ACCESS);
 }
