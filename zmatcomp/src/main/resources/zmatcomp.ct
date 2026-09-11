@@ -24,7 +24,6 @@ extendable class net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext noiseConfig Lnet/minecraft/world/gen/noise/NoiseConfig;
 
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext heightContext Lnet/minecraft/world/gen/HeightContext;
-accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext includedBiomes Ljava/util/Set;
 
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockX I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext blockY I
@@ -52,7 +51,7 @@ accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier
 
-accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BiomeMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BiomeMaterialCondition
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$NoiseThresholdMaterialCondition
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$VerticalGradientMaterialCondition
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$AboveYMaterialCondition
@@ -75,7 +74,6 @@ accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$Conditiona
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceBlockStateRule
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$SimpleBlockStateRule
 
-accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext getCurrentBiome ()Lnet/minecraft/registry/entry/RegistryEntry;
 accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext getSecondaryDepth ()D
 accessible method net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext estimateSurfaceHeight ()I
 
