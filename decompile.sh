@@ -1,11 +1,12 @@
 #!/bin/sh
 
 JARFILE=`find .gradle/loom-cache/minecraftMaven/ -iname '*.jar' | fzf`
-CLASS=`unzip -l $JARFILE | grep '\.class' | awk '{ print $4}' | fzf`
+ALLCLASSES=`unzip -l $JARFILE | grep '\.class' | awk '{print $4}'`
+CLASS=`printf "$ALLCLASSES" | fzf`
 
 CLASSNAME=${CLASS/%".class"}
 
-INNERCLASSES=`unzip -l $JARFILE | grep $CLASSNAME\$ | awk '{ print $4}'`
+INNERCLASSES=`printf "$ALLCLASSES" | grep -F $CLASSNAME\$`
 
 OUTDIR=build/decompiled
 
