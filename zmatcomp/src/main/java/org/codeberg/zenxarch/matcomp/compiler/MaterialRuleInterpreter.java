@@ -36,8 +36,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   public static final int JUMP_IF_FALSE = 0; // if (!conditions[a]) jmp(b);
   public static final int RETURN = 1; // return states[a];
   public static final int TRY_RETURN = 2; // if (rules[a] != null) return rules[a];
-  public static final int RETURN_IF = 3; // if (conditions[a]) return states[b];
-  public static final int JUMP_IF_FALSE_STATIC = 4; // if (!staticConditions[a].get()) jmp(b);
+  public static final int JUMP_IF_FALSE_STATIC = 3; // if (!staticConditions[a].get()) jmp(b);
 
   // private static final int NO_OP = 5;
 
@@ -86,26 +85,23 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
           if (res != null) return res;
           instPointer += 2;
         }
-        case RETURN_IF -> {
-          if (conditions[instructions[instPointer + 1]].get())
-            return states[instructions[instPointer + 2]];
-          instPointer += 3;
-        }
         case JUMP_IF_FALSE_STATIC -> {
-          var idx = instructions[instPointer + 1];
-          var offset = instructions[instPointer + 2];
-          try {
-            instPointer +=
-                ((boolean)
-                        cache
-                            .getHandle(idx)
-                            .invokeExact(
-                                this.conditions, this.rules, this.states, x, y, z, this.context))
-                    ? 3
-                    : offset;
-          } catch (Throwable e) {
-            instPointer += offset;
-          }
+          // var idx = instructions[instPointer + 1];
+          // var offset = instructions[instPointer + 2];
+          // try {
+          //   instPointer +=
+          //       ((boolean)
+          //               cache
+          //                   .getHandle(idx)
+          //                   .compiled()
+          //                   .invokeExact(
+          //                       this.conditions, this.rules, this.states, x, y, z, this.context))
+          //           ? 3
+          //           : offset;
+          // } catch (Throwable e) {
+          //   instPointer += offset;
+          // }
+          throw new IllegalStateException("Can't interpret");
         }
         default -> {
           throw new IllegalStateException("Invalid instruction");
@@ -171,16 +167,6 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
             .append(instructions[index + 1])
             .append("].tryApply(x,y,z); if (state != null) {return state;} else {");
         toString1(builder, instructions, index + 2);
-        builder.append("}");
-      }
-      case RETURN_IF -> {
-        builder
-            .append("if (conditions[")
-            .append(instructions[index + 1])
-            .append("].get()) { return states[")
-            .append(instructions[index + 2])
-            .append("]; } else {");
-        toString1(builder, instructions, index + 3);
         builder.append("}");
       }
       case JUMP_IF_FALSE_STATIC -> {
@@ -309,11 +295,6 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
       var index = this.conditions.size();
       this.conditions.add(rule.ifTrue().getPredicate(context));
-
-      if (rule.thenRun() instanceof BlockMaterialRule simple) {
-        this.addInst(RETURN_IF, index, indexOf(simple.resultState()));
-        return;
-      }
 
       this.addInst(JUMP_IF_FALSE, index, 0);
       var instIndex = instructions.size() - 1;

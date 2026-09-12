@@ -1,32 +1,56 @@
 package org.codeberg.zenxarch.matcomp.compiler;
 
-import java.lang.invoke.MethodHandle;
+import java.util.Arrays;
+import java.util.stream.Stream;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.math.VerticalSurfaceType;
+import net.minecraft.util.math.random.CheckedRandom;
 import net.minecraft.util.math.random.RandomSplitter;
+import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.AboveYMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
+import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialCondition.RegisteredCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.NegativeRunDepthPredicate;
 import net.minecraft.world.gen.surfacebuilder.NotMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.SteepSlopePredicate;
 import net.minecraft.world.gen.surfacebuilder.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.VerticalGradientMaterialCondition;
 import org.jspecify.annotations.Nullable;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.InstructionAdapter;
 
 public interface StaticMaterialCondition {
-  MethodHandle compiled();
+  public void emitBytecode(ZClassWriter cw, InstructionAdapter mv);
+
+  public default void emitJumpInst(ZClassWriter cw, InstructionAdapter mv, Label jumpTo) {
+    mv.ifeq(jumpTo);
+  }
 
   @Nullable
   public static StaticMaterialCondition tryCreate(
       MaterialCondition condition, HeightContext context, NoiseConfig config) {
     return switch (condition) {
       case VerticalGradientMaterialCondition vertical ->
-          new VerticalGradientCondition(
-              vertical.trueAtAndBelow().getY(context),
-              vertical.falseAtAndAbove().getY(context),
-              config.getOrCreateRandomSplitter(vertical.randomName()));
+          switch (config.getOrCreateRandomSplitter(vertical.randomName())) {
+            case Xoroshiro128PlusPlusRandom.Splitter xoro ->
+                new VerticalGradientConditionXoroshiro(
+                    vertical.trueAtAndBelow().getY(context),
+                    vertical.falseAtAndAbove().getY(context),
+                    xoro.seedLo,
+                    xoro.seedHi);
+            case CheckedRandom.Splitter checked ->
+                new VerticalGradientConditionChecked(
+                    vertical.trueAtAndBelow().getY(context),
+                    vertical.falseAtAndAbove().getY(context),
+                    checked.seed);
+            default -> null;
+          };
       case AboveYMaterialCondition aboveY ->
           new AboveYCondition(
               aboveY.anchor().getY(context),
@@ -54,39 +78,131 @@ public interface StaticMaterialCondition {
     };
   }
 
+  private static String getDescriptorForCondition(Class<?>... classes) {
+    var baseClasses =
+        new Class<?>[] {
+          BooleanSupplier[].class,
+          BlockStateRule[].class,
+          BlockState[].class,
+          int.class,
+          int.class,
+          int.class,
+          MaterialRuleContext.class
+        };
+    var types =
+        Stream.concat(Arrays.stream(classes), Stream.of(baseClasses))
+            .map(Type::getType)
+            .toArray(Type[]::new);
+    return Type.getMethodDescriptor(Type.BOOLEAN_TYPE, types);
+  }
+
+  public static final String MATERIALRULECOMPILER_NAME =
+      Type.getInternalName(MaterialRuleCompiler.class);
+
+  public static final String aboveY = getDescriptorForCondition(int.class);
+  public static final String aboveYWithRunDepth = getDescriptorForCondition(int.class, int.class);
+  public static final String aboveYWithStoneDepth = getDescriptorForCondition(int.class);
+  public static final String aboveYWithRunDepthAndStoneDepth =
+      getDescriptorForCondition(int.class, int.class);
+  public static final String stoneDepthTest =
+      getDescriptorForCondition(int.class, boolean.class, int.class, boolean.class);
+  public static final String verticalGradientTest =
+      getDescriptorForCondition(int.class, int.class, RandomSplitter.class);
+  public static final String xoroVerticalGradientTest =
+      getDescriptorForCondition(int.class, int.class, long.class, long.class);
+  public static final String checkedVerticalGradientTest =
+      getDescriptorForCondition(int.class, int.class, long.class);
+  public static final String common_desc = getDescriptorForCondition();
+
   public static record AboveYCondition(int y, int surfaceDepthMultiplier, boolean addStoneDepth)
       implements StaticMaterialCondition {
+
     @Override
-    public MethodHandle compiled() {
-      return MaterialRuleCompiler.createAboveY(y, surfaceDepthMultiplier, addStoneDepth);
+    public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
+      if (addStoneDepth) {
+        if (surfaceDepthMultiplier == 0) {
+          mv.iconst(y);
+          cw.callBlockStateRuleMethodInClass(
+              mv, MATERIALRULECOMPILER_NAME, "aboveYWithStoneDepth", aboveYWithStoneDepth);
+        } else {
+          mv.iconst(y);
+          mv.iconst(surfaceDepthMultiplier);
+          cw.callBlockStateRuleMethodInClass(
+              mv,
+              MATERIALRULECOMPILER_NAME,
+              "aboveYWithRunDepthAndStoneDepth",
+              aboveYWithRunDepthAndStoneDepth);
+        }
+      } else {
+        if (surfaceDepthMultiplier == 0) {
+          mv.iconst(y);
+          cw.callBlockStateRuleMethodInClass(mv, MATERIALRULECOMPILER_NAME, "aboveY", aboveY);
+        } else {
+          mv.iconst(y);
+          mv.iconst(surfaceDepthMultiplier);
+          cw.callBlockStateRuleMethodInClass(
+              mv, MATERIALRULECOMPILER_NAME, "aboveYWithRunDepth", aboveYWithRunDepth);
+        }
+      }
     }
   }
 
   public static record StoneDepthCondition(
       int offset, boolean addSurfaceDepth, int secondaryDepthRange, boolean ceiling)
       implements StaticMaterialCondition {
+
     @Override
-    public MethodHandle compiled() {
-      return MaterialRuleCompiler.createStoneDepthTest(
-          offset, addSurfaceDepth, secondaryDepthRange, ceiling);
+    public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
+      mv.iconst(offset);
+      mv.iconst(addSurfaceDepth ? 1 : 0);
+      mv.iconst(secondaryDepthRange);
+      mv.iconst(ceiling ? 1 : 0);
+      cw.callBlockStateRuleMethodInClass(
+          mv, MATERIALRULECOMPILER_NAME, "stoneDepthTest", stoneDepthTest);
     }
   }
 
-  public static record VerticalGradientCondition(
-      int trueAtAndBelow, int falseAtAndAbove, RandomSplitter splitter)
+  public static record VerticalGradientConditionXoroshiro(
+      int trueAtAndBelow, int falseAtAndAbove, long seedLo, long seedHi)
       implements StaticMaterialCondition {
+
     @Override
-    public MethodHandle compiled() {
-      return MaterialRuleCompiler.createVerticalGradientTest(
-          trueAtAndBelow, falseAtAndAbove, splitter);
+    public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
+      mv.iconst(trueAtAndBelow);
+      mv.iconst(falseAtAndAbove);
+      mv.lconst(seedLo);
+      mv.lconst(seedHi);
+      cw.callBlockStateRuleMethodInClass(
+          mv, MATERIALRULECOMPILER_NAME, "xoroVerticalGradientTest", xoroVerticalGradientTest);
+    }
+  }
+
+  public static record VerticalGradientConditionChecked(
+      int trueAtAndBelow, int falseAtAndAbove, long seed) implements StaticMaterialCondition {
+    @Override
+    public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
+      mv.iconst(trueAtAndBelow);
+      mv.iconst(falseAtAndAbove);
+      mv.lconst(seed);
+      cw.callBlockStateRuleMethodInClass(
+          mv,
+          MATERIALRULECOMPILER_NAME,
+          "checkedVerticalGradientTest",
+          checkedVerticalGradientTest);
     }
   }
 
   public static record InvertedCondition(StaticMaterialCondition original)
       implements StaticMaterialCondition {
+
     @Override
-    public MethodHandle compiled() {
-      return MaterialRuleCompiler.createInverted(original.compiled());
+    public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
+      original.emitBytecode(cw, mv);
+    }
+
+    @Override
+    public void emitJumpInst(ZClassWriter cw, InstructionAdapter mv, Label jumpTo) {
+      mv.ifne(jumpTo);
     }
   }
 
@@ -94,8 +210,9 @@ public interface StaticMaterialCondition {
     public static HoleMaterialCondition instance = new HoleMaterialCondition();
 
     @Override
-    public MethodHandle compiled() {
-      return MaterialRuleCompiler.negativeRunDepth;
+    public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
+      cw.callBlockStateRuleMethodInClass(
+          mv, MATERIALRULECOMPILER_NAME, "negativeRunDepth", common_desc);
     }
   }
 
@@ -103,8 +220,9 @@ public interface StaticMaterialCondition {
     public static SurfaceMaterialCondition instance = new SurfaceMaterialCondition();
 
     @Override
-    public MethodHandle compiled() {
-      return MaterialRuleCompiler.surfacePredicate;
+    public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
+      cw.callBlockStateRuleMethodInClass(
+          mv, MATERIALRULECOMPILER_NAME, "surfacePredicate", common_desc);
     }
   }
 
@@ -112,8 +230,9 @@ public interface StaticMaterialCondition {
     public static TemperatureMaterialCondition instance = new TemperatureMaterialCondition();
 
     @Override
-    public MethodHandle compiled() {
-      return MaterialRuleCompiler.biomeTemperaturePredicate;
+    public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
+      cw.callBlockStateRuleMethodInClass(
+          mv, MATERIALRULECOMPILER_NAME, "biomeTemperaturePredicate", common_desc);
     }
   }
 
@@ -121,8 +240,9 @@ public interface StaticMaterialCondition {
     public static SteepMaterialCondition instance = new SteepMaterialCondition();
 
     @Override
-    public MethodHandle compiled() {
-      return MaterialRuleCompiler.steepSlopePredicate;
+    public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
+      cw.callBlockStateRuleMethodInClass(
+          mv, MATERIALRULECOMPILER_NAME, "steepSlopePredicate", common_desc);
     }
   }
 }
