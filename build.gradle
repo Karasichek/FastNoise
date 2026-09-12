@@ -44,6 +44,13 @@ configure(allprojects - project(":")) {
         vmArgs '-XX:+AllowEnhancedClassRedefinition'
         client()
       }
+
+      printCompile {
+        vmArgs '-XX:CompileCommand=print,org.codeberg.zenxarch.*::*'
+        vmArgs '-XX:+UnlockDiagnosticVMOptions'
+        vmArgs '-XX:PrintAssemblyOptions=intel'
+        client()
+      }
     }
   }
 
