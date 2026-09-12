@@ -11,38 +11,23 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 import org.jspecify.annotations.Nullable;
 
 public final class BiomePredicate {
-  public static final BooleanSupplier ALWAYS_TRUE =
-      new BooleanSupplier() {
-        public boolean get() {
-          return true;
-        }
+  public static record ConstantBooleanSupplier(boolean result) implements BooleanSupplier {
+    @Override
+    public boolean get() {
+      return result;
+    }
+  }
 
-        public String toString() {
-          return Boolean.toString(true);
-        }
-      };
-  public static final BooleanSupplier ALWAYS_FALSE =
-      new BooleanSupplier() {
-        public boolean get() {
-          return false;
-        }
+  public static record NullBlockStateRule() implements BlockStateRule {
+    @Override
+    public @Nullable BlockState tryApply(int x, int y, int z) {
+      return null;
+    }
+  }
 
-        public String toString() {
-          return Boolean.toString(false);
-        }
-      };
-  public static final BlockStateRule ALWAYS_NULL =
-      new BlockStateRule() {
-        @Override
-        public @Nullable BlockState tryApply(int x, int y, int z) {
-          return null;
-        }
-
-        @Override
-        public String toString() {
-          return Objects.toString(null);
-        }
-      };
+  public static final BooleanSupplier ALWAYS_TRUE = new ConstantBooleanSupplier(true);
+  public static final BooleanSupplier ALWAYS_FALSE = new ConstantBooleanSupplier(false);
+  public static final BlockStateRule ALWAYS_NULL = new NullBlockStateRule();
 
   public static BooleanSupplier getSupplier(
       RegistryEntryList<Biome> entryList, MaterialRuleContext context) {
