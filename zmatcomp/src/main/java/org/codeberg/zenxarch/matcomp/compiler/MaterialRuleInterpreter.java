@@ -86,22 +86,20 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
           instPointer += 2;
         }
         case JUMP_IF_FALSE_STATIC -> {
-          // var idx = instructions[instPointer + 1];
-          // var offset = instructions[instPointer + 2];
-          // try {
-          //   instPointer +=
-          //       ((boolean)
-          //               cache
-          //                   .getHandle(idx)
-          //                   .compiled()
-          //                   .invokeExact(
-          //                       this.conditions, this.rules, this.states, x, y, z, this.context))
-          //           ? 3
-          //           : offset;
-          // } catch (Throwable e) {
-          //   instPointer += offset;
-          // }
-          throw new IllegalStateException("Can't interpret");
+          var idx = instructions[instPointer + 1];
+          var offset = instructions[instPointer + 2];
+          try {
+            instPointer +=
+                ((boolean)
+                        cache
+                            .getHandle(idx)
+                            .interpret(
+                                this.conditions, this.rules, this.states, x, y, z, this.context))
+                    ? 3
+                    : offset;
+          } catch (Throwable e) {
+            instPointer += offset;
+          }
         }
         default -> {
           throw new IllegalStateException("Invalid instruction");

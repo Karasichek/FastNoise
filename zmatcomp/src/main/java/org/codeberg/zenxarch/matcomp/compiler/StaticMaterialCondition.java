@@ -31,6 +31,15 @@ public interface StaticMaterialCondition {
     mv.ifeq(jumpTo);
   }
 
+  public boolean interpret(
+      BooleanSupplier[] conditions,
+      BlockStateRule[] rules,
+      BlockState[] states,
+      int x,
+      int y,
+      int z,
+      MaterialRuleContext context);
+
   @Nullable
   public static StaticMaterialCondition tryCreate(
       MaterialCondition condition, HeightContext context, NoiseConfig config) {
@@ -123,6 +132,28 @@ public interface StaticMaterialCondition {
       mv.iconst(addStoneDepth ? 1 : 0);
       cw.callBlockStateRuleMethodInClass(mv, MATERIALRULECOMPILER_NAME, "aboveY", aboveY);
     }
+
+    @Override
+    public boolean interpret(
+        BooleanSupplier[] conditions,
+        BlockStateRule[] rules,
+        BlockState[] states,
+        int x,
+        int y,
+        int z,
+        MaterialRuleContext context) {
+      return MaterialRuleCompilerFunctions.aboveY(
+          this.y,
+          surfaceDepthMultiplier,
+          addStoneDepth,
+          conditions,
+          rules,
+          states,
+          x,
+          y,
+          z,
+          context);
+    }
   }
 
   public static record StoneDepthCondition(
@@ -136,6 +167,29 @@ public interface StaticMaterialCondition {
       mv.iconst(secondaryDepthRange);
       mv.iconst(ceiling ? 1 : 0);
       cw.callBlockStateRuleMethodInClass(mv, MATERIALRULECOMPILER_NAME, "stoneDepth", stoneDepth);
+    }
+
+    @Override
+    public boolean interpret(
+        BooleanSupplier[] conditions,
+        BlockStateRule[] rules,
+        BlockState[] states,
+        int x,
+        int y,
+        int z,
+        MaterialRuleContext context) {
+      return MaterialRuleCompilerFunctions.stoneDepth(
+          offset,
+          addSurfaceDepth,
+          secondaryDepthRange,
+          ceiling,
+          conditions,
+          rules,
+          states,
+          x,
+          y,
+          z,
+          context);
     }
   }
 
@@ -152,6 +206,29 @@ public interface StaticMaterialCondition {
       cw.callBlockStateRuleMethodInClass(
           mv, MATERIALRULECOMPILER_NAME, "xoroVerticalGradient", xoroVerticalGradient);
     }
+
+    @Override
+    public boolean interpret(
+        BooleanSupplier[] conditions,
+        BlockStateRule[] rules,
+        BlockState[] states,
+        int x,
+        int y,
+        int z,
+        MaterialRuleContext context) {
+      return MaterialRuleCompilerFunctions.xoroVerticalGradient(
+          trueAtAndBelow,
+          falseAtAndAbove,
+          seedLo,
+          seedHi,
+          conditions,
+          rules,
+          states,
+          x,
+          y,
+          z,
+          context);
+    }
   }
 
   public static record VerticalGradientConditionChecked(
@@ -163,6 +240,19 @@ public interface StaticMaterialCondition {
       mv.lconst(seed);
       cw.callBlockStateRuleMethodInClass(
           mv, MATERIALRULECOMPILER_NAME, "checkedVerticalGradient", checkedVerticalGradient);
+    }
+
+    @Override
+    public boolean interpret(
+        BooleanSupplier[] conditions,
+        BlockStateRule[] rules,
+        BlockState[] states,
+        int x,
+        int y,
+        int z,
+        MaterialRuleContext context) {
+      return MaterialRuleCompilerFunctions.checkedVerticalGradient(
+          trueAtAndBelow, falseAtAndAbove, seed, conditions, rules, states, x, y, z, context);
     }
   }
 
@@ -178,6 +268,18 @@ public interface StaticMaterialCondition {
     public void emitJumpInst(ZClassWriter cw, InstructionAdapter mv, Label jumpTo) {
       mv.ifne(jumpTo);
     }
+
+    @Override
+    public boolean interpret(
+        BooleanSupplier[] conditions,
+        BlockStateRule[] rules,
+        BlockState[] states,
+        int x,
+        int y,
+        int z,
+        MaterialRuleContext context) {
+      return !original.interpret(conditions, rules, states, x, y, z, context);
+    }
   }
 
   public static record HoleMaterialCondition() implements StaticMaterialCondition {
@@ -187,6 +289,19 @@ public interface StaticMaterialCondition {
     public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
       cw.callBlockStateRuleMethodInClass(
           mv, MATERIALRULECOMPILER_NAME, "negativeRunDepth", common_desc);
+    }
+
+    @Override
+    public boolean interpret(
+        BooleanSupplier[] conditions,
+        BlockStateRule[] rules,
+        BlockState[] states,
+        int x,
+        int y,
+        int z,
+        MaterialRuleContext context) {
+      return MaterialRuleCompilerFunctions.negativeRunDepth(
+          conditions, rules, states, x, y, z, context);
     }
   }
 
@@ -198,6 +313,19 @@ public interface StaticMaterialCondition {
       cw.callBlockStateRuleMethodInClass(
           mv, MATERIALRULECOMPILER_NAME, "surfacePredicate", common_desc);
     }
+
+    @Override
+    public boolean interpret(
+        BooleanSupplier[] conditions,
+        BlockStateRule[] rules,
+        BlockState[] states,
+        int x,
+        int y,
+        int z,
+        MaterialRuleContext context) {
+      return MaterialRuleCompilerFunctions.surfacePredicate(
+          conditions, rules, states, x, y, z, context);
+    }
   }
 
   public static record TemperatureMaterialCondition() implements StaticMaterialCondition {
@@ -208,6 +336,19 @@ public interface StaticMaterialCondition {
       cw.callBlockStateRuleMethodInClass(
           mv, MATERIALRULECOMPILER_NAME, "biomeTemperaturePredicate", common_desc);
     }
+
+    @Override
+    public boolean interpret(
+        BooleanSupplier[] conditions,
+        BlockStateRule[] rules,
+        BlockState[] states,
+        int x,
+        int y,
+        int z,
+        MaterialRuleContext context) {
+      return MaterialRuleCompilerFunctions.biomeTemperaturePredicate(
+          conditions, rules, states, x, y, z, context);
+    }
   }
 
   public static record SteepMaterialCondition() implements StaticMaterialCondition {
@@ -217,6 +358,19 @@ public interface StaticMaterialCondition {
     public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
       cw.callBlockStateRuleMethodInClass(
           mv, MATERIALRULECOMPILER_NAME, "steepSlopePredicate", common_desc);
+    }
+
+    @Override
+    public boolean interpret(
+        BooleanSupplier[] conditions,
+        BlockStateRule[] rules,
+        BlockState[] states,
+        int x,
+        int y,
+        int z,
+        MaterialRuleContext context) {
+      return MaterialRuleCompilerFunctions.steepSlopePredicate(
+          conditions, rules, states, x, y, z, context);
     }
   }
 
@@ -229,6 +383,28 @@ public interface StaticMaterialCondition {
       mv.iconst(surfaceDepthMultiplier);
       mv.iconst(addStoneDepth ? 1 : 0);
       cw.callBlockStateRuleMethodInClass(mv, MATERIALRULECOMPILER_NAME, "water", water);
+    }
+
+    @Override
+    public boolean interpret(
+        BooleanSupplier[] conditions,
+        BlockStateRule[] rules,
+        BlockState[] states,
+        int x,
+        int y,
+        int z,
+        MaterialRuleContext context) {
+      return MaterialRuleCompilerFunctions.water(
+          offset,
+          surfaceDepthMultiplier,
+          addStoneDepth,
+          conditions,
+          rules,
+          states,
+          x,
+          y,
+          z,
+          context);
     }
   }
 }
