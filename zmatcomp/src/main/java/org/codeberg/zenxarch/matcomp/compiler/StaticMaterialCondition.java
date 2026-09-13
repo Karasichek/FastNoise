@@ -5,7 +5,6 @@ import java.util.stream.Stream;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.VerticalSurfaceType;
 import net.minecraft.util.math.random.CheckedRandom;
-import net.minecraft.util.math.random.RandomSplitter;
 import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
@@ -66,6 +65,7 @@ public interface StaticMaterialCondition {
       case NotMaterialCondition not -> {
         var original = tryCreate(not.target(), context, config);
         if (original == null) yield null;
+        if (original instanceof InvertedCondition inverted) yield inverted.original();
         yield new InvertedCondition(original);
       }
       case NegativeRunDepthPredicate _ -> HoleMaterialCondition.instance;
@@ -74,6 +74,9 @@ public interface StaticMaterialCondition {
       case net.minecraft.world.gen.surfacebuilder.TemperatureMaterialCondition _ ->
           TemperatureMaterialCondition.instance;
       case SteepSlopePredicate _ -> SteepMaterialCondition.instance;
+      case net.minecraft.world.gen.surfacebuilder.WaterMaterialCondition water ->
+          new WaterMaterialCondition(
+              water.offset(), water.surfaceDepthMultiplier(), water.addStoneDepth());
       default -> null;
     };
   }
@@ -97,21 +100,17 @@ public interface StaticMaterialCondition {
   }
 
   public static final String MATERIALRULECOMPILER_NAME =
-      Type.getInternalName(MaterialRuleCompiler.class);
+      Type.getInternalName(MaterialRuleCompilerFunctions.class);
 
-  public static final String aboveY = getDescriptorForCondition(int.class);
-  public static final String aboveYWithRunDepth = getDescriptorForCondition(int.class, int.class);
-  public static final String aboveYWithStoneDepth = getDescriptorForCondition(int.class);
-  public static final String aboveYWithRunDepthAndStoneDepth =
-      getDescriptorForCondition(int.class, int.class);
-  public static final String stoneDepthTest =
+  public static final String aboveY =
+      getDescriptorForCondition(int.class, int.class, boolean.class);
+  public static final String stoneDepth =
       getDescriptorForCondition(int.class, boolean.class, int.class, boolean.class);
-  public static final String verticalGradientTest =
-      getDescriptorForCondition(int.class, int.class, RandomSplitter.class);
-  public static final String xoroVerticalGradientTest =
+  public static final String xoroVerticalGradient =
       getDescriptorForCondition(int.class, int.class, long.class, long.class);
-  public static final String checkedVerticalGradientTest =
+  public static final String checkedVerticalGradient =
       getDescriptorForCondition(int.class, int.class, long.class);
+  public static final String water = getDescriptorForCondition(int.class, int.class, boolean.class);
   public static final String common_desc = getDescriptorForCondition();
 
   public static record AboveYCondition(int y, int surfaceDepthMultiplier, boolean addStoneDepth)
@@ -119,31 +118,10 @@ public interface StaticMaterialCondition {
 
     @Override
     public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
-      if (addStoneDepth) {
-        if (surfaceDepthMultiplier == 0) {
-          mv.iconst(y);
-          cw.callBlockStateRuleMethodInClass(
-              mv, MATERIALRULECOMPILER_NAME, "aboveYWithStoneDepth", aboveYWithStoneDepth);
-        } else {
-          mv.iconst(y);
-          mv.iconst(surfaceDepthMultiplier);
-          cw.callBlockStateRuleMethodInClass(
-              mv,
-              MATERIALRULECOMPILER_NAME,
-              "aboveYWithRunDepthAndStoneDepth",
-              aboveYWithRunDepthAndStoneDepth);
-        }
-      } else {
-        if (surfaceDepthMultiplier == 0) {
-          mv.iconst(y);
-          cw.callBlockStateRuleMethodInClass(mv, MATERIALRULECOMPILER_NAME, "aboveY", aboveY);
-        } else {
-          mv.iconst(y);
-          mv.iconst(surfaceDepthMultiplier);
-          cw.callBlockStateRuleMethodInClass(
-              mv, MATERIALRULECOMPILER_NAME, "aboveYWithRunDepth", aboveYWithRunDepth);
-        }
-      }
+      mv.iconst(y);
+      mv.iconst(surfaceDepthMultiplier);
+      mv.iconst(addStoneDepth ? 1 : 0);
+      cw.callBlockStateRuleMethodInClass(mv, MATERIALRULECOMPILER_NAME, "aboveY", aboveY);
     }
   }
 
@@ -157,8 +135,7 @@ public interface StaticMaterialCondition {
       mv.iconst(addSurfaceDepth ? 1 : 0);
       mv.iconst(secondaryDepthRange);
       mv.iconst(ceiling ? 1 : 0);
-      cw.callBlockStateRuleMethodInClass(
-          mv, MATERIALRULECOMPILER_NAME, "stoneDepthTest", stoneDepthTest);
+      cw.callBlockStateRuleMethodInClass(mv, MATERIALRULECOMPILER_NAME, "stoneDepth", stoneDepth);
     }
   }
 
@@ -173,7 +150,7 @@ public interface StaticMaterialCondition {
       mv.lconst(seedLo);
       mv.lconst(seedHi);
       cw.callBlockStateRuleMethodInClass(
-          mv, MATERIALRULECOMPILER_NAME, "xoroVerticalGradientTest", xoroVerticalGradientTest);
+          mv, MATERIALRULECOMPILER_NAME, "xoroVerticalGradient", xoroVerticalGradient);
     }
   }
 
@@ -185,10 +162,7 @@ public interface StaticMaterialCondition {
       mv.iconst(falseAtAndAbove);
       mv.lconst(seed);
       cw.callBlockStateRuleMethodInClass(
-          mv,
-          MATERIALRULECOMPILER_NAME,
-          "checkedVerticalGradientTest",
-          checkedVerticalGradientTest);
+          mv, MATERIALRULECOMPILER_NAME, "checkedVerticalGradient", checkedVerticalGradient);
     }
   }
 
@@ -243,6 +217,18 @@ public interface StaticMaterialCondition {
     public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
       cw.callBlockStateRuleMethodInClass(
           mv, MATERIALRULECOMPILER_NAME, "steepSlopePredicate", common_desc);
+    }
+  }
+
+  public static record WaterMaterialCondition(
+      int offset, int surfaceDepthMultiplier, boolean addStoneDepth)
+      implements StaticMaterialCondition {
+    @Override
+    public void emitBytecode(ZClassWriter cw, InstructionAdapter mv) {
+      mv.iconst(offset);
+      mv.iconst(surfaceDepthMultiplier);
+      mv.iconst(addStoneDepth ? 1 : 0);
+      cw.callBlockStateRuleMethodInClass(mv, MATERIALRULECOMPILER_NAME, "water", water);
     }
   }
 }

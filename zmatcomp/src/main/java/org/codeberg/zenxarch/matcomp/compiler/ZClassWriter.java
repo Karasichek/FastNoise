@@ -38,17 +38,6 @@ public final class ZClassWriter {
           Type.getType(int.class),
           Type.getType(MaterialRuleContext.class));
 
-  private static final String CONDITION_METHOD_TYPE =
-      Type.getMethodDescriptor(
-          Type.getType(boolean.class),
-          Type.getType(BooleanSupplier[].class),
-          Type.getType(BlockStateRule[].class),
-          Type.getType(BlockState[].class),
-          Type.getType(int.class),
-          Type.getType(int.class),
-          Type.getType(int.class),
-          Type.getType(MaterialRuleContext.class));
-
   public ZClassWriter(String classname, int[] instructions) {
     this.classname = classname;
     this.instructions = instructions;

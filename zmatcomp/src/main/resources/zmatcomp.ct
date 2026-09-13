@@ -29,9 +29,12 @@ accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext incl
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext blockX I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext blockY I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext blockZ I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext steepnessX I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext steepnessZ I
 
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext stoneDepthAbove I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext stoneDepthBelow I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext fluidHeight I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext runDepth I
 
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRuleContext surfaceBuilder Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;

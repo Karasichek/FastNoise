@@ -31,7 +31,7 @@ public final class BiomePredicate {
 
   public static BooleanSupplier getSupplier(
       RegistryEntryList<Biome> entryList, MaterialRuleContext context) {
-    var includedBiomes = context.getIncludedBiomes();
+    var includedBiomes = context.includedBiomes;
     if (includedBiomes != null) {
       var count = 0;
       RegistryEntry<Biome> lastValid = null;
