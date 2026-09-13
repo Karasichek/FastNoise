@@ -15,6 +15,9 @@ run:
 runFast:
     just task runClient -Pzfastsurface=true
 
+runWithDump:
+    just task runClient -Pzdumpclass
+
 server:
     just task runServer
 

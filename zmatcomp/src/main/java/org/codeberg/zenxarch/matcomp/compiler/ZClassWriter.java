@@ -11,6 +11,7 @@ import java.util.BitSet;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.registry.Registries;
 import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
@@ -195,13 +196,22 @@ public final class ZClassWriter {
     mv.visitEnd();
   }
 
+  private String getBlockStateFieldName(int blockId) {
+    if (dumpClasses) {
+      var id = Registries.BLOCK.getId(Block.getStateFromRawId(blockId).getBlock()).toShortString();
+      id = id.replace("^[a-zA-Z]+", "").replace("[^a-zA-Z0-9]+", "$");
+      return id.isEmpty() ? "block" : id + "$" + blockId;
+    }
+    return "block$" + blockId;
+  }
+
   private void writeBlockFields(BitSet blocks) {
     blocks.stream()
         .forEach(
             k -> {
               cw.visitField(
                       ACC_PUBLIC | ACC_FINAL | ACC_STATIC,
-                      "block$" + k,
+                      getBlockStateFieldName(k),
                       "L" + BLOCK_STATE_INTERNAL_NAME + ";",
                       null,
                       null)
@@ -220,7 +230,8 @@ public final class ZClassWriter {
                   "getStateFromRawId",
                   "(I)L" + BLOCK_STATE_INTERNAL_NAME + ";",
                   false);
-              mv.putstatic(classname, "block$" + k, "L" + BLOCK_STATE_INTERNAL_NAME + ";");
+              mv.putstatic(
+                  classname, getBlockStateFieldName(k), "L" + BLOCK_STATE_INTERNAL_NAME + ";");
             });
 
     mv.visitInsn(RETURN);
@@ -269,7 +280,8 @@ public final class ZClassWriter {
     var l0 = startMethodVisit(mv);
 
     loadStates(mv);
-    mv.getstatic(classname, "block$" + stateIdx, "L" + BLOCK_STATE_INTERNAL_NAME + ";");
+    mv.getstatic(
+        classname, getBlockStateFieldName(stateIdx), "L" + BLOCK_STATE_INTERNAL_NAME + ";");
     mv.visitInsn(ARETURN);
 
     visitFunctionParams(mv, l0);
@@ -328,7 +340,7 @@ public final class ZClassWriter {
       if (instructions[methodIdx] == MaterialRuleInterpreter.RETURN) {
         mv.getstatic(
             classname,
-            "block$" + instructions[methodIdx + 1],
+            getBlockStateFieldName(instructions[methodIdx + 1]),
             "L" + BLOCK_STATE_INTERNAL_NAME + ";");
       } else {
         callBlockStateRuleMethodInClass(mv, methodIdx);
