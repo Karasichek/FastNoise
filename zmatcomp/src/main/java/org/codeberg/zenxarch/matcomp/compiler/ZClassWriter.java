@@ -312,7 +312,7 @@ public final class ZClassWriter {
     mv.visitLabel(ll);
     mv.visitLocalVariable(
         "conditions", "[L" + BOOLEAN_SUPPLIER_INTERNAL_NAME + ";", null, l0, ll, 0);
-    mv.visitLocalVariable("rules", "[" + BLOCK_STATE_RULE_INTERNAL_NAME + ";", null, l0, ll, 1);
+    mv.visitLocalVariable("rules", "[L" + BLOCK_STATE_RULE_INTERNAL_NAME + ";", null, l0, ll, 1);
     mv.visitLocalVariable("states", "[L" + BLOCK_STATE_INTERNAL_NAME + ";", null, l0, ll, 2);
     mv.visitLocalVariable("x", "I", null, l0, ll, 3);
     mv.visitLocalVariable("y", "I", null, l0, ll, 4);
