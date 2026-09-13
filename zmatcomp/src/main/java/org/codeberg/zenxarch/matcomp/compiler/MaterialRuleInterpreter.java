@@ -6,6 +6,8 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.lang.invoke.MethodHandle;
+import java.util.BitSet;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
@@ -46,6 +48,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
       BlockState[] states,
+      BitSet stateSet,
       int[] instructions,
       MaterialRuleCompilerCacheHeightContextSpecific cache,
       MaterialRuleContext context) {
@@ -54,7 +57,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     this.states = states;
     this.instructions = instructions;
     this.cache = cache;
-    this.compiled = cache.get(instructions);
+    this.compiled = cache.get(instructions, stateSet);
     this.context = context;
   }
 
@@ -78,7 +81,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
               (conditions[instructions[instPointer + 1]].get()) ? 3 : instructions[instPointer + 2];
         }
         case RETURN -> {
-          return states[instructions[instPointer + 1]];
+          return Block.getStateFromRawId(instructions[instPointer + 1]);
         }
         case TRY_RETURN -> {
           var res = this.rules[instructions[instPointer + 1]].tryApply(x, y, z);
@@ -157,7 +160,10 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         builder.append("}");
       }
       case RETURN -> {
-        builder.append("return states[").append(instructions[index + 1]).append("];");
+        builder
+            .append("return Block.getStateFromRawId(")
+            .append(instructions[index + 1])
+            .append(");");
       }
       case TRY_RETURN -> {
         builder
@@ -204,17 +210,17 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   private static class Builder {
     private final ObjectArrayList<BooleanSupplier> conditions;
     private final ReferenceArrayList<BlockStateRule> rules;
-    private final ReferenceArrayList<BlockState> states;
     private final IntArrayList instructions;
     private final MaterialRuleContext context;
+    private final BitSet statesSet;
 
     private final MaterialRuleCompilerCacheHeightContextSpecific cache;
 
     public Builder(MaterialRuleContext context, NoiseConfig config, MaterialRule rule) {
       this.conditions = new ObjectArrayList<>();
       this.rules = new ReferenceArrayList<>();
-      this.states = new ReferenceArrayList<>();
       this.instructions = new IntArrayList();
+      this.statesSet = new BitSet();
       this.context = context;
       this.cache =
           ((MaterialRuleCompilerCacheHolder) context.surfaceBuilder)
@@ -224,11 +230,8 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     }
 
     private int indexOf(BlockState state) {
-      var res = states.indexOf(state);
-      if (res == -1) {
-        res = states.size();
-        states.add(state);
-      }
+      var res = Block.getRawIdFromState(state);
+      statesSet.set(res);
       return res;
     }
 
@@ -327,10 +330,16 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     }
 
     public MaterialRuleInterpreter build() {
+      var states =
+          this.statesSet.stream()
+              .mapToObj(k -> Block.getStateFromRawId(k))
+              .toArray(BlockState[]::new);
+
       return new MaterialRuleInterpreter(
           this.conditions.toArray(BooleanSupplier[]::new),
           this.rules.toArray(BlockStateRule[]::new),
-          this.states.toArray(BlockState[]::new),
+          states,
+          statesSet,
           this.instructions.toIntArray(),
           cache,
           context);

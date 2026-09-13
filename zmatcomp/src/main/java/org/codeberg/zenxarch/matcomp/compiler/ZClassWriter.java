@@ -9,6 +9,7 @@ import java.lang.invoke.MethodType;
 import java.nio.file.Path;
 import java.util.BitSet;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
@@ -31,6 +32,7 @@ public final class ZClassWriter {
       Type.getInternalName(BlockStateRule.class);
   private static final String MATERIAL_RULE_CONTEXT_INTERNAL_NAME =
       Type.getInternalName(MaterialRuleContext.class);
+  private static final String BLOCK_INTERNAL_NAME = Type.getInternalName(Block.class);
 
   private static final String BLOCKSTATE_RULE_METHOD_TYPE =
       Type.getMethodDescriptor(
@@ -79,9 +81,12 @@ public final class ZClassWriter {
   public static MethodHandle compile(
       String classname,
       int[] instructions,
+      BitSet states,
       MaterialRuleCompilerCacheHeightContextSpecific contextSpecificCache) {
     var cw = new ZClassWriter(classname, instructions);
     cw.startClass();
+
+    cw.writeBlockFields(states);
 
     var compiled = new BitSet(instructions.length);
     cw.compile(0, compiled, contextSpecificCache);
@@ -190,6 +195,39 @@ public final class ZClassWriter {
     mv.visitEnd();
   }
 
+  private void writeBlockFields(BitSet blocks) {
+    blocks.stream()
+        .forEach(
+            k -> {
+              cw.visitField(
+                      ACC_PUBLIC | ACC_FINAL | ACC_STATIC,
+                      "block$" + k,
+                      "L" + BLOCK_STATE_INTERNAL_NAME + ";",
+                      null,
+                      null)
+                  .visitEnd();
+            });
+
+    var mv = new InstructionAdapter(cw.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null));
+    mv.visitCode();
+
+    blocks.stream()
+        .forEach(
+            k -> {
+              mv.iconst(k);
+              mv.invokestatic(
+                  BLOCK_INTERNAL_NAME,
+                  "getStateFromRawId",
+                  "(I)L" + BLOCK_STATE_INTERNAL_NAME + ";",
+                  false);
+              mv.putstatic(classname, "block$" + k, "L" + BLOCK_STATE_INTERNAL_NAME + ";");
+            });
+
+    mv.visitInsn(RETURN);
+    mv.visitMaxs(0, 0);
+    mv.visitEnd();
+  }
+
   private InstructionAdapter newMethod(int index) {
     return new InstructionAdapter(
         cw.visitMethod(
@@ -231,8 +269,7 @@ public final class ZClassWriter {
     var l0 = startMethodVisit(mv);
 
     loadStates(mv);
-    mv.iconst(stateIdx);
-    mv.visitInsn(AALOAD);
+    mv.getstatic(classname, "block$" + stateIdx, "L" + BLOCK_STATE_INTERNAL_NAME + ";");
     mv.visitInsn(ARETURN);
 
     visitFunctionParams(mv, l0);
@@ -289,9 +326,10 @@ public final class ZClassWriter {
       mv.aconst(null);
     } else {
       if (instructions[methodIdx] == MaterialRuleInterpreter.RETURN) {
-        loadStates(mv);
-        mv.iconst(instructions[methodIdx + 1]);
-        mv.visitInsn(AALOAD);
+        mv.getstatic(
+            classname,
+            "block$" + instructions[methodIdx + 1],
+            "L" + BLOCK_STATE_INTERNAL_NAME + ";");
       } else {
         callBlockStateRuleMethodInClass(mv, methodIdx);
       }
