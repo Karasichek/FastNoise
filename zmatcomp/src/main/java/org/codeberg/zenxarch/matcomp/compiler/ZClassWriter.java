@@ -24,8 +24,13 @@ public final class ZClassWriter {
   private final int[] instructions;
   private final ClassWriter cw;
 
+  private static final String BLOCK_STATE_INTERNAL_NAME = Type.getInternalName(BlockState.class);
   private static final String BOOLEAN_SUPPLIER_INTERNAL_NAME =
       Type.getInternalName(BooleanSupplier.class);
+  private static final String BLOCK_STATE_RULE_INTERNAL_NAME =
+      Type.getInternalName(BlockStateRule.class);
+  private static final String MATERIAL_RULE_CONTEXT_INTERNAL_NAME =
+      Type.getInternalName(MaterialRuleContext.class);
 
   private static final String BLOCKSTATE_RULE_METHOD_TYPE =
       Type.getMethodDescriptor(
@@ -254,7 +259,7 @@ public final class ZClassWriter {
     emitTailCall(mv, otherMethodIdx);
 
     var l3 = visitFunctionParams(mv, l0);
-    mv.visitLocalVariable("res", "Lnet/minecraft/block/BlockState;", null, l1, l3, 7);
+    mv.visitLocalVariable("res", "L" + BLOCK_STATE_INTERNAL_NAME + ";", null, l1, l3, 7);
 
     endMethodVisit(mv);
   }
@@ -306,15 +311,14 @@ public final class ZClassWriter {
     Label ll = new Label();
     mv.visitLabel(ll);
     mv.visitLocalVariable(
-        "conditions", "[Lnet/minecraft/world/gen/surfacebuilder/BooleanSupplier;", null, l0, ll, 0);
-    mv.visitLocalVariable(
-        "rules", "[Lnet/minecraft/world/gen/surfacebuilder/BlockStateRule;", null, l0, ll, 1);
-    mv.visitLocalVariable("states", "[Lnet/minecraft/block/BlockState;", null, l0, ll, 2);
+        "conditions", "[L" + BOOLEAN_SUPPLIER_INTERNAL_NAME + ";", null, l0, ll, 0);
+    mv.visitLocalVariable("rules", "[" + BLOCK_STATE_RULE_INTERNAL_NAME + ";", null, l0, ll, 1);
+    mv.visitLocalVariable("states", "[L" + BLOCK_STATE_INTERNAL_NAME + ";", null, l0, ll, 2);
     mv.visitLocalVariable("x", "I", null, l0, ll, 3);
     mv.visitLocalVariable("y", "I", null, l0, ll, 4);
     mv.visitLocalVariable("z", "I", null, l0, ll, 5);
     mv.visitLocalVariable(
-        "context", "Lnet/minecraft/world/gen/surfacebuilder/MaterialRuleContext;", null, l0, ll, 6);
+        "context", "L" + MATERIAL_RULE_CONTEXT_INTERNAL_NAME + ";", null, l0, ll, 6);
     return ll;
   }
 
@@ -326,9 +330,7 @@ public final class ZClassWriter {
     loady(mv);
     loadz(mv);
     mv.invokeinterface(
-        "net/minecraft/world/gen/surfacebuilder/BlockStateRule",
-        "tryApply",
-        "(III)Lnet/minecraft/block/BlockState;");
+        BLOCK_STATE_RULE_INTERNAL_NAME, "tryApply", "(III)L" + BLOCK_STATE_INTERNAL_NAME + ";");
   }
 
   private void callBlockStateRuleMethodInClass(InstructionAdapter mv, int index) {
