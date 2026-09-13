@@ -2,14 +2,18 @@ package org.codeberg.zenxarch.matcomp.compiler;
 
 import static org.objectweb.asm.Opcodes.*;
 
+import com.google.common.io.Files;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.nio.file.Path;
 import java.util.BitSet;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import org.codeberg.zenxarch.matcomp.MaterialRuleCompilerConstants;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -51,6 +55,33 @@ public final class ZClassWriter {
     this.cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
   }
 
+  private static final boolean dumpClasses =
+      Boolean.getBoolean("org.codeberg.zenxarch.zmatcomp.dumpClasses");
+  private static final Path dumpDir =
+      FabricLoader.getInstance().getGameDir().resolve("./cache/zmatcomp/classes");
+
+  static {
+    if (dumpClasses) {
+      try {
+        for (var file : dumpDir.toFile().listFiles()) {
+          if (file.getName().endsWith(".class")) file.delete();
+        }
+      } catch (Exception e) {
+        MaterialRuleCompilerConstants.LOGGER.error("Failed to clean class dump", e);
+      }
+    }
+  }
+
+  private static void dumpClass(String classname, byte[] bytes) {
+    var file = dumpDir.resolve(classname + ".class").toFile();
+    file.getParentFile().mkdirs();
+    try {
+      Files.write(bytes, file);
+    } catch (Exception e) {
+      MaterialRuleCompilerConstants.LOGGER.error("Failed to dump " + classname, e);
+    }
+  }
+
   public static MethodHandle compile(
       String classname,
       int[] instructions,
@@ -61,7 +92,11 @@ public final class ZClassWriter {
     var compiled = new BitSet(instructions.length);
     cw.compile(0, compiled, contextSpecificCache);
 
-    var clazz = defineClass(classname, cw.finish());
+    var bytes = cw.finish();
+
+    if (dumpClasses) dumpClass(classname, bytes);
+
+    var clazz = defineClass(classname, bytes);
 
     try {
       return MethodHandles.lookup()
