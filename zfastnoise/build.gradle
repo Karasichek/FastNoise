@@ -60,8 +60,8 @@ publishMods {
     }
 
     additionalFile(project(":zfastnoise-ocl").sourcesJar) {
-	    type = SOURCES_JAR
-	  }
+      type = SOURCES_JAR
+    }
 
     incompatible("moonrise-opt")
     incompatible("anti-xray")
@@ -87,8 +87,8 @@ publishMods {
     }
 
     additionalFile(project(":zfastnoise-ocl").sourcesJar) {
-	    name = "Sources Jar for Opencl integration"
-	  }
+      name = "Sources Jar for Opencl integration"
+    }
 
     incompatible("moonrise")
     incompatible("antixray")
