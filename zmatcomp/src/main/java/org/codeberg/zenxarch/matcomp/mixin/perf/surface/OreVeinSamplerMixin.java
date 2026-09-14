@@ -31,8 +31,8 @@ public abstract class OreVeinSamplerMixin {
   @WrapMethod(method = "getBlockStateRule")
   public BlockStateRule getBlockStateRule(
       final MaterialRuleContext context, Operation<BlockStateRule> op) {
-    if (SharedConstants.DISABLE_ORE_VEINS) return BiomePredicate.ALWAYS_NULL;
-    if (SharedConstants.ORE_VEINS) return op.call(context);
+    if (SharedConstants.DEBUG_DISABLE_ORE_VEINS) return BiomePredicate.ALWAYS_NULL;
+    if (SharedConstants.DEBUG_ORE_VEINS) return op.call(context);
 
     RandomSplitter randomFactory = context.getOrCreateRandomSplitter(Identifier.ofVanilla("ore"));
 

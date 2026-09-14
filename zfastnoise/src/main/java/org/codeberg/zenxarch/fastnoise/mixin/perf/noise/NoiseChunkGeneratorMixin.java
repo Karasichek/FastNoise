@@ -41,7 +41,7 @@ public abstract class NoiseChunkGeneratorMixin {
       final ChunkNoiseSampler chunkNoiseSampler, final Chunk chunk, final Operation<Void> op) {
     var defaultBlock = this.settings.value().defaultBlock();
     if (((Object) this.getClass()) != NoiseChunkGenerator.class
-        || SharedConstants.AQUIFERS
+        || SharedConstants.DEBUG_AQUIFERS
         || defaultBlock == FastNoiseGen.AIR
         || chunk.hasBelowZeroRetrogen()
         || !FastNoiseGen.isEmpty(chunk)) {
