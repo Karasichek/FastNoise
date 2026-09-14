@@ -34,6 +34,12 @@ configure(allprojects - project(":")) {
     useIntermediateMappings = true
 
     runs {
+      client {
+        if (project.hasProperty("zdumpclass")) {
+          vmArgs '-Dorg.codeberg.zenxarch.zmatcomp.dumpClasses=true'
+        }
+      }
+
       dap {
         vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
         client()
@@ -42,6 +48,13 @@ configure(allprojects - project(":")) {
       hotswapDap {
         vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
         vmArgs '-XX:+AllowEnhancedClassRedefinition'
+        client()
+      }
+
+      printCompile {
+        vmArgs '-XX:CompileCommand=print,org.codeberg.zenxarch.*::*'
+        vmArgs '-XX:+UnlockDiagnosticVMOptions'
+        vmArgs '-XX:PrintAssemblyOptions=intel'
         client()
       }
     }

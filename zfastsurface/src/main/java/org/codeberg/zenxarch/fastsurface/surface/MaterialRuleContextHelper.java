@@ -1,4 +1,5 @@
 package org.codeberg.zenxarch.fastsurface.surface;
+
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 
 public class MaterialRuleContextHelper {

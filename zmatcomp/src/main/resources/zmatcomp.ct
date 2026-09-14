@@ -32,6 +32,7 @@ accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthAbove I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext stoneDepthBelow I
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext fluidHeight I
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext runDepth I
 
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext surfaceBuilder Lnet/minecraft/world/gen/surfacebuilder/SurfaceBuilder;

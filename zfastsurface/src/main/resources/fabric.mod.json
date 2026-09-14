@@ -25,7 +25,8 @@
     "moonrise": "*"
   },
   "recommends": {
-    "c2me": "*"
+    "c2me": "*",
+    "zmatcomp": "*"
   },
   "accessWidener": "zfastsurface.ct"
 }
