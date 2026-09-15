@@ -10,11 +10,8 @@ import java.util.BitSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import net.minecraft.world.gen.surfacebuilder.ConditionMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRule.RegisteredRule;
-import net.minecraft.world.gen.surfacebuilder.SequenceMaterialRule;
 import org.codeberg.zenxarch.matcomp.config.MaterialRuleCompilerConfig;
 
 public class MaterialRuleCompilerCacheHeightContextSpecific {
@@ -22,6 +19,7 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
       new Reference2IntOpenHashMap<>();
 
   private final StaticMaterialCondition[] compiledStaticConditions;
+  public final FlattenedMaterialRule flattened;
 
   private final Object2ObjectLinkedOpenCustomHashMap<int[], MethodHandle> cache =
       new Object2ObjectLinkedOpenCustomHashMap<>(
@@ -32,32 +30,10 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
   public MaterialRuleCompilerCacheHeightContextSpecific(
       HeightContext context, NoiseConfig config, MaterialRule rule) {
     var handles = new ObjectArrayList<StaticMaterialCondition>();
-    createCache(context, config, rule, handles);
+    this.flattened = FlattenedMaterialRule.flatten(rule);
+    for (var condition : flattened.conditions)
+      tryAddStaticRule(context, config, condition, handles);
     this.compiledStaticConditions = handles.toArray(StaticMaterialCondition[]::new);
-  }
-
-  private void createCache(
-      HeightContext context,
-      NoiseConfig config,
-      MaterialRule rule,
-      ObjectArrayList<StaticMaterialCondition> handles) {
-    switch (rule) {
-      case SequenceMaterialRule seq -> {
-        var sequence = seq.sequence();
-        var size = sequence.size();
-        for (int i = 0; i < size; i++) {
-          createCache(context, config, sequence.get(i), handles);
-        }
-      }
-      case ConditionMaterialRule cond -> {
-        tryAddStaticRule(context, config, cond.ifTrue(), handles);
-        createCache(context, config, cond.thenRun(), handles);
-      }
-      case RegisteredRule reg -> {
-        createCache(context, config, reg.holder().value(), handles);
-      }
-      default -> {}
-    }
   }
 
   private void tryAddStaticRule(
