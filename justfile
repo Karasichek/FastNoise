@@ -4,7 +4,8 @@ task taskName options="":
     ./gradlew {{options}} :{{taskName}}
 
 build:
-    just task build
+    # just task build
+    ./gradlew build
 
 wrapper:
     ./gradlew wrapper --gradle-version=latest && ./gradlew wrapper
