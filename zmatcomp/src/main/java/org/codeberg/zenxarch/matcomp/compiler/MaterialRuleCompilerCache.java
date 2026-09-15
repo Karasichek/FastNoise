@@ -14,27 +14,36 @@ public final class MaterialRuleCompilerCache {
     return new MaterialRuleCompilerCache();
   }
 
-  private static final Hash.Strategy<HeightContext> HEIGHT_CONTEXT_STRATEGY =
-      new Hash.Strategy<HeightContext>() {
-        public boolean equals(HeightContext a, HeightContext b) {
-          if (a == null || b == null) return a == b;
+  private static final Hash.Strategy<CacheKey> HEIGHT_CONTEXT_STRATEGY =
+      new Hash.Strategy<CacheKey>() {
+        public boolean equals(CacheKey a, CacheKey b) {
           if (a == b) return true;
-          return a.getHeight() == b.getHeight() && a.getMinY() == b.getMinY();
+          if (a == null || b == null) return false;
+
+          var oa = a.context;
+          var ob = b.context;
+          return a.config == b.config
+              && a.rule == b.rule
+              && oa.getHeight() == ob.getHeight()
+              && oa.getMinY() == ob.getMinY();
         }
 
-        public int hashCode(HeightContext o) {
+        public int hashCode(CacheKey key) {
+          var o = key.context;
           return HashCommon.mix(o.getHeight()) ^ HashCommon.mix(o.getMinY());
         }
       };
 
   private final Object2ObjectOpenCustomHashMap<
-          HeightContext, MaterialRuleCompilerCacheHeightContextSpecific>
+          CacheKey, MaterialRuleCompilerCacheHeightContextSpecific>
       cache = new Object2ObjectOpenCustomHashMap<>(HEIGHT_CONTEXT_STRATEGY);
 
   public synchronized MaterialRuleCompilerCacheHeightContextSpecific get(
       HeightContext context, NoiseConfig config, MaterialRule rule) {
     return this.cache.computeIfAbsent(
-        context,
+        new CacheKey(context, config, rule),
         (ctx) -> new MaterialRuleCompilerCacheHeightContextSpecific(context, config, rule));
   }
+
+  private static record CacheKey(HeightContext context, NoiseConfig config, MaterialRule rule) {}
 }
