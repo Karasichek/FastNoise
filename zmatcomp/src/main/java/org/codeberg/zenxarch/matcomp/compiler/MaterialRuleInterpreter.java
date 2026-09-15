@@ -12,14 +12,11 @@ import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.BiomeMaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.BlockMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.ConditionMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRule.RegisteredRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
-import net.minecraft.world.gen.surfacebuilder.SequenceMaterialRule;
 import org.codeberg.zenxarch.matcomp.MaterialRuleCompilerConstants;
 import org.codeberg.zenxarch.matcomp.rules.BiomePredicate;
 import org.codeberg.zenxarch.matcomp.rules.OreVeinMaterialRule;
@@ -208,6 +205,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
   }
 
   private static class Builder {
+    private final FlattenedMaterialRule flattened;
     private final ObjectArrayList<BooleanSupplier> conditions;
     private final ReferenceArrayList<BlockStateRule> rules;
     private final IntArrayList instructions;
@@ -226,7 +224,9 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
           ((MaterialRuleCompilerCacheHolder) context.surfaceBuilder)
               .zenxarch$getCache()
               .get(context.heightContext, config, rule);
-      this.push(rule);
+      this.flattened = this.cache.flattened;
+
+      push(0);
     }
 
     private int indexOf(BlockState state) {
@@ -244,80 +244,71 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       return res;
     }
 
-    public void push(SequenceMaterialRule rule) {
-      var rles = rule.sequence();
-      var size = rles.size();
-      for (int i = 0; i < size; i++) push(rles.get(i));
-    }
-
-    public void push(ConditionMaterialRule rule) {
+    public void pushCondition(MaterialCondition condition, int index) {
       var startIndex = instructions.size();
-      if (rule.ifTrue() instanceof BiomeMaterialCondition biome) {
+      if (condition instanceof BiomeMaterialCondition biome) {
         var cond = BiomePredicate.getSupplier(biome.biomes(), context);
         if (cond == BiomePredicate.ALWAYS_FALSE) return;
         if (cond == BiomePredicate.ALWAYS_TRUE) {
-          push(rule.thenRun());
+          push(index);
           return;
         }
 
-        var index = this.conditions.size();
+        var condIdx = this.conditions.size();
         this.conditions.add(cond);
 
-        this.addInst(JUMP_IF_FALSE, index, 0);
-        var instIndex = instructions.size() - 1;
-
-        push(rule.thenRun());
-
-        if (instIndex + 1 == instructions.size()) {
-          this.removeInst(4);
-          return;
-        }
-
-        this.instructions.set(instIndex, instructions.size() - startIndex);
+        this.addInst(JUMP_IF_FALSE, condIdx, 0);
+        conditionalPush(index, 3, startIndex);
         return;
       }
 
-      var specialIdx = cache.getIdx(rule.ifTrue());
+      var specialIdx = cache.getIdx(condition);
 
       if (specialIdx != -1) {
         this.addInst(JUMP_IF_FALSE_STATIC, specialIdx, 0);
-
-        var instIndex = instructions.size() - 1;
-        push(rule.thenRun());
-
-        if (instIndex + 1 == instructions.size()) {
-          this.removeInst(3);
-          return;
-        }
-
-        this.instructions.set(instIndex, instructions.size() - startIndex);
+        conditionalPush(index, 3, startIndex);
         return;
       }
 
-      var index = this.conditions.size();
-      this.conditions.add(rule.ifTrue().getPredicate(context));
+      var condIdx = this.conditions.size();
+      this.conditions.add(condition.getPredicate(context));
 
-      this.addInst(JUMP_IF_FALSE, index, 0);
+      this.addInst(JUMP_IF_FALSE, condIdx, 0);
+      conditionalPush(index, 3, startIndex);
+    }
+
+    private void conditionalPush(int index, int removeIf, int startIndex) {
       var instIndex = instructions.size() - 1;
 
-      push(rule.thenRun());
+      push(index);
 
       if (instIndex + 1 == instructions.size()) {
-        this.removeInst(3);
+        this.removeInst(removeIf);
         return;
       }
 
       this.instructions.set(instIndex, instructions.size() - startIndex);
     }
 
-    private void push(MaterialRule rule) {
-      switch (rule) {
-        case SequenceMaterialRule seq -> push(seq);
-        case ConditionMaterialRule cond -> push(cond);
-        case BlockMaterialRule simple -> addInst(RETURN, indexOf(simple.resultState()));
-        case RegisteredRule registered -> push(registered.holder().value());
-        default -> addInst(TRY_RETURN, indexOf(rule.getBlockStateRule(context)));
+    private void push(int index) {
+      if (index >= flattened.program.length) return;
+      switch (flattened.program[index]) {
+        case FlattenedMaterialRule.CONDITION_RULE -> {
+          pushCondition(flattened.conditions[prog(index + 1)], index + 3);
+          push(prog(index + 2));
+        }
+        case FlattenedMaterialRule.MATERIAL_RULE -> {
+          addInst(TRY_RETURN, indexOf(flattened.rules[prog(index + 1)].getBlockStateRule(context)));
+          push(index + 2);
+        }
+        case FlattenedMaterialRule.STATE_RULE -> {
+          addInst(RETURN, indexOf(flattened.states[prog(index + 1)]));
+        }
       }
+    }
+
+    private int prog(int index) {
+      return flattened.program[index];
     }
 
     private void addInst(int opcode, int... data) {
