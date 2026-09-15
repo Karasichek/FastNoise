@@ -226,7 +226,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
               .get(context.heightContext, config, rule);
       this.flattened = this.cache.flattened;
 
-      push(0);
+      push(0, this.flattened.program.length);
     }
 
     private int indexOf(BlockState state) {
@@ -244,13 +244,13 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       return res;
     }
 
-    public void pushCondition(MaterialCondition condition, int index) {
+    public void pushCondition(MaterialCondition condition, int index, int last) {
       var startIndex = instructions.size();
       if (condition instanceof BiomeMaterialCondition biome) {
         var cond = BiomePredicate.getSupplier(biome.biomes(), context);
         if (cond == BiomePredicate.ALWAYS_FALSE) return;
         if (cond == BiomePredicate.ALWAYS_TRUE) {
-          push(index);
+          push(index, last);
           return;
         }
 
@@ -258,7 +258,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
         this.conditions.add(cond);
 
         this.addInst(JUMP_IF_FALSE, condIdx, 0);
-        conditionalPush(index, 3, startIndex);
+        conditionalPush(index, 3, startIndex, last);
         return;
       }
 
@@ -266,7 +266,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
       if (specialIdx != -1) {
         this.addInst(JUMP_IF_FALSE_STATIC, specialIdx, 0);
-        conditionalPush(index, 3, startIndex);
+        conditionalPush(index, 3, startIndex, last);
         return;
       }
 
@@ -274,13 +274,13 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       this.conditions.add(condition.getPredicate(context));
 
       this.addInst(JUMP_IF_FALSE, condIdx, 0);
-      conditionalPush(index, 3, startIndex);
+      conditionalPush(index, 3, startIndex, last);
     }
 
-    private void conditionalPush(int index, int removeIf, int startIndex) {
+    private void conditionalPush(int index, int removeIf, int startIndex, int last) {
       var instIndex = instructions.size() - 1;
 
-      push(index);
+      push(index, last);
 
       if (instIndex + 1 == instructions.size()) {
         this.removeInst(removeIf);
@@ -290,16 +290,17 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       this.instructions.set(instIndex, instructions.size() - startIndex);
     }
 
-    private void push(int index) {
-      if (index >= flattened.program.length) return;
-      switch (flattened.program[index]) {
+    private void push(int index, int last) {
+      if (index >= last) return;
+      switch (prog(index)) {
         case FlattenedMaterialRule.CONDITION_RULE -> {
-          pushCondition(flattened.conditions[prog(index + 1)], index + 3);
-          push(prog(index + 2));
+          var ifFalse = prog(index + 2);
+          pushCondition(flattened.conditions[prog(index + 1)], index + 3, ifFalse);
+          push(ifFalse, last);
         }
         case FlattenedMaterialRule.MATERIAL_RULE -> {
           addInst(TRY_RETURN, indexOf(flattened.rules[prog(index + 1)].getBlockStateRule(context)));
-          push(index + 2);
+          push(index + 2, last);
         }
         case FlattenedMaterialRule.STATE_RULE -> {
           addInst(RETURN, indexOf(flattened.states[prog(index + 1)]));

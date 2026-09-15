@@ -20,9 +20,9 @@ public class FlattenedMaterialRule {
   public final BlockState[] states;
   public final int[] program;
 
-  public static final byte MATERIAL_RULE = 0;
-  public static final byte CONDITION_RULE = 1;
-  public static final byte STATE_RULE = 2;
+  public static final int MATERIAL_RULE = 0;
+  public static final int CONDITION_RULE = 1;
+  public static final int STATE_RULE = 2;
 
   public FlattenedMaterialRule(
       MaterialRule[] rules, MaterialCondition[] conditions, BlockState[] states, int[] program) {
