@@ -2,11 +2,12 @@ package org.codeberg.zenxarch.matcomp.compiler;
 
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.lang.invoke.MethodHandle;
-import java.util.BitSet;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.HeightContext;
@@ -45,7 +46,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
       BlockState[] states,
-      BitSet stateSet,
+      IntSet stateSet,
       int[] instructions,
       MaterialRuleCompilerCacheHeightContextSpecific cache,
       MaterialRuleContext context) {
@@ -210,7 +211,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
     private final ReferenceArrayList<BlockStateRule> rules;
     private final IntArrayList instructions;
     private final MaterialRuleContext context;
-    private final BitSet statesSet;
+    private final IntArraySet statesSet;
 
     private final MaterialRuleCompilerCacheHeightContextSpecific cache;
 
@@ -218,7 +219,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
       this.conditions = new ObjectArrayList<>();
       this.rules = new ReferenceArrayList<>();
       this.instructions = new IntArrayList();
-      this.statesSet = new BitSet();
+      this.statesSet = new IntArraySet();
       this.context = context;
       this.cache =
           ((MaterialRuleCompilerCacheHolder) context.surfaceBuilder)
@@ -231,7 +232,7 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
     private int indexOf(BlockState state) {
       var res = Block.getRawIdFromState(state);
-      statesSet.set(res);
+      statesSet.add(res);
       return res;
     }
 
@@ -323,7 +324,8 @@ public final class MaterialRuleInterpreter implements BlockStateRule {
 
     public MaterialRuleInterpreter build() {
       var states =
-          this.statesSet.stream()
+          this.statesSet
+              .intStream()
               .mapToObj(k -> Block.getStateFromRawId(k))
               .toArray(BlockState[]::new);
 

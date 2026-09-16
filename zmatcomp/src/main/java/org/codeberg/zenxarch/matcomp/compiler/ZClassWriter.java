@@ -3,6 +3,7 @@ package org.codeberg.zenxarch.matcomp.compiler;
 import static org.objectweb.asm.Opcodes.*;
 
 import com.google.common.io.Files;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -82,7 +83,7 @@ public final class ZClassWriter {
   public static MethodHandle compile(
       String classname,
       int[] instructions,
-      BitSet states,
+      IntSet states,
       MaterialRuleCompilerCacheHeightContextSpecific contextSpecificCache) {
     var cw = new ZClassWriter(classname, instructions);
     cw.startClass();
@@ -211,34 +212,31 @@ public final class ZClassWriter {
 
   private static final String ZCLASS_WRITE_INTERNAL_NAME = Type.getInternalName(ZClassWriter.class);
 
-  private void writeBlockFields(BitSet blocks) {
-    blocks.stream()
-        .forEach(
-            k -> {
-              cw.visitField(
-                      ACC_PUBLIC | ACC_FINAL | ACC_STATIC,
-                      getBlockStateFieldName(k),
-                      "L" + BLOCK_STATE_INTERNAL_NAME + ";",
-                      null,
-                      null)
-                  .visitEnd();
-            });
+  private void writeBlockFields(IntSet blocks) {
+    blocks.forEach(
+        k -> {
+          cw.visitField(
+                  ACC_PUBLIC | ACC_FINAL | ACC_STATIC,
+                  getBlockStateFieldName(k),
+                  "L" + BLOCK_STATE_INTERNAL_NAME + ";",
+                  null,
+                  null)
+              .visitEnd();
+        });
 
     var mv = new InstructionAdapter(cw.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null));
     mv.visitCode();
 
-    blocks.stream()
-        .forEach(
-            k -> {
-              mv.iconst(k);
-              mv.invokestatic(
-                  ZCLASS_WRITE_INTERNAL_NAME,
-                  "zclasswriter$getStateFromRawId",
-                  "(I)L" + BLOCK_STATE_INTERNAL_NAME + ";",
-                  false);
-              mv.putstatic(
-                  classname, getBlockStateFieldName(k), "L" + BLOCK_STATE_INTERNAL_NAME + ";");
-            });
+    blocks.forEach(
+        k -> {
+          mv.iconst(k);
+          mv.invokestatic(
+              ZCLASS_WRITE_INTERNAL_NAME,
+              "zclasswriter$getStateFromRawId",
+              "(I)L" + BLOCK_STATE_INTERNAL_NAME + ";",
+              false);
+          mv.putstatic(classname, getBlockStateFieldName(k), "L" + BLOCK_STATE_INTERNAL_NAME + ";");
+        });
 
     mv.visitInsn(RETURN);
     mv.visitMaxs(0, 0);

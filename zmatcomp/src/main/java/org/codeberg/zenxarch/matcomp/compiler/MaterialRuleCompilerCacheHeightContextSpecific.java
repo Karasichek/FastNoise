@@ -1,12 +1,12 @@
 package org.codeberg.zenxarch.matcomp.compiler;
 
 import it.unimi.dsi.fastutil.ints.IntArrays;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import java.lang.invoke.MethodHandle;
-import java.util.BitSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
@@ -60,7 +60,7 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
 
   private static AtomicInteger counter = new AtomicInteger(0);
 
-  public synchronized MethodHandle get(int[] program, BitSet states) {
+  public synchronized MethodHandle get(int[] program, IntSet states) {
     var res = cache.getAndMoveToFirst(program);
     if (res != null) return res;
     int idx = counter.incrementAndGet();
