@@ -205,6 +205,12 @@ public final class ZClassWriter {
     return "block$" + blockId;
   }
 
+  public static BlockState zclasswrite$getStateFromRawId(int id) {
+    return Block.getStateFromRawId(id);
+  }
+
+  private static final String ZCLASS_WRITE_INTERNAL_NAME = Type.getInternalName(ZClassWriter.class);
+
   private void writeBlockFields(BitSet blocks) {
     blocks.stream()
         .forEach(
@@ -226,8 +232,8 @@ public final class ZClassWriter {
             k -> {
               mv.iconst(k);
               mv.invokestatic(
-                  BLOCK_INTERNAL_NAME,
-                  "getStateFromRawId",
+                  ZCLASS_WRITE_INTERNAL_NAME,
+                  "zclasswrite$getStateFromRawId",
                   "(I)L" + BLOCK_STATE_INTERNAL_NAME + ";",
                   false);
               mv.putstatic(
