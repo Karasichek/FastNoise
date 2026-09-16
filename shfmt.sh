@@ -1,3 +1,3 @@
 #!/bin/bash
 
-shfmt -ln=bash -w *.sh
+shfmt -i 2 -ln=bash -w *.sh

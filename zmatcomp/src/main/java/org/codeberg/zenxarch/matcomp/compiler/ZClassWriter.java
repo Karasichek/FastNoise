@@ -205,6 +205,12 @@ public final class ZClassWriter {
     return "block$" + blockId;
   }
 
+  public static BlockState zclasswriter$getStateFromRawId(int id) {
+    return Block.getStateFromRawId(id);
+  }
+
+  private static final String ZCLASS_WRITE_INTERNAL_NAME = Type.getInternalName(ZClassWriter.class);
+
   private void writeBlockFields(BitSet blocks) {
     blocks.stream()
         .forEach(
@@ -226,8 +232,8 @@ public final class ZClassWriter {
             k -> {
               mv.iconst(k);
               mv.invokestatic(
-                  BLOCK_INTERNAL_NAME,
-                  "getStateFromRawId",
+                  ZCLASS_WRITE_INTERNAL_NAME,
+                  "zclasswriter$getStateFromRawId",
                   "(I)L" + BLOCK_STATE_INTERNAL_NAME + ";",
                   false);
               mv.putstatic(
@@ -350,11 +356,19 @@ public final class ZClassWriter {
     mv.visitInsn(ARETURN);
   }
 
+  public static boolean zclasswriter$callCondition(BooleanSupplier condition) {
+    return condition.get();
+  }
+
   private void emitConditionCall(InstructionAdapter mv, int conditionIdx) {
     loadConditions(mv);
     mv.iconst(conditionIdx);
     mv.visitInsn(AALOAD);
-    mv.visitMethodInsn(INVOKEINTERFACE, BOOLEAN_SUPPLIER_INTERNAL_NAME, "get", "()Z", true);
+    mv.invokestatic(
+        ZCLASS_WRITE_INTERNAL_NAME,
+        "zclasswriter$callCondition",
+        "(L" + BOOLEAN_SUPPLIER_INTERNAL_NAME + ";)Z",
+        false);
   }
 
   private Label visitFunctionParams(InstructionAdapter mv, Label l0) {
