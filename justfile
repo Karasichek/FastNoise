@@ -28,6 +28,9 @@ stop:
 clean:
     ./gradlew clean
 
+perf +args="":
+  ./perf.sh {{args}}
+
 # Available props zperfbenchmark zuseasync zworldname zbenchmode zwarmuptime zmeasuretime zwarmups zmeasures zforks zthreads zseed zworldradius zendcenter zworldcenter
 perfSurface +args="":
     ./gradlew :perf:runServer -Pzperfbenchmark="surface" {{args}}
