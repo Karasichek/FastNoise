@@ -145,6 +145,43 @@ configure(allprojects - project(":")) {
   }
 }
 
+if (project.hasProperty("modrinth")) {
+  subprojects {
+    repositories {
+      exclusiveContent {
+        forRepository {
+          maven {
+            name = "Modrinth"
+            url = "https://api.modrinth.com/maven"
+          }
+        }
+        filter {
+          includeGroup "maven.modrinth"
+        }
+      }
+    }
+
+    configurations {
+      register("modrinth")
+    }
+
+    dependencies {
+      ext.modrinth = new Properties()
+      def modFile = rootProject.layout.buildDirectory.file("mods.properties").get()
+      file(modFile).withInputStream { modrinth.load(it) }
+
+      modrinth.forEach { a,b -> 
+        if (b.isEmpty()) return
+        modrinth "maven.modrinth:${a}:${b}"
+        modRuntimeOnly "maven.modrinth:${a}:${b}"
+      }
+
+      modRuntimeOnly configurations.modrinth.collect { zipTree(file(it)).matching { include '**/*.jar' } }
+    }
+  }
+}
+
+
 jmh {
   iterations = 4
   fork = 2
