@@ -1,7 +1,5 @@
 package org.codeberg.zenxarch.matcomp.compiler;
 
-import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
-import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 import org.codeberg.zenxarch.matcomp.rules.VerticalGradientPredicate;
 import org.codeberg.zenxarch.matcomp.util.AllocFreeRandom;
@@ -10,15 +8,7 @@ public final class MaterialRuleCompilerFunctions {
   private MaterialRuleCompilerFunctions() {}
 
   public static boolean aboveY(
-      int testY,
-      int surfaceDepthMultiplier,
-      boolean addStoneDepth,
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
-      MaterialRuleContext context) {
+      int testY, int surfaceDepthMultiplier, boolean addStoneDepth, MaterialRuleContext context) {
     return context.blockY + (addStoneDepth ? context.stoneDepthAbove : 0)
         >= testY + context.runDepth * surfaceDepthMultiplier;
   }
@@ -28,11 +18,6 @@ public final class MaterialRuleCompilerFunctions {
       boolean addSurfaceDepth,
       int secondaryDepthRange,
       boolean ceiling,
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
       MaterialRuleContext context) {
     var stoneDepth = ceiling ? context.stoneDepthBelow : context.stoneDepthAbove;
     if (addSurfaceDepth) stoneDepth -= context.runDepth;
@@ -47,11 +32,6 @@ public final class MaterialRuleCompilerFunctions {
       int falseAtAndAbove,
       long seedLo,
       long seedHi,
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
       MaterialRuleContext context) {
     final int blockY = context.blockY;
     if (blockY <= trueAtAndBelow) return true;
@@ -64,15 +44,7 @@ public final class MaterialRuleCompilerFunctions {
   }
 
   public static boolean checkedVerticalGradient(
-      int trueAtAndBelow,
-      int falseAtAndAbove,
-      long seed,
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
-      MaterialRuleContext context) {
+      int trueAtAndBelow, int falseAtAndAbove, long seed, MaterialRuleContext context) {
     final int blockY = context.blockY;
     if (blockY <= trueAtAndBelow) return true;
     if (blockY >= falseAtAndAbove) return false;
@@ -82,56 +54,24 @@ public final class MaterialRuleCompilerFunctions {
         < probability;
   }
 
-  public static boolean negativeRunDepth(
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
-      MaterialRuleContext context) {
+  public static boolean negativeRunDepth(MaterialRuleContext context) {
     return context.runDepth <= 0;
   }
 
-  public static boolean surfacePredicate(
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
-      MaterialRuleContext context) {
+  public static boolean surfacePredicate(MaterialRuleContext context) {
     return context.blockY >= context.estimateSurfaceHeight();
   }
 
-  public static boolean biomeTemperaturePredicate(
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
-      MaterialRuleContext context) {
+  public static boolean biomeTemperaturePredicate(MaterialRuleContext context) {
     return context.getCurrentBiome().value().isCold(context.getBlockPos(), context.getSeaLevel());
   }
 
-  public static boolean steepSlopePredicate(
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
-      MaterialRuleContext context) {
+  public static boolean steepSlopePredicate(MaterialRuleContext context) {
     return context.steepnessX <= 4 || context.steepnessZ >= 4;
   }
 
   public static boolean water(
-      int offset,
-      int surfaceDepthMultiplier,
-      boolean addStoneDepth,
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
-      MaterialRuleContext context) {
+      int offset, int surfaceDepthMultiplier, boolean addStoneDepth, MaterialRuleContext context) {
     final var fluidHeight = context.fluidHeight;
     if (fluidHeight == Integer.MIN_VALUE) return true;
     return (context.blockY + (addStoneDepth ? context.stoneDepthAbove : 0))
