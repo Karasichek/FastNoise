@@ -165,7 +165,7 @@ public interface StaticMaterialCondition {
     @Override
     public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
       original.emitBytecode(cw, mv);
-      mv.iconst(-1);
+      mv.iconst(1);
       mv.visitInsn(IXOR);
     }
   }
