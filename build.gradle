@@ -127,6 +127,10 @@ configure(allprojects - project(":")) {
     jvmArgs.add("-Xmx4G")
     jvmArgs.add("-XX:+UseShenandoahGC")
     jvmArgs.add("-XX:ShenandoahGCMode=generational")
+    if (project.hasProperty("zprodArgs")) {
+      def newArgs = project.getProperty("zprodArgs").split(',')
+      newArgs.stream().forEach { jvmArgs.add(it) }
+    }
     doNotTrackState("prod server task")
   }
 
