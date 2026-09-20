@@ -1,7 +1,7 @@
 default: build
 
 task taskName options="":
-    ../gradlew {{options}} :zmatcomp:{{taskName}}
+    ../gradlew :zmatcomp:{{taskName}} {{options}}
 
 build:
     just task build

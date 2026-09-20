@@ -114,6 +114,10 @@ configure(allprojects - project(":")) {
     jvmArgs.add("-Xmx4G")
     jvmArgs.add("-XX:+UseShenandoahGC")
     jvmArgs.add("-XX:ShenandoahGCMode=generational")
+    if (project.hasProperty("zprodArgs")) {
+      def newArgs = project.getProperty("zprodArgs").split(',')
+      newArgs.stream().forEach { jvmArgs.add(it) }
+    }
     doNotTrackState("prod client task")
   }
 
@@ -123,6 +127,10 @@ configure(allprojects - project(":")) {
     jvmArgs.add("-Xmx4G")
     jvmArgs.add("-XX:+UseShenandoahGC")
     jvmArgs.add("-XX:ShenandoahGCMode=generational")
+    if (project.hasProperty("zprodArgs")) {
+      def newArgs = project.getProperty("zprodArgs").split(',')
+      newArgs.stream().forEach { jvmArgs.add(it) }
+    }
     doNotTrackState("prod server task")
   }
 
@@ -144,6 +152,43 @@ configure(allprojects - project(":")) {
     }
   }
 }
+
+if (project.hasProperty("modrinth")) {
+  subprojects {
+    repositories {
+      exclusiveContent {
+        forRepository {
+          maven {
+            name = "Modrinth"
+            url = "https://api.modrinth.com/maven"
+          }
+        }
+        filter {
+          includeGroup "maven.modrinth"
+        }
+      }
+    }
+
+    configurations {
+      register("modrinth")
+    }
+
+    dependencies {
+      ext.modrinth = new Properties()
+      def modFile = rootProject.layout.buildDirectory.file("mods.properties").get()
+      file(modFile).withInputStream { modrinth.load(it) }
+
+      modrinth.forEach { a,b -> 
+        if (b.isEmpty()) return
+        modrinth "maven.modrinth:${a}:${b}"
+        modRuntimeOnly "maven.modrinth:${a}:${b}"
+      }
+
+      modRuntimeOnly configurations.modrinth.collect { zipTree(file(it)).matching { include '**/*.jar' } }
+    }
+  }
+}
+
 
 jmh {
   iterations = 4

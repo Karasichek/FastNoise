@@ -1,6 +1,5 @@
 package org.codeberg.zenxarch.matcomp.compiler;
 
-import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
@@ -16,7 +15,6 @@ public final class MaterialRuleCompilerFunctions {
       boolean addStoneDepth,
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
-      BlockState[] states,
       int x,
       int y,
       int z,
@@ -32,7 +30,6 @@ public final class MaterialRuleCompilerFunctions {
       boolean ceiling,
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
-      BlockState[] states,
       int x,
       int y,
       int z,
@@ -52,7 +49,6 @@ public final class MaterialRuleCompilerFunctions {
       long seedHi,
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
-      BlockState[] states,
       int x,
       int y,
       int z,
@@ -73,7 +69,6 @@ public final class MaterialRuleCompilerFunctions {
       long seed,
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
-      BlockState[] states,
       int x,
       int y,
       int z,
@@ -90,7 +85,6 @@ public final class MaterialRuleCompilerFunctions {
   public static boolean negativeRunDepth(
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
-      BlockState[] states,
       int x,
       int y,
       int z,
@@ -101,7 +95,6 @@ public final class MaterialRuleCompilerFunctions {
   public static boolean surfacePredicate(
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
-      BlockState[] states,
       int x,
       int y,
       int z,
@@ -112,7 +105,6 @@ public final class MaterialRuleCompilerFunctions {
   public static boolean biomeTemperaturePredicate(
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
-      BlockState[] states,
       int x,
       int y,
       int z,
@@ -127,7 +119,6 @@ public final class MaterialRuleCompilerFunctions {
   public static boolean steepSlopePredicate(
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
-      BlockState[] states,
       int x,
       int y,
       int z,
@@ -141,7 +132,6 @@ public final class MaterialRuleCompilerFunctions {
       boolean addStoneDepth,
       BooleanSupplier[] conditions,
       BlockStateRule[] rules,
-      BlockState[] states,
       int x,
       int y,
       int z,

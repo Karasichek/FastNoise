@@ -88,3 +88,5 @@ accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext pos Lnet/minecraft/util/math/BlockPos$Mutable;
 
 accessible field net/minecraft/world/biome/source/BiomeAccess storage Lnet/minecraft/world/biome/source/BiomeAccess$Storage;
+
+accessible method net/minecraft/world/gen/surfacebuilder/SurfaceBuilder getTerracottaBlock (III)Lnet/minecraft/block/BlockState;
