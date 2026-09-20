@@ -122,7 +122,7 @@ public class FlattenedMaterialRule {
         program.add(add(states, block.resultState()));
       }
       case ConditionMaterialRule cond -> {
-        var ifTrue = cond.ifTrue();
+        var ifTrue = derefernce(cond.ifTrue());
         if (ifTrue instanceof BiomeMaterialCondition biomeCond) {
           program.add(BIOME_CONDITION);
           program.add(add(biomeConditions, biomeCond.biomes()));
@@ -198,11 +198,9 @@ public class FlattenedMaterialRule {
     }
   }
 
-  private static int addCondition(
-      ObjectArrayList<MaterialCondition> conditions, MaterialCondition condition) {
-    if (condition instanceof RegisteredCondition reg)
-      return addCondition(conditions, reg.holder().value());
-    return add(conditions, condition);
+  private static MaterialCondition derefernce(MaterialCondition condition) {
+    if (condition instanceof RegisteredCondition reg) return derefernce(reg.holder().value());
+    return condition;
   }
 
   private static <T> int add(List<T> array, T value) {
