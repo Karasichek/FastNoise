@@ -7,6 +7,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.BitSet;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -130,11 +131,9 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
         compile(instructions[index + 2], compiled, contextSpecificCache);
       }
       case MaterialRuleCompilerCacheHeightContextSpecific.SINGLE_BIOME_CONDITION -> {
-        emitIfElse(
+        emitIfElseWOpcode(
             index,
-            mv -> {
-              emitSingleBiomeEquals(mv, instructions[index + 1]);
-            },
+            mv -> emitSingleBiomeEquals(mv, instructions[index + 1]),
             index + 3,
             instructions[index + 2]);
         compiled.set(index);
@@ -142,11 +141,10 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
         compile(instructions[index + 2], compiled, contextSpecificCache);
       }
       case MaterialRuleCompilerCacheHeightContextSpecific.STATIC_CONDITION -> {
-        emitIfElse(
+        emitIfElseWOpcode(
             index,
-            mv -> {
-              this.flattenedRule.staticConditions[instructions[index + 1]].emitBytecode(this, mv);
-            },
+            mv ->
+                this.flattenedRule.staticConditions[instructions[index + 1]].emitBytecode(this, mv),
             index + 3,
             instructions[index + 2]);
         compiled.set(index);
@@ -178,6 +176,28 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
 
     var l1 = new Label();
     mv.ifeq(l1);
+
+    emitTailCall(mv, ifTrue);
+    mv.visitLabel(l1);
+
+    emitTailCall(mv, ifFalse);
+
+    visitFunctionParams(mv, l0);
+    endMethodVisit(mv);
+  }
+
+  public void emitIfElseWOpcode(
+      int methodIdx,
+      Function<InstructionAdapter, Integer> conditionEmitter,
+      int ifTrue,
+      int ifFalse) {
+    var mv = newMethod(methodIdx);
+    var l0 = startMethodVisit(mv);
+
+    var inst = conditionEmitter.apply(mv);
+
+    var l1 = new Label();
+    mv.visitJumpInsn(inst, l1);
 
     emitTailCall(mv, ifTrue);
     mv.visitLabel(l1);
@@ -313,11 +333,7 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
         false);
   }
 
-  public static boolean singleBiomeEquals(RegistryEntry<Biome> ours, RegistryEntry<Biome> theirs) {
-    return ours == theirs;
-  }
-
-  private void emitSingleBiomeEquals(InstructionAdapter mv, int conditionIdx) {
+  private int emitSingleBiomeEquals(InstructionAdapter mv, int conditionIdx) {
     mv.getstatic(
         flattenedClassname,
         "biome$" + conditionIdx,
@@ -331,14 +347,7 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
             + ";)"
             + FlattenedMaterialRuleClassWriter.REGISTRY_ENTRY_DESCRIPTOR,
         false);
-    mv.invokestatic(
-        MATERIAL_RULE_CW_INTERNAL_NAME,
-        "singleBiomeEquals",
-        "("
-            + FlattenedMaterialRuleClassWriter.REGISTRY_ENTRY_DESCRIPTOR
-            + FlattenedMaterialRuleClassWriter.REGISTRY_ENTRY_DESCRIPTOR
-            + ")Z",
-        false);
+    return IF_ACMPNE;
   }
 
   private Label visitFunctionParams(InstructionAdapter mv, Label l0) {

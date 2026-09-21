@@ -7,24 +7,37 @@ import org.codeberg.zenxarch.matcomp.util.AllocFreeRandom;
 public final class MaterialRuleCompilerFunctions {
   private MaterialRuleCompilerFunctions() {}
 
-  public static boolean aboveY(
-      int testY, int surfaceDepthMultiplier, boolean addStoneDepth, MaterialRuleContext context) {
-    return context.blockY + (addStoneDepth ? context.stoneDepthAbove : 0)
-        >= testY + context.runDepth * surfaceDepthMultiplier;
+  public static int loadX(MaterialRuleContext ctx) {
+    return ctx.blockX;
   }
 
-  public static boolean stoneDepth(
-      int offset,
-      boolean addSurfaceDepth,
-      int secondaryDepthRange,
-      boolean ceiling,
-      MaterialRuleContext context) {
-    var stoneDepth = ceiling ? context.stoneDepthBelow : context.stoneDepthAbove;
-    if (addSurfaceDepth) stoneDepth -= context.runDepth;
-    if (secondaryDepthRange != 0)
-      stoneDepth -= (int) ((context.getSecondaryDepth() + 1.0) * 0.5 * secondaryDepthRange);
+  public static int loadY(MaterialRuleContext ctx) {
+    return ctx.blockY;
+  }
 
-    return stoneDepth <= offset;
+  public static int loadZ(MaterialRuleContext ctx) {
+    return ctx.blockZ;
+  }
+
+  public static int loadStoneDepthAbove(MaterialRuleContext ctx) {
+    return ctx.stoneDepthAbove;
+  }
+
+  public static int loadStoneDepthBelow(MaterialRuleContext ctx) {
+    return ctx.stoneDepthBelow;
+  }
+
+  public static int loadRunDepth(MaterialRuleContext ctx) {
+    return ctx.runDepth;
+  }
+
+  public static int loadFluidHeight(MaterialRuleContext ctx) {
+    return ctx.fluidHeight;
+  }
+
+  public static int getMultipliedSecondaryDepthRange(
+      int secondaryDepthRange, MaterialRuleContext ctx) {
+    return (int) ((ctx.getSecondaryDepth() + 1.0) * 0.5 * secondaryDepthRange);
   }
 
   public static boolean xoroVerticalGradient(
@@ -70,11 +83,9 @@ public final class MaterialRuleCompilerFunctions {
     return context.steepnessX <= 4 || context.steepnessZ >= 4;
   }
 
-  public static boolean water(
-      int offset, int surfaceDepthMultiplier, boolean addStoneDepth, MaterialRuleContext context) {
-    final var fluidHeight = context.fluidHeight;
-    if (fluidHeight == Integer.MIN_VALUE) return true;
-    return (context.blockY + (addStoneDepth ? context.stoneDepthAbove : 0))
-        >= fluidHeight + offset + context.runDepth * surfaceDepthMultiplier;
+  public static boolean testByteCode(MaterialRuleContext ctx) {
+    if (ctx.fluidHeight == Integer.MIN_VALUE) return true;
+
+    return ctx.fluidHeight < ctx.blockY;
   }
 }

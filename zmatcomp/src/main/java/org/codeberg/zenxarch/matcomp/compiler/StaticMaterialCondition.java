@@ -1,6 +1,6 @@
 package org.codeberg.zenxarch.matcomp.compiler;
 
-import static org.objectweb.asm.Opcodes.IXOR;
+import static org.objectweb.asm.Opcodes.*;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -20,11 +20,54 @@ import net.minecraft.world.gen.surfacebuilder.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.VerticalGradientMaterialCondition;
 import org.codeberg.zenxarch.matcomp.compiler.cw.MaterialRuleClassWriter;
 import org.jspecify.annotations.Nullable;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
 public interface StaticMaterialCondition {
-  public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv);
+  // return jump insn opcode
+  public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv);
+
+  static void callFuncWithCtxAtEnd(
+      MaterialRuleClassWriter cw, InstructionAdapter mv, String funcName, String desc) {
+    cw.loadCtx(mv);
+    mv.invokestatic(MATERIALRULECOMPILER_NAME, funcName, desc, false);
+  }
+
+  static void loadX(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadX", loadIntDesc);
+  }
+
+  static void loadY(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadY", loadIntDesc);
+  }
+
+  static void loadZ(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadZ", loadIntDesc);
+  }
+
+  static void loadStoneDepthAbove(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadStoneDepthAbove", loadIntDesc);
+  }
+
+  static void loadStoneDepthBelow(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadStoneDepthBelow", loadIntDesc);
+  }
+
+  static void loadRunDepth(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadRunDepth", loadIntDesc);
+  }
+
+  static void loadFluidHeight(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadFluidHeight", loadIntDesc);
+  }
+
+  static void getMultipliedSecondaryDepthRange(
+      MaterialRuleClassWriter cw, InstructionAdapter mv, int secondaryDepthRange) {
+    mv.iconst(secondaryDepthRange);
+    callFuncWithCtxAtEnd(
+        cw, mv, "getMultipliedSecondaryDepthRange", getMultipliedSecondaryDepthRange);
+  }
 
   @Nullable
   public static StaticMaterialCondition tryCreate(
@@ -88,27 +131,44 @@ public interface StaticMaterialCondition {
   public static final String MATERIALRULECOMPILER_NAME =
       Type.getInternalName(MaterialRuleCompilerFunctions.class);
 
-  public static final String aboveY =
-      getDescriptorForCondition(int.class, int.class, boolean.class);
-  public static final String stoneDepth =
-      getDescriptorForCondition(int.class, boolean.class, int.class, boolean.class);
   public static final String xoroVerticalGradient =
       getDescriptorForCondition(int.class, int.class, long.class, long.class);
   public static final String checkedVerticalGradient =
       getDescriptorForCondition(int.class, int.class, long.class);
-  public static final String water = getDescriptorForCondition(int.class, int.class, boolean.class);
-  public static final String common_desc = getDescriptorForCondition();
+  public static final String common_desc =
+      Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.getType(MaterialRuleContext.class));
+  public static final String loadIntDesc =
+      Type.getMethodDescriptor(Type.INT_TYPE, Type.getType(MaterialRuleContext.class));
+  public static final String getMultipliedSecondaryDepthRange =
+      Type.getMethodDescriptor(
+          Type.INT_TYPE, Type.INT_TYPE, Type.getType(MaterialRuleContext.class));
 
   public static record AboveYCondition(int y, int surfaceDepthMultiplier, boolean addStoneDepth)
       implements StaticMaterialCondition {
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+      loadY(cw, mv);
+      if (addStoneDepth) {
+        loadStoneDepthAbove(cw, mv);
+        mv.add(Type.INT_TYPE);
+      }
       mv.iconst(y);
-      mv.iconst(surfaceDepthMultiplier);
-      mv.iconst(addStoneDepth ? 1 : 0);
-      cw.loadCtx(mv);
-      mv.invokestatic(MATERIALRULECOMPILER_NAME, "aboveY", aboveY, false);
+      if (surfaceDepthMultiplier != 0) {
+        loadRunDepth(cw, mv);
+
+        if (surfaceDepthMultiplier == 1) {
+          mv.add(Type.INT_TYPE);
+        } else if (surfaceDepthMultiplier == -1) {
+          mv.sub(Type.INT_TYPE);
+        } else {
+          mv.iconst(surfaceDepthMultiplier);
+          mv.mul(Type.INT_TYPE);
+          mv.add(Type.INT_TYPE);
+        }
+      }
+
+      return IF_ICMPLT;
     }
   }
 
@@ -117,13 +177,22 @@ public interface StaticMaterialCondition {
       implements StaticMaterialCondition {
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+      if (ceiling) loadStoneDepthBelow(cw, mv);
+      else loadStoneDepthAbove(cw, mv);
+      if (addSurfaceDepth) {
+        loadRunDepth(cw, mv);
+        mv.sub(Type.INT_TYPE);
+      }
+
+      if (secondaryDepthRange != 0) {
+        getMultipliedSecondaryDepthRange(cw, mv, secondaryDepthRange);
+        mv.sub(Type.INT_TYPE);
+      }
+
       mv.iconst(offset);
-      mv.iconst(addSurfaceDepth ? 1 : 0);
-      mv.iconst(secondaryDepthRange);
-      mv.iconst(ceiling ? 1 : 0);
-      cw.loadCtx(mv);
-      mv.invokestatic(MATERIALRULECOMPILER_NAME, "stoneDepth", stoneDepth, false);
+
+      return IF_ICMPGT;
     }
   }
 
@@ -132,7 +201,7 @@ public interface StaticMaterialCondition {
       implements StaticMaterialCondition {
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
       mv.iconst(trueAtAndBelow);
       mv.iconst(falseAtAndAbove);
       mv.lconst(seedLo);
@@ -140,19 +209,23 @@ public interface StaticMaterialCondition {
       cw.loadCtx(mv);
       mv.invokestatic(
           MATERIALRULECOMPILER_NAME, "xoroVerticalGradient", xoroVerticalGradient, false);
+
+      return IFEQ;
     }
   }
 
   public static record VerticalGradientConditionChecked(
       int trueAtAndBelow, int falseAtAndAbove, long seed) implements StaticMaterialCondition {
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
       mv.iconst(trueAtAndBelow);
       mv.iconst(falseAtAndAbove);
       mv.lconst(seed);
       cw.loadCtx(mv);
       mv.invokestatic(
           MATERIALRULECOMPILER_NAME, "checkedVerticalGradient", checkedVerticalGradient, false);
+
+      return IFEQ;
     }
   }
 
@@ -163,10 +236,26 @@ public interface StaticMaterialCondition {
       implements StaticMaterialCondition {
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
-      original.emitBytecode(cw, mv);
-      mv.iconst(1);
-      mv.visitInsn(IXOR);
+    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+      var og = original.emitBytecode(cw, mv);
+      return switch (og) {
+        case IFEQ -> IFNE;
+        case IFNE -> IFEQ;
+        case IFGE -> IFLT;
+        case IFLT -> IFGE;
+        case IFGT -> IFLE;
+        case IFLE -> IFGT;
+        case IF_ICMPGE -> IF_ICMPLT;
+        case IF_ICMPLT -> IF_ICMPGE;
+        case IF_ICMPGT -> IF_ICMPLE;
+        case IF_ICMPLE -> IF_ICMPGT;
+        case IF_ICMPEQ -> IF_ICMPNE;
+        case IF_ACMPEQ -> IF_ACMPNE;
+        case IF_ACMPNE -> IF_ACMPEQ;
+        case IFNULL -> IFNONNULL;
+        case IFNONNULL -> IFNULL;
+        default -> throw new IllegalStateException("Unsupported jump insn");
+      };
     }
   }
 
@@ -174,9 +263,9 @@ public interface StaticMaterialCondition {
     public static HoleMaterialCondition instance = new HoleMaterialCondition();
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
-      cw.loadCtx(mv);
-      mv.invokestatic(MATERIALRULECOMPILER_NAME, "negativeRunDepth", common_desc, false);
+    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+      loadRunDepth(cw, mv);
+      return IFGT;
     }
   }
 
@@ -184,9 +273,10 @@ public interface StaticMaterialCondition {
     public static SurfaceMaterialCondition instance = new SurfaceMaterialCondition();
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
       cw.loadCtx(mv);
       mv.invokestatic(MATERIALRULECOMPILER_NAME, "surfacePredicate", common_desc, false);
+      return IFEQ;
     }
   }
 
@@ -194,9 +284,10 @@ public interface StaticMaterialCondition {
     public static TemperatureMaterialCondition instance = new TemperatureMaterialCondition();
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
       cw.loadCtx(mv);
       mv.invokestatic(MATERIALRULECOMPILER_NAME, "biomeTemperaturePredicate", common_desc, false);
+      return IFEQ;
     }
   }
 
@@ -204,9 +295,10 @@ public interface StaticMaterialCondition {
     public static SteepMaterialCondition instance = new SteepMaterialCondition();
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
       cw.loadCtx(mv);
       mv.invokestatic(MATERIALRULECOMPILER_NAME, "steepSlopePredicate", common_desc, false);
+      return IFEQ;
     }
   }
 
@@ -214,12 +306,54 @@ public interface StaticMaterialCondition {
       int offset, int surfaceDepthMultiplier, boolean addStoneDepth)
       implements StaticMaterialCondition {
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
-      mv.iconst(offset);
-      mv.iconst(surfaceDepthMultiplier);
-      mv.iconst(addStoneDepth ? 1 : 0);
-      cw.loadCtx(mv);
-      mv.invokestatic(MATERIALRULECOMPILER_NAME, "water", water, false);
+    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+
+      var retTrue = new Label();
+      var retFalse = new Label();
+      var finalL = new Label();
+
+      loadFluidHeight(cw, mv);
+      // mv.dup();
+      mv.iconst(Integer.MIN_VALUE);
+      mv.ificmpeq(retTrue);
+
+      loadFluidHeight(cw, mv);
+      if (offset != 0) {
+        mv.iconst(offset);
+        mv.add(Type.INT_TYPE);
+      }
+      if (surfaceDepthMultiplier != 0) {
+        loadRunDepth(cw, mv);
+
+        if (surfaceDepthMultiplier == 1) {
+          mv.add(Type.INT_TYPE);
+        } else if (surfaceDepthMultiplier == -1) {
+          mv.sub(Type.INT_TYPE);
+        } else {
+          mv.iconst(surfaceDepthMultiplier);
+          mv.mul(Type.INT_TYPE);
+          mv.add(Type.INT_TYPE);
+        }
+      }
+
+      loadY(cw, mv);
+      if (addStoneDepth) {
+        loadStoneDepthAbove(cw, mv);
+        mv.add(Type.INT_TYPE);
+      }
+
+      mv.ificmpge(retFalse);
+
+      mv.visitLabel(retTrue);
+      mv.iconst(1);
+      mv.goTo(finalL);
+
+      mv.visitLabel(retFalse);
+      mv.iconst(0);
+
+      mv.visitLabel(finalL);
+
+      return IFEQ;
     }
   }
 }
