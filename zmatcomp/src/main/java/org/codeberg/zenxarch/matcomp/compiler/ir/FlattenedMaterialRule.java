@@ -122,7 +122,7 @@ public class FlattenedMaterialRule {
         program.add(add(states, block.resultState()));
       }
       case ConditionMaterialRule cond -> {
-        var ifTrue = derefernce(cond.ifTrue());
+        var ifTrue = dereference(cond.ifTrue());
         if (ifTrue instanceof BiomeMaterialCondition biomeCond) {
           program.add(BIOME_CONDITION);
           program.add(add(biomeConditions, biomeCond.biomes()));
@@ -198,8 +198,8 @@ public class FlattenedMaterialRule {
     }
   }
 
-  private static MaterialCondition derefernce(MaterialCondition condition) {
-    if (condition instanceof RegisteredCondition reg) return derefernce(reg.holder().value());
+  private static MaterialCondition dereference(MaterialCondition condition) {
+    if (condition instanceof RegisteredCondition reg) return dereference(reg.holder().value());
     return condition;
   }
 
