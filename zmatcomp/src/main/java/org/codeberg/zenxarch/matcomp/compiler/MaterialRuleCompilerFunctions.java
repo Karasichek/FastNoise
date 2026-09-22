@@ -89,4 +89,16 @@ public final class MaterialRuleCompilerFunctions {
     var z = Math.abs(ctx.steepnessZ);
     return (z >= min && z <= max);
   }
+
+  public static boolean slopeConditionAbove(int min, MaterialRuleContext ctx) {
+    return Math.abs(ctx.steepnessX) >= min || Math.abs(ctx.steepnessZ) >= min;
+  }
+
+  public static boolean slopeConditionBelow(int max, MaterialRuleContext ctx) {
+    return Math.abs(ctx.steepnessX) <= max || Math.abs(ctx.steepnessZ) <= max;
+  }
+
+  public static boolean slopeConditionEquals(int value, MaterialRuleContext ctx) {
+    return Math.abs(ctx.steepnessX) == value || Math.abs(ctx.steepnessZ) == value;
+  }
 }

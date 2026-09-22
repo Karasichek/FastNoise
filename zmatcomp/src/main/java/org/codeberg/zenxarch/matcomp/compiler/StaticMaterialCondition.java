@@ -137,6 +137,7 @@ public interface StaticMaterialCondition {
       Type.getMethodDescriptor(
           Type.INT_TYPE, Type.INT_TYPE, Type.getType(MaterialRuleContext.class));
   public static final String slopeCondDesc = getDescriptorForCondition(int.class, int.class);
+  public static final String slopeCondDescAlt = getDescriptorForCondition(int.class);
 
   public static record AboveYCondition(int y, int surfaceDepthMultiplier, boolean addStoneDepth)
       implements StaticMaterialCondition {
@@ -328,9 +329,20 @@ public interface StaticMaterialCondition {
   public static record SlopeCondition(int min, int max) implements StaticMaterialCondition {
     @Override
     public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
-      mv.iconst(min);
-      mv.iconst(max);
-      callFuncWithCtxAtEnd(cw, mv, "slopeCondition", slopeCondDesc);
+      if (min == max) {
+        mv.iconst(min);
+        callFuncWithCtxAtEnd(cw, mv, "slopeConditionEquals", slopeCondDescAlt);
+      } else if (min <= 0) {
+        mv.iconst(max);
+        callFuncWithCtxAtEnd(cw, mv, "slopeConditionBelow", slopeCondDescAlt);
+      } else if (max == Integer.MAX_VALUE) {
+        mv.iconst(min);
+        callFuncWithCtxAtEnd(cw, mv, "slopeConditionAbove", slopeCondDescAlt);
+      } else {
+        mv.iconst(min);
+        mv.iconst(max);
+        callFuncWithCtxAtEnd(cw, mv, "slopeCondition", slopeCondDesc);
+      }
       return IFEQ;
     }
   }
