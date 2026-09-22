@@ -18,6 +18,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialCondition.RegisteredCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRule.RegisteredRule;
+import net.minecraft.world.gen.surfacebuilder.NotMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.SequenceMaterialRule;
 import org.codeberg.zenxarch.matcomp.compiler.StaticMaterialCondition;
 import org.codeberg.zenxarch.matcomp.compiler.StaticMaterialRule;
@@ -36,11 +37,26 @@ public class FlattenedMaterialRule {
   public final Class<?> clazz;
 
   public static final int MATERIAL_RULE = 0;
-  public static final int CONDITION_RULE = 1;
-  public static final int STATE_RULE = 2;
-  public static final int BIOME_CONDITION = 3;
-  public static final int STATIC_CONDITION = 4;
-  public static final int STATIC_RULE = 5;
+  public static final int STATE_RULE = 1;
+  public static final int STATIC_RULE = 2;
+  public static final int CONDITION = 3;
+  public static final int BIOME_CONDITION = 4;
+  public static final int STATIC_CONDITION = 5;
+  public static final int NOT_CONDITION = 6;
+  public static final int NOT_BIOME_CONDITION = 7;
+  public static final int NOT_STATIC_CONDITION = 8;
+
+  public static int invertOpcode(int opcode) {
+    return switch (opcode) {
+      case CONDITION -> NOT_CONDITION;
+      case BIOME_CONDITION -> NOT_BIOME_CONDITION;
+      case STATIC_CONDITION -> NOT_STATIC_CONDITION;
+      case NOT_CONDITION -> CONDITION;
+      case NOT_BIOME_CONDITION -> BIOME_CONDITION;
+      case NOT_STATIC_CONDITION -> STATIC_CONDITION;
+      default -> throw new IllegalStateException("Not a jump opcode");
+    };
+  }
 
   private static final AtomicInteger classNum = new AtomicInteger(0);
 
@@ -123,6 +139,12 @@ public class FlattenedMaterialRule {
       }
       case ConditionMaterialRule cond -> {
         var ifTrue = dereference(cond.ifTrue());
+        var reversed = false;
+        while (ifTrue instanceof NotMaterialCondition notCond) {
+          ifTrue = dereference(notCond.target());
+          reversed = !reversed;
+        }
+
         if (ifTrue instanceof BiomeMaterialCondition biomeCond) {
           program.add(BIOME_CONDITION);
           program.add(add(biomeConditions, biomeCond.biomes()));
@@ -132,9 +154,14 @@ public class FlattenedMaterialRule {
             program.add(STATIC_CONDITION);
             program.add(add(staticConditions, staticCond));
           } else {
-            program.add(CONDITION_RULE);
+            program.add(CONDITION);
             program.add(add(conditions, ifTrue));
           }
+        }
+
+        if (reversed) {
+          var opcodeIdx = program.size() - 2;
+          program.set(opcodeIdx, invertOpcode(program.getInt(opcodeIdx)));
         }
 
         var idx = program.size();

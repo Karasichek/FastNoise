@@ -11,10 +11,8 @@ import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.AboveYMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.MaterialCondition.RegisteredCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.NegativeRunDepthPredicate;
-import net.minecraft.world.gen.surfacebuilder.NotMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.SteepSlopePredicate;
 import net.minecraft.world.gen.surfacebuilder.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.VerticalGradientMaterialCondition;
@@ -99,13 +97,6 @@ public interface StaticMaterialCondition {
               stone.addSurfaceDepth(),
               stone.secondaryDepthRange(),
               stone.surfaceType() == VerticalSurfaceType.CEILING);
-      case RegisteredCondition reg -> tryCreate(reg.holder().value(), context, config);
-      case NotMaterialCondition not -> {
-        var original = tryCreate(not.target(), context, config);
-        if (original == null) yield null;
-        if (original instanceof InvertedCondition inverted) yield inverted.original();
-        yield new InvertedCondition(original);
-      }
       case NegativeRunDepthPredicate _ -> HoleMaterialCondition.instance;
       case net.minecraft.world.gen.surfacebuilder.SurfaceMaterialCondition _ ->
           SurfaceMaterialCondition.instance;
@@ -231,33 +222,6 @@ public interface StaticMaterialCondition {
 
   public static final String STATIC_MATERIAL_CONDITION_INTERNAL_NAME =
       Type.getInternalName(StaticMaterialCondition.class);
-
-  public static record InvertedCondition(StaticMaterialCondition original)
-      implements StaticMaterialCondition {
-
-    @Override
-    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
-      var og = original.emitBytecode(cw, mv);
-      return switch (og) {
-        case IFEQ -> IFNE;
-        case IFNE -> IFEQ;
-        case IFGE -> IFLT;
-        case IFLT -> IFGE;
-        case IFGT -> IFLE;
-        case IFLE -> IFGT;
-        case IF_ICMPGE -> IF_ICMPLT;
-        case IF_ICMPLT -> IF_ICMPGE;
-        case IF_ICMPGT -> IF_ICMPLE;
-        case IF_ICMPLE -> IF_ICMPGT;
-        case IF_ICMPEQ -> IF_ICMPNE;
-        case IF_ACMPEQ -> IF_ACMPNE;
-        case IF_ACMPNE -> IF_ACMPEQ;
-        case IFNULL -> IFNONNULL;
-        case IFNONNULL -> IFNULL;
-        default -> throw new IllegalStateException("Unsupported jump insn");
-      };
-    }
-  }
 
   public static record HoleMaterialCondition() implements StaticMaterialCondition {
     public static HoleMaterialCondition instance = new HoleMaterialCondition();

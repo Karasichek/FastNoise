@@ -6,7 +6,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.BitSet;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -86,6 +85,27 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
     }
   }
 
+  private static int invertOpcode(int og) {
+    return switch (og) {
+      case IFEQ -> IFNE;
+      case IFNE -> IFEQ;
+      case IFGE -> IFLT;
+      case IFLT -> IFGE;
+      case IFGT -> IFLE;
+      case IFLE -> IFGT;
+      case IF_ICMPGE -> IF_ICMPLT;
+      case IF_ICMPLT -> IF_ICMPGE;
+      case IF_ICMPGT -> IF_ICMPLE;
+      case IF_ICMPLE -> IF_ICMPGT;
+      case IF_ICMPEQ -> IF_ICMPNE;
+      case IF_ACMPEQ -> IF_ACMPNE;
+      case IF_ACMPNE -> IF_ACMPEQ;
+      case IFNULL -> IFNONNULL;
+      case IFNONNULL -> IFNULL;
+      default -> throw new IllegalStateException("Unsupported jump insn");
+    };
+  }
+
   private void compile(
       int index,
       BitSet compiled,
@@ -102,12 +122,20 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
         compiled.set(index);
         compile(index + 2, compiled, contextSpecificCache);
       }
-      case MaterialRuleCompilerCacheHeightContextSpecific.CONDITION_RULE -> {
+      case MaterialRuleCompilerCacheHeightContextSpecific.CONDITION -> {
         emitIfElse(
             index,
-            mv -> {
-              emitConditionCall(mv, instructions[index + 1]);
-            },
+            mv -> emitConditionCall(mv, instructions[index + 1]),
+            index + 3,
+            instructions[index + 2]);
+        compiled.set(index);
+        compile(index + 3, compiled, contextSpecificCache);
+        compile(instructions[index + 2], compiled, contextSpecificCache);
+      }
+      case MaterialRuleCompilerCacheHeightContextSpecific.NOT_CONDITION -> {
+        emitIfElse(
+            index,
+            mv -> invertOpcode(emitConditionCall(mv, instructions[index + 1])),
             index + 3,
             instructions[index + 2]);
         compiled.set(index);
@@ -121,9 +149,17 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
       case MaterialRuleCompilerCacheHeightContextSpecific.BIOME_CONDITION -> {
         emitIfElse(
             index,
-            mv -> {
-              emitBiomeListContains(mv, instructions[index + 1]);
-            },
+            mv -> emitBiomeListContains(mv, instructions[index + 1]),
+            index + 3,
+            instructions[index + 2]);
+        compiled.set(index);
+        compile(index + 3, compiled, contextSpecificCache);
+        compile(instructions[index + 2], compiled, contextSpecificCache);
+      }
+      case MaterialRuleCompilerCacheHeightContextSpecific.NOT_BIOME_CONDITION -> {
+        emitIfElse(
+            index,
+            mv -> invertOpcode(emitBiomeListContains(mv, instructions[index + 1])),
             index + 3,
             instructions[index + 2]);
         compiled.set(index);
@@ -131,7 +167,7 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
         compile(instructions[index + 2], compiled, contextSpecificCache);
       }
       case MaterialRuleCompilerCacheHeightContextSpecific.SINGLE_BIOME_CONDITION -> {
-        emitIfElseWOpcode(
+        emitIfElse(
             index,
             mv -> emitSingleBiomeEquals(mv, instructions[index + 1]),
             index + 3,
@@ -140,11 +176,34 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
         compile(index + 3, compiled, contextSpecificCache);
         compile(instructions[index + 2], compiled, contextSpecificCache);
       }
+      case MaterialRuleCompilerCacheHeightContextSpecific.NOT_SINGLE_BIOME_CONDITION -> {
+        emitIfElse(
+            index,
+            mv -> invertOpcode(emitSingleBiomeEquals(mv, instructions[index + 1])),
+            index + 3,
+            instructions[index + 2]);
+        compiled.set(index);
+        compile(index + 3, compiled, contextSpecificCache);
+        compile(instructions[index + 2], compiled, contextSpecificCache);
+      }
       case MaterialRuleCompilerCacheHeightContextSpecific.STATIC_CONDITION -> {
-        emitIfElseWOpcode(
+        emitIfElse(
             index,
             mv ->
                 this.flattenedRule.staticConditions[instructions[index + 1]].emitBytecode(this, mv),
+            index + 3,
+            instructions[index + 2]);
+        compiled.set(index);
+        compile(index + 3, compiled, contextSpecificCache);
+        compile(instructions[index + 2], compiled, contextSpecificCache);
+      }
+      case MaterialRuleCompilerCacheHeightContextSpecific.NOT_STATIC_CONDITION -> {
+        emitIfElse(
+            index,
+            mv ->
+                invertOpcode(
+                    this.flattenedRule.staticConditions[instructions[index + 1]].emitBytecode(
+                        this, mv)),
             index + 3,
             instructions[index + 2]);
         compiled.set(index);
@@ -168,25 +227,6 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
   }
 
   public void emitIfElse(
-      int methodIdx, Consumer<InstructionAdapter> conditionEmitter, int ifTrue, int ifFalse) {
-    var mv = newMethod(methodIdx);
-    var l0 = startMethodVisit(mv);
-
-    conditionEmitter.accept(mv);
-
-    var l1 = new Label();
-    mv.ifeq(l1);
-
-    emitTailCall(mv, ifTrue);
-    mv.visitLabel(l1);
-
-    emitTailCall(mv, ifFalse);
-
-    visitFunctionParams(mv, l0);
-    endMethodVisit(mv);
-  }
-
-  public void emitIfElseWOpcode(
       int methodIdx,
       Function<InstructionAdapter, Integer> conditionEmitter,
       int ifTrue,
@@ -290,7 +330,7 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
     return condition.get();
   }
 
-  private void emitConditionCall(InstructionAdapter mv, int conditionIdx) {
+  private int emitConditionCall(InstructionAdapter mv, int conditionIdx) {
     loadConditions(mv);
     mv.iconst(conditionIdx);
     mv.visitInsn(AALOAD);
@@ -299,6 +339,7 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
         "zclasswriter$callCondition",
         "(L" + BOOLEAN_SUPPLIER_INTERNAL_NAME + ";)Z",
         false);
+    return IFEQ;
   }
 
   public static RegistryEntry<Biome> getCurrentBiome(MaterialRuleContext ctx) {
@@ -309,7 +350,7 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
     return biomeList.contains(biome);
   }
 
-  private void emitBiomeListContains(InstructionAdapter mv, int conditionIdx) {
+  private int emitBiomeListContains(InstructionAdapter mv, int conditionIdx) {
     mv.getstatic(
         flattenedClassname,
         "biomeList$" + conditionIdx,
@@ -331,6 +372,7 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
             + FlattenedMaterialRuleClassWriter.REGISTRY_ENTRY_DESCRIPTOR
             + ")Z",
         false);
+    return IFEQ;
   }
 
   private int emitSingleBiomeEquals(InstructionAdapter mv, int conditionIdx) {

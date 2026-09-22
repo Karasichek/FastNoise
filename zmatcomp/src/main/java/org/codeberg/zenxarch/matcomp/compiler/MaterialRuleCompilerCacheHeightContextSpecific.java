@@ -31,12 +31,16 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
   }
 
   public static final int MATERIAL_RULE = 0;
-  public static final int CONDITION_RULE = 1;
-  public static final int STATE_RULE = 2;
-  public static final int BIOME_CONDITION = 3;
-  public static final int SINGLE_BIOME_CONDITION = 4;
-  public static final int STATIC_CONDITION = 5;
-  public static final int STATIC_RULE = 6;
+  public static final int STATE_RULE = 1;
+  public static final int STATIC_RULE = 2;
+  public static final int CONDITION = 3;
+  public static final int BIOME_CONDITION = 4;
+  public static final int SINGLE_BIOME_CONDITION = 5;
+  public static final int STATIC_CONDITION = 6;
+  public static final int NOT_CONDITION = 7;
+  public static final int NOT_BIOME_CONDITION = 8;
+  public static final int NOT_SINGLE_BIOME_CONDITION = 9;
+  public static final int NOT_STATIC_CONDITION = 10;
 
   public synchronized FlattenedBlockStateRule get(MaterialRuleContext ctx) {
     var key = new int[flattened.biomeConditions.length * 2];
@@ -157,10 +161,15 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
           addInst(MATERIAL_RULE, idx);
           push(index + 2, last);
         }
-        case FlattenedMaterialRule.CONDITION_RULE -> {
+        case FlattenedMaterialRule.CONDITION -> {
           var idx = this.condIdx.size();
           this.condIdx.add(prog(index + 1));
-          conditionalPushWithInst(CONDITION_RULE, idx, index, last);
+          conditionalPushWithInst(CONDITION, idx, index, last);
+        }
+        case FlattenedMaterialRule.NOT_CONDITION -> {
+          var idx = this.condIdx.size();
+          this.condIdx.add(prog(index + 1));
+          conditionalPushWithInst(NOT_CONDITION, idx, index, last);
         }
         case FlattenedMaterialRule.STATE_RULE -> {
           addInst(STATE_RULE, prog(index + 1));
@@ -188,8 +197,34 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
             }
           }
         }
+        case FlattenedMaterialRule.NOT_BIOME_CONDITION -> {
+          var pgidx = prog(index + 1);
+          var curBiomeIdx = pgidx * 2;
+          var biomeState = this.biomeIdx[curBiomeIdx];
+          var biomeData = this.biomeIdx[curBiomeIdx + 1];
+          var nextLast = prog(index + 2);
+
+          switch (biomeState) {
+            case BIOME_NONE -> {
+              push(index + 3, nextLast);
+              push(nextLast, last);
+            }
+            case BIOME_ALL -> {
+              push(nextLast, last);
+            }
+            case BIOME_MANY -> {
+              conditionalPushWithInst(NOT_BIOME_CONDITION, pgidx, index, last);
+            }
+            case BIOME_SINGLE -> {
+              conditionalPushWithInst(NOT_SINGLE_BIOME_CONDITION, biomeData, index, last);
+            }
+          }
+        }
         case FlattenedMaterialRule.STATIC_CONDITION -> {
           conditionalPushWithInst(STATIC_CONDITION, prog(index + 1), index, last);
+        }
+        case FlattenedMaterialRule.NOT_STATIC_CONDITION -> {
+          conditionalPushWithInst(NOT_STATIC_CONDITION, prog(index + 1), index, last);
         }
         case FlattenedMaterialRule.STATIC_RULE -> {
           addInst(STATIC_RULE, prog(index + 1));
