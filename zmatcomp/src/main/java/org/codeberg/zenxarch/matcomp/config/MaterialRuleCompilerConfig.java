@@ -28,6 +28,10 @@ public class MaterialRuleCompilerConfig {
   public static final int MAX_CACHE_SIZE =
       scaleByMemory(get(MaterialRuleCompilerConfigEntries.MAX_CACHE_SIZE_PER_GB));
 
+  static {
+    MaterialRuleCompilerConstants.LOGGER.info("Surface rule cache size {}", MAX_CACHE_SIZE);
+  }
+
   private static int scaleByMemory(int value) {
     var memory = Runtime.getRuntime().maxMemory() / (1024.0 * 1024 * 1024);
     return (int) (value * memory);
