@@ -13,7 +13,8 @@
     "perf.biome.SurfaceBuilderMixin",
     "lithostitched.SlopeConditionMixin",
     "lithostitched.AnyOfConditionMixin",
-    "lithostitched.AllOfConditionMixin"
+    "lithostitched.AllOfConditionMixin",
+    "lithostitched.BandlandsRuleMixin"
   ],
   "injectors": {
     "defaultRequire": 1
