@@ -6,4 +6,4 @@ import org.spongepowered.asm.mixin.Pseudo;
 
 @Pseudo
 @Mixin(targets = "dev.worldgen.lithostitched.impl.worldgen.material.condition.SlopeCondition")
-public interface SlopeConditionMixin extends SlopeCondition {}
+public abstract class SlopeConditionMixin implements SlopeCondition {}

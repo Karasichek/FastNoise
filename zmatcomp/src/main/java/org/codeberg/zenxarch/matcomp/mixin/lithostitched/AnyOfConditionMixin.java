@@ -10,9 +10,9 @@ import org.spongepowered.asm.mixin.Pseudo;
 
 @Pseudo
 @Mixin(targets = "dev.worldgen.lithostitched.impl.worldgen.material.condition.AnyOfCondition")
-public interface AnyOfConditionMixin extends AnyOfCondition {
+public abstract class AnyOfConditionMixin implements AnyOfCondition {
   @Overwrite
-  default BooleanSupplier getPredicate(MaterialRuleContext context) {
+  public BooleanSupplier getPredicate(MaterialRuleContext context) {
     return LithostitchedConditions.compileAnyofCondition(this.conditions(), context);
   }
 }
