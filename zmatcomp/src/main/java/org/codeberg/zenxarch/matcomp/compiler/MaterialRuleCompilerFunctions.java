@@ -80,12 +80,13 @@ public final class MaterialRuleCompilerFunctions {
   }
 
   public static boolean steepSlopePredicate(MaterialRuleContext context) {
-    return context.steepnessX <= 4 || context.steepnessZ >= 4;
+    return context.steepnessX <= -4 || context.steepnessZ >= 4;
   }
 
-  public static boolean testByteCode(MaterialRuleContext ctx) {
-    if (ctx.fluidHeight == Integer.MIN_VALUE) return true;
-
-    return ctx.fluidHeight < ctx.blockY;
+  public static boolean slopeCondition(int min, int max, MaterialRuleContext ctx) {
+    var x = Math.abs(ctx.steepnessX);
+    if (x >= min && x <= max) return true;
+    var z = Math.abs(ctx.steepnessZ);
+    return (z >= min && z <= max);
   }
 }

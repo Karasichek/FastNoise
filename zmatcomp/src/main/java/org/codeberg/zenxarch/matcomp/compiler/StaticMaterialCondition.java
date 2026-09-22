@@ -17,6 +17,7 @@ import net.minecraft.world.gen.surfacebuilder.SteepSlopePredicate;
 import net.minecraft.world.gen.surfacebuilder.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.VerticalGradientMaterialCondition;
 import org.codeberg.zenxarch.matcomp.compiler.cw.MaterialRuleClassWriter;
+import org.codeberg.zenxarch.matcomp.rules.LithostitchedConditions;
 import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -106,6 +107,8 @@ public interface StaticMaterialCondition {
       case net.minecraft.world.gen.surfacebuilder.WaterMaterialCondition water ->
           new WaterMaterialCondition(
               water.offset(), water.surfaceDepthMultiplier(), water.addStoneDepth());
+      case LithostitchedConditions.SlopeCondition slope ->
+          new SlopeCondition(slope.threshold().minInclusive(), slope.threshold().maxInclusive());
       default -> null;
     };
   }
@@ -133,6 +136,7 @@ public interface StaticMaterialCondition {
   public static final String getMultipliedSecondaryDepthRange =
       Type.getMethodDescriptor(
           Type.INT_TYPE, Type.INT_TYPE, Type.getType(MaterialRuleContext.class));
+  public static final String slopeCondDesc = getDescriptorForCondition(int.class, int.class);
 
   public static record AboveYCondition(int y, int surfaceDepthMultiplier, boolean addStoneDepth)
       implements StaticMaterialCondition {
@@ -317,6 +321,16 @@ public interface StaticMaterialCondition {
 
       mv.visitLabel(finalL);
 
+      return IFEQ;
+    }
+  }
+
+  public static record SlopeCondition(int min, int max) implements StaticMaterialCondition {
+    @Override
+    public int emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+      mv.iconst(min);
+      mv.iconst(max);
+      callFuncWithCtxAtEnd(cw, mv, "slopeCondition", slopeCondDesc);
       return IFEQ;
     }
   }

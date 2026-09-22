@@ -75,4 +75,20 @@ public final class LithostitchedConditions {
       return false;
     }
   }
+
+  public static BooleanSupplier compileSlopeCondition(
+      Range<Integer> range, MaterialRuleContext ctx) {
+    return new SlopeConditionImpl(ctx, range.minInclusive(), range.maxInclusive());
+  }
+
+  public static record SlopeConditionImpl(MaterialRuleContext ctx, int min, int max)
+      implements BooleanSupplier {
+    @Override
+    public boolean get() {
+      var x = Math.abs(ctx.steepnessX);
+      if (x >= min && x <= max) return true;
+      var z = Math.abs(ctx.steepnessZ);
+      return (z >= min && z <= max);
+    }
+  }
 }
