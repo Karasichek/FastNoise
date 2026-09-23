@@ -171,8 +171,7 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
         }
         case FlattenedMaterialRule.BIOME_CONDITION -> {
           var pgidx = prog(index + 1);
-          var curBiomeIdx = pgidx * 2;
-          var biomeState = this.biomeIdx[curBiomeIdx];
+          var biomeState = this.biomeIdx[pgidx];
           var nextLast = prog(index + 2);
 
           switch (biomeState) {
@@ -197,8 +196,7 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
         }
         case FlattenedMaterialRule.NOT_BIOME_CONDITION -> {
           var pgidx = prog(index + 1);
-          var curBiomeIdx = pgidx * 2;
-          var biomeState = this.biomeIdx[curBiomeIdx];
+          var biomeState = this.biomeIdx[pgidx];
           var nextLast = prog(index + 2);
 
           switch (biomeState) {
