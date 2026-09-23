@@ -10,7 +10,6 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
-import net.minecraft.resource.DataConfiguration;
 import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
@@ -21,7 +20,6 @@ import net.minecraft.test.TestServer;
 import net.minecraft.util.Util;
 import net.minecraft.util.collection.BoundedRegionArray;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.AbstractChunkHolder;
@@ -32,9 +30,8 @@ import net.minecraft.world.chunk.PalettesFactory;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.dimension.DimensionOptions;
-import net.minecraft.world.level.LevelInfo;
-import net.minecraft.world.level.LevelInfo.DifficultySettings;
 import net.minecraft.world.level.LevelProperties;
+import net.minecraft.world.level.LevelProperties.SpecialProperty;
 import net.minecraft.world.level.storage.LevelStorage.Session;
 import org.jspecify.annotations.Nullable;
 
@@ -89,15 +86,12 @@ public final class TestGlobals {
   public static ServerWorld create(
       RegistryKey<World> key, RegistryKey<DimensionOptions> dimensionOptions, long seed) {
     var levelData =
-        new LevelProperties(
-            new LevelInfo(
-                "A",
-                GameMode.CREATIVE,
-                DifficultySettings.DEFAULT,
-                true,
-                DataConfiguration.SAFE_MODE),
-            LevelProperties.SpecialProperty.NONE,
-            Lifecycle.stable());
+        saveLoader.saveProperties().data() instanceof LevelProperties props
+            ? props
+            : new LevelProperties(
+                saveLoader.saveProperties().data().getLevelInfo(),
+                SpecialProperty.NONE,
+                Lifecycle.stable());
     server.getWorldGenSettings().generatorOptions().seed = seed;
     return new ServerWorld(
         server,
