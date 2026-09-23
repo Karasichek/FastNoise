@@ -282,9 +282,14 @@ public interface StaticMaterialCondition {
       var finalL = new Label();
 
       loadFluidHeight(cw, mv);
-      // mv.dup();
       mv.iconst(Integer.MIN_VALUE);
       mv.ificmpeq(retTrue);
+
+      loadY(cw, mv);
+      if (addStoneDepth) {
+        loadStoneDepthAbove(cw, mv);
+        mv.add(Type.INT_TYPE);
+      }
 
       loadFluidHeight(cw, mv);
       if (offset != 0) {
@@ -305,13 +310,7 @@ public interface StaticMaterialCondition {
         }
       }
 
-      loadY(cw, mv);
-      if (addStoneDepth) {
-        loadStoneDepthAbove(cw, mv);
-        mv.add(Type.INT_TYPE);
-      }
-
-      mv.ificmpge(retFalse);
+      mv.ificmplt(retFalse);
 
       mv.visitLabel(retTrue);
       mv.iconst(1);
