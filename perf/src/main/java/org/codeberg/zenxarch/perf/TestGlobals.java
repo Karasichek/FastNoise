@@ -1,6 +1,5 @@
 package org.codeberg.zenxarch.perf;
 
-import com.mojang.serialization.Lifecycle;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -31,7 +30,6 @@ import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.level.LevelProperties;
-import net.minecraft.world.level.LevelProperties.SpecialProperty;
 import net.minecraft.world.level.storage.LevelStorage.Session;
 import org.jspecify.annotations.Nullable;
 
@@ -85,19 +83,12 @@ public final class TestGlobals {
 
   public static ServerWorld create(
       RegistryKey<World> key, RegistryKey<DimensionOptions> dimensionOptions, long seed) {
-    var levelData =
-        saveLoader.saveProperties().data() instanceof LevelProperties props
-            ? props
-            : new LevelProperties(
-                saveLoader.saveProperties().data().getLevelInfo(),
-                SpecialProperty.NONE,
-                Lifecycle.stable());
     server.getWorldGenSettings().generatorOptions().seed = seed;
     return new ServerWorld(
         server,
         Util.getMainWorkerExecutor(),
         session,
-        levelData,
+        (LevelProperties) saveLoader.saveProperties().data(),
         key,
         manager.getOrThrow(RegistryKeys.DIMENSION).getOrThrow(dimensionOptions).value(),
         false,
