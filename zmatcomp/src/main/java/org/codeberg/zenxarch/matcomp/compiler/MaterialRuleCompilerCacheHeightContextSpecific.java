@@ -1,9 +1,10 @@
 package org.codeberg.zenxarch.matcomp.compiler;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
+import it.unimi.dsi.fastutil.shorts.ShortArrays;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
@@ -19,11 +20,11 @@ import org.codeberg.zenxarch.matcomp.config.MaterialRuleCompilerConfig;
 public class MaterialRuleCompilerCacheHeightContextSpecific {
   public final FlattenedMaterialRule flattened;
 
-  private final Object2ObjectLinkedOpenCustomHashMap<int[], FlattenedBlockStateRule> cache =
+  private final Object2ObjectLinkedOpenCustomHashMap<short[], FlattenedBlockStateRule> cache =
       new Object2ObjectLinkedOpenCustomHashMap<>(
           MaterialRuleCompilerConfig.MAX_CACHE_SIZE,
           Object2ObjectOpenCustomHashMap.FAST_LOAD_FACTOR,
-          IntArrays.HASH_STRATEGY);
+          ShortArrays.HASH_STRATEGY);
 
   public MaterialRuleCompilerCacheHeightContextSpecific(
       HeightContext context, NoiseConfig config, MaterialRule rule) {
@@ -43,7 +44,7 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
   public static final int NOT_STATIC_CONDITION = 10;
 
   public synchronized FlattenedBlockStateRule get(MaterialRuleContext ctx) {
-    var key = new int[flattened.biomeConditions.length * 2];
+    var key = new short[flattened.biomeConditions.length];
     fillBiomeCacheKey(key, flattened, ctx);
     var res = cache.getAndMoveToFirst(key);
     if (res != null) return res;
@@ -55,21 +56,17 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
     return res;
   }
 
-  public static final int BIOME_NONE = 0;
-  public static final int BIOME_ALL = 1;
-  public static final int BIOME_MANY = 2;
-  public static final int BIOME_SINGLE = 3;
+  public static final short BIOME_NONE = 0;
+  public static final short BIOME_ALL = 1;
+  public static final short BIOME_MANY = 2;
+  public static final short BIOME_SINGLE = 3;
 
   private static void fillBiomeCacheKey(
-      int[] arr, FlattenedMaterialRule rule, MaterialRuleContext ctx) {
+      short[] arr, FlattenedMaterialRule rule, MaterialRuleContext ctx) {
     var included = ctx.getIncludedBiomes();
 
     if (included == null) {
-      for (int i = 0; i < rule.biomeConditions.length; i++) {
-        var idx = i * 2;
-        arr[idx] = BIOME_MANY;
-        arr[idx + 1] = 0;
-      }
+      Arrays.fill(arr, BIOME_MANY);
       return;
     }
 
@@ -87,11 +84,8 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
         }
       }
 
-      var idx = i * 2;
-      arr[idx + 1] = 0;
-      if (count == 0) arr[idx] = BIOME_NONE;
+      if (count == 0) arr[i] = BIOME_NONE;
       else if (count == 1) {
-        arr[idx] = BIOME_SINGLE;
         var biomeIdx = -1;
         for (int k = 0; k < rule.biomes.length; k++) {
           if (lastBiome == rule.biomes[k]) {
@@ -99,9 +93,10 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
             break;
           }
         }
-        arr[idx + 1] = biomeIdx;
-      } else if (count == biomes.length) arr[idx] = BIOME_ALL;
-      else arr[idx] = BIOME_MANY;
+        arr[i] = (short) (BIOME_SINGLE + (short) biomeIdx);
+        if (biomeIdx >= 65533) throw new IllegalStateException("Too many biomes detected");
+      } else if (count == biomes.length) arr[i] = BIOME_ALL;
+      else arr[i] = BIOME_MANY;
     }
   }
 
@@ -109,7 +104,7 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
 
   public static FlattenedBlockStateRule of(
       FlattenedMaterialRule rule,
-      int[] biomeIdx,
+      short[] biomeIdx,
       MaterialRuleCompilerCacheHeightContextSpecific ctx) {
     return new Builder(rule, biomeIdx).build(ctx);
   }
@@ -120,9 +115,9 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
     private final IntArrayList ruleIdx;
     private final IntArrayList instructions;
 
-    private final int[] biomeIdx;
+    private final short[] biomeIdx;
 
-    public Builder(FlattenedMaterialRule rule, int[] biomeIdx) {
+    public Builder(FlattenedMaterialRule rule, short[] biomeIdx) {
       this.flattened = rule;
       this.biomeIdx = biomeIdx;
       this.condIdx = new IntArrayList();
@@ -178,7 +173,6 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
           var pgidx = prog(index + 1);
           var curBiomeIdx = pgidx * 2;
           var biomeState = this.biomeIdx[curBiomeIdx];
-          var biomeData = this.biomeIdx[curBiomeIdx + 1];
           var nextLast = prog(index + 2);
 
           switch (biomeState) {
@@ -192,8 +186,12 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
             case BIOME_MANY -> {
               conditionalPushWithInst(BIOME_CONDITION, pgidx, index, last);
             }
-            case BIOME_SINGLE -> {
-              conditionalPushWithInst(SINGLE_BIOME_CONDITION, biomeData, index, last);
+            default -> {
+              conditionalPushWithInst(
+                  SINGLE_BIOME_CONDITION,
+                  Short.toUnsignedInt(biomeState) - BIOME_SINGLE,
+                  index,
+                  last);
             }
           }
         }
@@ -201,7 +199,6 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
           var pgidx = prog(index + 1);
           var curBiomeIdx = pgidx * 2;
           var biomeState = this.biomeIdx[curBiomeIdx];
-          var biomeData = this.biomeIdx[curBiomeIdx + 1];
           var nextLast = prog(index + 2);
 
           switch (biomeState) {
@@ -215,8 +212,12 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
             case BIOME_MANY -> {
               conditionalPushWithInst(NOT_BIOME_CONDITION, pgidx, index, last);
             }
-            case BIOME_SINGLE -> {
-              conditionalPushWithInst(NOT_SINGLE_BIOME_CONDITION, biomeData, index, last);
+            default -> {
+              conditionalPushWithInst(
+                  NOT_SINGLE_BIOME_CONDITION,
+                  Short.toUnsignedInt(biomeState) - BIOME_SINGLE,
+                  index,
+                  last);
             }
           }
         }
