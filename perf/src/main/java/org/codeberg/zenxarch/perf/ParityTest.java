@@ -1,5 +1,7 @@
 package org.codeberg.zenxarch.perf;
 
+import net.minecraft.SharedConstants;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
 import org.codeberg.zenxarch.perf.parity.ChunkStorage;
 import org.codeberg.zenxarch.perf.parity.ParityGlobals;
@@ -44,8 +46,8 @@ public final class ParityTest {
     for (int i = 0; i < randomCount; i++) {
       LOGGER.info("Testing coords: {} {}", x, z);
       doParityTest(settings.withCenter(x, z));
-      x = random.nextInt();
-      z = random.nextInt();
+      x = random.nextInt(2097152) - 1048576;
+      z = random.nextInt(2097152) - 1048576;
     }
   }
 
