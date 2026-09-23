@@ -64,6 +64,15 @@ public final class TestGlobals {
     TestGlobals.session = session;
     TestGlobals.resourcePackManager = resourcePackManager;
     TestGlobals.saveLoader = saveLoader;
+    BenchmarkMain.LOGGER.info(
+        "Using datapacks : {}",
+        saveLoader
+            .saveProperties()
+            .data()
+            .getLevelInfo()
+            .dataConfiguration()
+            .dataPacks()
+            .getEnabled());
     server =
         new TestServer(
             new Thread(() -> {}),
