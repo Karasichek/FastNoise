@@ -1,7 +1,5 @@
 package org.codeberg.zenxarch.perf;
 
-import net.minecraft.SharedConstants;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
 import org.codeberg.zenxarch.perf.parity.ChunkStorage;
 import org.codeberg.zenxarch.perf.parity.ParityGlobals;
