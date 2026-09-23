@@ -12,7 +12,7 @@ public record BenchmarkSettings(
     RegistryKey<World> worldKey,
     RegistryKey<DimensionOptions> dimensionOptions) {
 
-  private static int getIntProperty(String name, int def, int min) {
+  public static int getIntProperty(String name, int def, int min) {
     var value = System.getProperty(name);
     if (value == null) return def;
     try {
@@ -69,5 +69,10 @@ public record BenchmarkSettings(
   public static BenchmarkSettings end(long seed) {
     return new BenchmarkSettings(
         endCenter, endCenter, WorldRadiusInChunks, seed, World.END, DimensionOptions.END);
+  }
+
+  public BenchmarkSettings withCenter(int centerX, int centerZ) {
+    return new BenchmarkSettings(
+        centerX, centerZ, this.radius, this.seed, this.worldKey, this.dimensionOptions);
   }
 }
