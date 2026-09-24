@@ -62,6 +62,7 @@ publishMods {
       type = SOURCES_JAR
     }
 
+    optional("zfastnoise")
     incompatible("moonrise-opt")
     requires("zconfig")
   }
@@ -84,6 +85,7 @@ publishMods {
       name = "Sources Jar"
     }
 
+    optional("zfastnoise")
     incompatible("moonrise")
     requires("zconfig")
   }

@@ -6,7 +6,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.BitSet;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -85,6 +85,27 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
     }
   }
 
+  private static int invertOpcode(int og) {
+    return switch (og) {
+      case IFEQ -> IFNE;
+      case IFNE -> IFEQ;
+      case IFGE -> IFLT;
+      case IFLT -> IFGE;
+      case IFGT -> IFLE;
+      case IFLE -> IFGT;
+      case IF_ICMPGE -> IF_ICMPLT;
+      case IF_ICMPLT -> IF_ICMPGE;
+      case IF_ICMPGT -> IF_ICMPLE;
+      case IF_ICMPLE -> IF_ICMPGT;
+      case IF_ICMPEQ -> IF_ICMPNE;
+      case IF_ACMPEQ -> IF_ACMPNE;
+      case IF_ACMPNE -> IF_ACMPEQ;
+      case IFNULL -> IFNONNULL;
+      case IFNONNULL -> IFNULL;
+      default -> throw new IllegalStateException("Unsupported jump insn");
+    };
+  }
+
   private void compile(
       int index,
       BitSet compiled,
@@ -101,12 +122,20 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
         compiled.set(index);
         compile(index + 2, compiled, contextSpecificCache);
       }
-      case MaterialRuleCompilerCacheHeightContextSpecific.CONDITION_RULE -> {
+      case MaterialRuleCompilerCacheHeightContextSpecific.CONDITION -> {
         emitIfElse(
             index,
-            mv -> {
-              emitConditionCall(mv, instructions[index + 1]);
-            },
+            mv -> emitConditionCall(mv, instructions[index + 1]),
+            index + 3,
+            instructions[index + 2]);
+        compiled.set(index);
+        compile(index + 3, compiled, contextSpecificCache);
+        compile(instructions[index + 2], compiled, contextSpecificCache);
+      }
+      case MaterialRuleCompilerCacheHeightContextSpecific.NOT_CONDITION -> {
+        emitIfElse(
+            index,
+            mv -> invertOpcode(emitConditionCall(mv, instructions[index + 1])),
             index + 3,
             instructions[index + 2]);
         compiled.set(index);
@@ -120,9 +149,17 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
       case MaterialRuleCompilerCacheHeightContextSpecific.BIOME_CONDITION -> {
         emitIfElse(
             index,
-            mv -> {
-              emitBiomeListContains(mv, instructions[index + 1]);
-            },
+            mv -> emitBiomeListContains(mv, instructions[index + 1]),
+            index + 3,
+            instructions[index + 2]);
+        compiled.set(index);
+        compile(index + 3, compiled, contextSpecificCache);
+        compile(instructions[index + 2], compiled, contextSpecificCache);
+      }
+      case MaterialRuleCompilerCacheHeightContextSpecific.NOT_BIOME_CONDITION -> {
+        emitIfElse(
+            index,
+            mv -> invertOpcode(emitBiomeListContains(mv, instructions[index + 1])),
             index + 3,
             instructions[index + 2]);
         compiled.set(index);
@@ -132,9 +169,17 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
       case MaterialRuleCompilerCacheHeightContextSpecific.SINGLE_BIOME_CONDITION -> {
         emitIfElse(
             index,
-            mv -> {
-              emitSingleBiomeEquals(mv, instructions[index + 1]);
-            },
+            mv -> emitSingleBiomeEquals(mv, instructions[index + 1]),
+            index + 3,
+            instructions[index + 2]);
+        compiled.set(index);
+        compile(index + 3, compiled, contextSpecificCache);
+        compile(instructions[index + 2], compiled, contextSpecificCache);
+      }
+      case MaterialRuleCompilerCacheHeightContextSpecific.NOT_SINGLE_BIOME_CONDITION -> {
+        emitIfElse(
+            index,
+            mv -> invertOpcode(emitSingleBiomeEquals(mv, instructions[index + 1])),
             index + 3,
             instructions[index + 2]);
         compiled.set(index);
@@ -145,7 +190,31 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
         emitIfElse(
             index,
             mv -> {
-              this.flattenedRule.staticConditions[instructions[index + 1]].emitBytecode(this, mv);
+              loadCtx(mv);
+              mv.invokestatic(
+                  this.flattenedClassname,
+                  "condition$" + instructions[index + 1],
+                  FlattenedMaterialRuleClassWriter.CONDITION_DESC,
+                  false);
+              return IFEQ;
+            },
+            index + 3,
+            instructions[index + 2]);
+        compiled.set(index);
+        compile(index + 3, compiled, contextSpecificCache);
+        compile(instructions[index + 2], compiled, contextSpecificCache);
+      }
+      case MaterialRuleCompilerCacheHeightContextSpecific.NOT_STATIC_CONDITION -> {
+        emitIfElse(
+            index,
+            mv -> {
+              loadCtx(mv);
+              mv.invokestatic(
+                  this.flattenedClassname,
+                  "condition$" + instructions[index + 1],
+                  FlattenedMaterialRuleClassWriter.CONDITION_DESC,
+                  false);
+              return IFNE;
             },
             index + 3,
             instructions[index + 2]);
@@ -170,14 +239,17 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
   }
 
   public void emitIfElse(
-      int methodIdx, Consumer<InstructionAdapter> conditionEmitter, int ifTrue, int ifFalse) {
+      int methodIdx,
+      Function<InstructionAdapter, Integer> conditionEmitter,
+      int ifTrue,
+      int ifFalse) {
     var mv = newMethod(methodIdx);
     var l0 = startMethodVisit(mv);
 
-    conditionEmitter.accept(mv);
+    var inst = conditionEmitter.apply(mv);
 
     var l1 = new Label();
-    mv.ifeq(l1);
+    mv.visitJumpInsn(inst, l1);
 
     emitTailCall(mv, ifTrue);
     mv.visitLabel(l1);
@@ -270,7 +342,7 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
     return condition.get();
   }
 
-  private void emitConditionCall(InstructionAdapter mv, int conditionIdx) {
+  private int emitConditionCall(InstructionAdapter mv, int conditionIdx) {
     loadConditions(mv);
     mv.iconst(conditionIdx);
     mv.visitInsn(AALOAD);
@@ -279,6 +351,7 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
         "zclasswriter$callCondition",
         "(L" + BOOLEAN_SUPPLIER_INTERNAL_NAME + ";)Z",
         false);
+    return IFEQ;
   }
 
   public static RegistryEntry<Biome> getCurrentBiome(MaterialRuleContext ctx) {
@@ -289,7 +362,7 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
     return biomeList.contains(biome);
   }
 
-  private void emitBiomeListContains(InstructionAdapter mv, int conditionIdx) {
+  private int emitBiomeListContains(InstructionAdapter mv, int conditionIdx) {
     mv.getstatic(
         flattenedClassname,
         "biomeList$" + conditionIdx,
@@ -311,13 +384,10 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
             + FlattenedMaterialRuleClassWriter.REGISTRY_ENTRY_DESCRIPTOR
             + ")Z",
         false);
+    return IFEQ;
   }
 
-  public static boolean singleBiomeEquals(RegistryEntry<Biome> ours, RegistryEntry<Biome> theirs) {
-    return ours == theirs;
-  }
-
-  private void emitSingleBiomeEquals(InstructionAdapter mv, int conditionIdx) {
+  private int emitSingleBiomeEquals(InstructionAdapter mv, int conditionIdx) {
     mv.getstatic(
         flattenedClassname,
         "biome$" + conditionIdx,
@@ -331,14 +401,7 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
             + ";)"
             + FlattenedMaterialRuleClassWriter.REGISTRY_ENTRY_DESCRIPTOR,
         false);
-    mv.invokestatic(
-        MATERIAL_RULE_CW_INTERNAL_NAME,
-        "singleBiomeEquals",
-        "("
-            + FlattenedMaterialRuleClassWriter.REGISTRY_ENTRY_DESCRIPTOR
-            + FlattenedMaterialRuleClassWriter.REGISTRY_ENTRY_DESCRIPTOR
-            + ")Z",
-        false);
+    return IF_ACMPNE;
   }
 
   private Label visitFunctionParams(InstructionAdapter mv, Label l0) {

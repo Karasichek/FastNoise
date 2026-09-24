@@ -9,20 +9,6 @@ import org.codeberg.zenxarch.matcomp.util.AllocFreeRandom;
 public final class MaterialRuleCompilerFunctions {
   private MaterialRuleCompilerFunctions() {}
 
-  public static boolean aboveY(
-      int testY,
-      int surfaceDepthMultiplier,
-      boolean addStoneDepth,
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
-      MaterialRuleContext context) {
-    return context.blockY + (addStoneDepth ? context.stoneDepthAbove : 0)
-        >= testY + context.runDepth * surfaceDepthMultiplier;
-  }
-
   public static boolean stoneDepth(
       int offset,
       boolean addSurfaceDepth,
@@ -47,11 +33,6 @@ public final class MaterialRuleCompilerFunctions {
       int falseAtAndAbove,
       long seedLo,
       long seedHi,
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
       MaterialRuleContext context) {
     final int blockY = context.blockY;
     if (blockY <= trueAtAndBelow) return true;
@@ -64,15 +45,7 @@ public final class MaterialRuleCompilerFunctions {
   }
 
   public static boolean checkedVerticalGradient(
-      int trueAtAndBelow,
-      int falseAtAndAbove,
-      long seed,
-      BooleanSupplier[] conditions,
-      BlockStateRule[] rules,
-      int x,
-      int y,
-      int z,
-      MaterialRuleContext context) {
+      int trueAtAndBelow, int falseAtAndAbove, long seed, MaterialRuleContext context) {
     final int blockY = context.blockY;
     if (blockY <= trueAtAndBelow) return true;
     if (blockY >= falseAtAndAbove) return false;
@@ -140,5 +113,50 @@ public final class MaterialRuleCompilerFunctions {
     if (fluidHeight == Integer.MIN_VALUE) return true;
     return (context.blockY + (addStoneDepth ? context.stoneDepthAbove : 0))
         >= fluidHeight + offset + context.runDepth * surfaceDepthMultiplier;
+  }
+
+  public static int loadX(MaterialRuleContext ctx) {
+    return ctx.blockX;
+  }
+
+  public static int loadY(MaterialRuleContext ctx) {
+    return ctx.blockY;
+  }
+
+  public static int loadZ(MaterialRuleContext ctx) {
+    return ctx.blockZ;
+  }
+
+  public static int loadStoneDepthAbove(MaterialRuleContext ctx) {
+    return ctx.stoneDepthAbove;
+  }
+
+  public static int loadStoneDepthBelow(MaterialRuleContext ctx) {
+    return ctx.stoneDepthBelow;
+  }
+
+  public static int loadRunDepth(MaterialRuleContext ctx) {
+    return ctx.runDepth;
+  }
+
+  public static int loadFluidHeight(MaterialRuleContext ctx) {
+    return ctx.fluidHeight;
+  }
+
+  public static int getMultipliedSecondaryDepthRange(
+      int secondaryDepthRange, MaterialRuleContext ctx) {
+    return (int) ((ctx.getSecondaryDepth() + 1.0) * 0.5 * secondaryDepthRange);
+  }
+
+  public static boolean negativeRunDepth(MaterialRuleContext context) {
+    return context.runDepth <= 0;
+  }
+
+  public static boolean surfacePredicate(MaterialRuleContext context) {
+    return context.blockY >= context.estimateSurfaceHeight();
+  }
+
+  public static boolean steepSlopePredicate(MaterialRuleContext context) {
+    return context.steepSlopePredicate.get();
   }
 }

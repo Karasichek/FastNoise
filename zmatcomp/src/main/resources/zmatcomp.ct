@@ -90,3 +90,6 @@ accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 accessible field net/minecraft/world/biome/source/BiomeAccess storage Lnet/minecraft/world/biome/source/BiomeAccess$Storage;
 
 accessible method net/minecraft/world/gen/surfacebuilder/SurfaceBuilder getTerracottaBlock (III)Lnet/minecraft/block/BlockState;
+
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext chunk Lnet/minecraft/world/chunk/Chunk;
+accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext uniqueHorizontalPosValue J

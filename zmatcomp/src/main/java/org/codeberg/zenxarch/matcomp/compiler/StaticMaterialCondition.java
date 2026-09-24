@@ -1,5 +1,7 @@
 package org.codeberg.zenxarch.matcomp.compiler;
 
+import static org.objectweb.asm.Opcodes.*;
+
 import java.util.Arrays;
 import java.util.stream.Stream;
 import net.minecraft.util.math.VerticalSurfaceType;
@@ -8,20 +10,82 @@ import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.AboveYMaterialCondition;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.NotMaterialCondition;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.SteepMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
-import org.codeberg.zenxarch.matcomp.compiler.cw.MaterialRuleClassWriter;
+import org.codeberg.zenxarch.matcomp.compiler.cw.FlattenedMaterialRuleClassWriter;
+import org.codeberg.zenxarch.matcomp.rules.LithostitchedConditions;
 import org.jspecify.annotations.Nullable;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
 public interface StaticMaterialCondition {
-  public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv);
+  // return boolean
+  public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv);
+
+  static void callFuncWithCtxAtEnd(
+      FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv, String funcName, String desc) {
+    cw.loadCtx(mv);
+    mv.invokestatic(MATERIALRULECOMPILER_NAME, funcName, desc, false);
+  }
+
+  static void retBoolean(InstructionAdapter mv) {
+    mv.areturn(Type.BOOLEAN_TYPE);
+  }
+
+  static void retBoolean(InstructionAdapter mv, boolean value) {
+    mv.iconst(value ? 1 : 0);
+    retBoolean(mv);
+  }
+
+  static void retBooleanUsingJump(InstructionAdapter mv, int opcode) {
+    var retFalse = new Label();
+
+    mv.visitJumpInsn(opcode, retFalse);
+
+    retBoolean(mv, true);
+
+    mv.visitLabel(retFalse);
+    retBoolean(mv, false);
+  }
+
+  static void loadX(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadX", loadIntDesc);
+  }
+
+  static void loadY(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadY", loadIntDesc);
+  }
+
+  static void loadZ(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadZ", loadIntDesc);
+  }
+
+  static void loadStoneDepthAbove(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadStoneDepthAbove", loadIntDesc);
+  }
+
+  static void loadStoneDepthBelow(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadStoneDepthBelow", loadIntDesc);
+  }
+
+  static void loadRunDepth(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadRunDepth", loadIntDesc);
+  }
+
+  static void loadFluidHeight(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+    callFuncWithCtxAtEnd(cw, mv, "loadFluidHeight", loadIntDesc);
+  }
+
+  static void getMultipliedSecondaryDepthRange(
+      FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv, int secondaryDepthRange) {
+    mv.iconst(secondaryDepthRange);
+    callFuncWithCtxAtEnd(
+        cw, mv, "getMultipliedSecondaryDepthRange", getMultipliedSecondaryDepthRange);
+  }
 
   @Nullable
   public static StaticMaterialCondition tryCreate(
@@ -53,12 +117,6 @@ public interface StaticMaterialCondition {
               stone.addSurfaceDepth(),
               stone.secondaryDepthRange(),
               stone.surfaceType() == VerticalSurfaceType.CEILING);
-      case NotMaterialCondition not -> {
-        var original = tryCreate(not.target(), context, config);
-        if (original == null) yield null;
-        if (original instanceof InvertedCondition inverted) yield inverted.original();
-        yield new InvertedCondition(original);
-      }
       case net.minecraft.world.gen.surfacebuilder.MaterialRules.HoleMaterialCondition _ ->
           HoleMaterialCondition.instance;
       case net.minecraft.world.gen.surfacebuilder.MaterialRules.SurfaceMaterialCondition _ ->
@@ -70,20 +128,14 @@ public interface StaticMaterialCondition {
       case net.minecraft.world.gen.surfacebuilder.MaterialRules.WaterMaterialCondition water ->
           new WaterMaterialCondition(
               water.offset(), water.surfaceDepthMultiplier(), water.addStoneDepth());
+      case LithostitchedConditions.SlopeCondition slope ->
+          new SlopeCondition(slope.threshold().minInclusive(), slope.threshold().maxInclusive());
       default -> null;
     };
   }
 
   private static String getDescriptorForCondition(Class<?>... classes) {
-    var baseClasses =
-        new Class<?>[] {
-          BooleanSupplier[].class,
-          BlockStateRule[].class,
-          int.class,
-          int.class,
-          int.class,
-          MaterialRuleContext.class
-        };
+    var baseClasses = new Class<?>[] {MaterialRuleContext.class};
     var types =
         Stream.concat(Arrays.stream(classes), Stream.of(baseClasses))
             .map(Type::getType)
@@ -94,26 +146,46 @@ public interface StaticMaterialCondition {
   public static final String MATERIALRULECOMPILER_NAME =
       Type.getInternalName(MaterialRuleCompilerFunctions.class);
 
-  public static final String aboveY =
-      getDescriptorForCondition(int.class, int.class, boolean.class);
-  public static final String stoneDepth =
-      getDescriptorForCondition(int.class, boolean.class, int.class, boolean.class);
   public static final String xoroVerticalGradient =
       getDescriptorForCondition(int.class, int.class, long.class, long.class);
   public static final String checkedVerticalGradient =
       getDescriptorForCondition(int.class, int.class, long.class);
-  public static final String water = getDescriptorForCondition(int.class, int.class, boolean.class);
-  public static final String common_desc = getDescriptorForCondition();
+  public static final String common_desc =
+      Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.getType(MaterialRuleContext.class));
+  public static final String loadIntDesc =
+      Type.getMethodDescriptor(Type.INT_TYPE, Type.getType(MaterialRuleContext.class));
+  public static final String getMultipliedSecondaryDepthRange =
+      Type.getMethodDescriptor(
+          Type.INT_TYPE, Type.INT_TYPE, Type.getType(MaterialRuleContext.class));
+  public static final String slopeCondDesc = getDescriptorForCondition(int.class, int.class);
+  public static final String slopeCondDescAlt = getDescriptorForCondition(int.class);
 
   public static record AboveYCondition(int y, int surfaceDepthMultiplier, boolean addStoneDepth)
       implements StaticMaterialCondition {
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+      loadY(cw, mv);
+      if (addStoneDepth) {
+        loadStoneDepthAbove(cw, mv);
+        mv.add(Type.INT_TYPE);
+      }
       mv.iconst(y);
-      mv.iconst(surfaceDepthMultiplier);
-      mv.iconst(addStoneDepth ? 1 : 0);
-      cw.callBlockStateRuleMethodInClass(mv, MATERIALRULECOMPILER_NAME, "aboveY", aboveY);
+      if (surfaceDepthMultiplier != 0) {
+        loadRunDepth(cw, mv);
+
+        if (surfaceDepthMultiplier == 1) {
+          mv.add(Type.INT_TYPE);
+        } else if (surfaceDepthMultiplier == -1) {
+          mv.sub(Type.INT_TYPE);
+        } else {
+          mv.iconst(surfaceDepthMultiplier);
+          mv.mul(Type.INT_TYPE);
+          mv.add(Type.INT_TYPE);
+        }
+      }
+
+      retBooleanUsingJump(mv, IF_ICMPLT);
     }
   }
 
@@ -122,12 +194,22 @@ public interface StaticMaterialCondition {
       implements StaticMaterialCondition {
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+      if (ceiling) loadStoneDepthBelow(cw, mv);
+      else loadStoneDepthAbove(cw, mv);
+      if (addSurfaceDepth) {
+        loadRunDepth(cw, mv);
+        mv.sub(Type.INT_TYPE);
+      }
+
+      if (secondaryDepthRange != 0) {
+        getMultipliedSecondaryDepthRange(cw, mv, secondaryDepthRange);
+        mv.sub(Type.INT_TYPE);
+      }
+
       mv.iconst(offset);
-      mv.iconst(addSurfaceDepth ? 1 : 0);
-      mv.iconst(secondaryDepthRange);
-      mv.iconst(ceiling ? 1 : 0);
-      cw.callBlockStateRuleMethodInClass(mv, MATERIALRULECOMPILER_NAME, "stoneDepth", stoneDepth);
+
+      retBooleanUsingJump(mv, IF_ICMPGT);
     }
   }
 
@@ -136,52 +218,44 @@ public interface StaticMaterialCondition {
       implements StaticMaterialCondition {
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
       mv.iconst(trueAtAndBelow);
       mv.iconst(falseAtAndAbove);
       mv.lconst(seedLo);
       mv.lconst(seedHi);
-      cw.callBlockStateRuleMethodInClass(
-          mv, MATERIALRULECOMPILER_NAME, "xoroVerticalGradient", xoroVerticalGradient);
+      cw.loadCtx(mv);
+      mv.invokestatic(
+          MATERIALRULECOMPILER_NAME, "xoroVerticalGradient", xoroVerticalGradient, false);
+
+      retBoolean(mv);
     }
   }
 
   public static record VerticalGradientConditionChecked(
       int trueAtAndBelow, int falseAtAndAbove, long seed) implements StaticMaterialCondition {
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
       mv.iconst(trueAtAndBelow);
       mv.iconst(falseAtAndAbove);
       mv.lconst(seed);
-      cw.callBlockStateRuleMethodInClass(
-          mv, MATERIALRULECOMPILER_NAME, "checkedVerticalGradient", checkedVerticalGradient);
-    }
-  }
+      cw.loadCtx(mv);
+      mv.invokestatic(
+          MATERIALRULECOMPILER_NAME, "checkedVerticalGradient", checkedVerticalGradient, false);
 
-  public static boolean not(boolean value) {
-    return !value;
+      retBoolean(mv);
+    }
   }
 
   public static final String STATIC_MATERIAL_CONDITION_INTERNAL_NAME =
       Type.getInternalName(StaticMaterialCondition.class);
 
-  public static record InvertedCondition(StaticMaterialCondition original)
-      implements StaticMaterialCondition {
-
-    @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
-      original.emitBytecode(cw, mv);
-      mv.invokestatic(STATIC_MATERIAL_CONDITION_INTERNAL_NAME, "not", "(Z)Z", true);
-    }
-  }
-
   public static record HoleMaterialCondition() implements StaticMaterialCondition {
     public static HoleMaterialCondition instance = new HoleMaterialCondition();
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
-      cw.callBlockStateRuleMethodInClass(
-          mv, MATERIALRULECOMPILER_NAME, "negativeRunDepth", common_desc);
+    public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+      loadRunDepth(cw, mv);
+      retBooleanUsingJump(mv, IFGT);
     }
   }
 
@@ -189,9 +263,10 @@ public interface StaticMaterialCondition {
     public static SurfaceMaterialCondition instance = new SurfaceMaterialCondition();
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
-      cw.callBlockStateRuleMethodInClass(
-          mv, MATERIALRULECOMPILER_NAME, "surfacePredicate", common_desc);
+    public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+      cw.loadCtx(mv);
+      mv.invokestatic(MATERIALRULECOMPILER_NAME, "surfacePredicate", common_desc, false);
+      retBoolean(mv);
     }
   }
 
@@ -199,9 +274,10 @@ public interface StaticMaterialCondition {
     public static TemperatureMaterialCondition instance = new TemperatureMaterialCondition();
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
-      cw.callBlockStateRuleMethodInClass(
-          mv, MATERIALRULECOMPILER_NAME, "biomeTemperaturePredicate", common_desc);
+    public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+      cw.loadCtx(mv);
+      mv.invokestatic(MATERIALRULECOMPILER_NAME, "biomeTemperaturePredicate", common_desc, false);
+      retBoolean(mv);
     }
   }
 
@@ -209,9 +285,10 @@ public interface StaticMaterialCondition {
     public static SteepMaterialCondition instance = new SteepMaterialCondition();
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
-      cw.callBlockStateRuleMethodInClass(
-          mv, MATERIALRULECOMPILER_NAME, "steepSlopePredicate", common_desc);
+    public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+      cw.loadCtx(mv);
+      mv.invokestatic(MATERIALRULECOMPILER_NAME, "steepSlopePredicate", common_desc, false);
+      retBoolean(mv);
     }
   }
 
@@ -219,11 +296,68 @@ public interface StaticMaterialCondition {
       int offset, int surfaceDepthMultiplier, boolean addStoneDepth)
       implements StaticMaterialCondition {
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
-      mv.iconst(offset);
-      mv.iconst(surfaceDepthMultiplier);
-      mv.iconst(addStoneDepth ? 1 : 0);
-      cw.callBlockStateRuleMethodInClass(mv, MATERIALRULECOMPILER_NAME, "water", water);
+    public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+
+      var retTrue = new Label();
+      var retFalse = new Label();
+
+      loadFluidHeight(cw, mv);
+      mv.iconst(Integer.MIN_VALUE);
+      mv.ificmpeq(retTrue);
+
+      loadY(cw, mv);
+      if (addStoneDepth) {
+        loadStoneDepthAbove(cw, mv);
+        mv.add(Type.INT_TYPE);
+      }
+
+      loadFluidHeight(cw, mv);
+      if (offset != 0) {
+        mv.iconst(offset);
+        mv.add(Type.INT_TYPE);
+      }
+      if (surfaceDepthMultiplier != 0) {
+        loadRunDepth(cw, mv);
+
+        if (surfaceDepthMultiplier == 1) {
+          mv.add(Type.INT_TYPE);
+        } else if (surfaceDepthMultiplier == -1) {
+          mv.sub(Type.INT_TYPE);
+        } else {
+          mv.iconst(surfaceDepthMultiplier);
+          mv.mul(Type.INT_TYPE);
+          mv.add(Type.INT_TYPE);
+        }
+      }
+
+      mv.ificmplt(retFalse);
+
+      mv.visitLabel(retTrue);
+      retBoolean(mv, true);
+
+      mv.visitLabel(retFalse);
+      retBoolean(mv, false);
+    }
+  }
+
+  public static record SlopeCondition(int min, int max) implements StaticMaterialCondition {
+    @Override
+    public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
+      if (min == max) {
+        mv.iconst(min);
+        callFuncWithCtxAtEnd(cw, mv, "slopeConditionEquals", slopeCondDescAlt);
+      } else if (min <= 0) {
+        mv.iconst(max);
+        callFuncWithCtxAtEnd(cw, mv, "slopeConditionBelow", slopeCondDescAlt);
+      } else if (max == Integer.MAX_VALUE) {
+        mv.iconst(min);
+        callFuncWithCtxAtEnd(cw, mv, "slopeConditionAbove", slopeCondDescAlt);
+      } else {
+        mv.iconst(min);
+        mv.iconst(max);
+        callFuncWithCtxAtEnd(cw, mv, "slopeCondition", slopeCondDesc);
+      }
+      retBoolean(mv);
     }
   }
 }

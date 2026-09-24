@@ -14,8 +14,8 @@ public class MaterialRuleCompilerConfigEntries extends ConfigEntries {
           builder ->
               builder
                   .addComment("Max size of surface rule compiler cache per gb of allocated memory")
-                  .defaultValue(100)
-                  .constraints(16, 65536));
+                  .defaultValue(4096)
+                  .constraints(16, 1048576));
 
   public static final BooleanConfigEntry MIXIN_COMPILER =
       INSTANCE.createEntry(

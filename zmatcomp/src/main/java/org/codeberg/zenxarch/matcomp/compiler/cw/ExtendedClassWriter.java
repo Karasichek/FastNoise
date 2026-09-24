@@ -30,8 +30,11 @@ public abstract class ExtendedClassWriter {
   static {
     if (dumpClasses) {
       try {
-        for (var file : dumpDir.toFile().listFiles()) {
-          if (file.getName().endsWith(".class")) file.delete();
+        var f = dumpDir.toFile();
+        if (f.exists()) {
+          for (var file : f.listFiles()) {
+            if (file.getName().endsWith(".class")) file.delete();
+          }
         }
       } catch (Exception e) {
         MaterialRuleCompilerConstants.LOGGER.error("Failed to clean class dump", e);
