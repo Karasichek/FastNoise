@@ -189,8 +189,15 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
       case MaterialRuleCompilerCacheHeightContextSpecific.STATIC_CONDITION -> {
         emitIfElse(
             index,
-            mv ->
-                this.flattenedRule.staticConditions[instructions[index + 1]].emitBytecode(this, mv),
+            mv -> {
+              loadCtx(mv);
+              mv.invokestatic(
+                  this.flattenedClassname,
+                  "condition$" + instructions[index + 1],
+                  FlattenedMaterialRuleClassWriter.CONDITION_DESC,
+                  false);
+              return IFEQ;
+            },
             index + 3,
             instructions[index + 2]);
         compiled.set(index);
@@ -200,10 +207,15 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
       case MaterialRuleCompilerCacheHeightContextSpecific.NOT_STATIC_CONDITION -> {
         emitIfElse(
             index,
-            mv ->
-                invertOpcode(
-                    this.flattenedRule.staticConditions[instructions[index + 1]].emitBytecode(
-                        this, mv)),
+            mv -> {
+              loadCtx(mv);
+              mv.invokestatic(
+                  this.flattenedClassname,
+                  "condition$" + instructions[index + 1],
+                  FlattenedMaterialRuleClassWriter.CONDITION_DESC,
+                  false);
+              return IFNE;
+            },
             index + 3,
             instructions[index + 2]);
         compiled.set(index);
