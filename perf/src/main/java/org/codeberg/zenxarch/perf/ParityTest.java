@@ -60,7 +60,12 @@ public final class ParityTest {
         ChunkRegion.of(fakeWorld, settings.centerX(), settings.centerZ(), settings.radius() + 1);
 
     generateChunk(
-        fakeWorld, base, biomes, MOD_LOADED ? "Modded " : "Vanilla " + name, settings.seed(), name);
+        fakeWorld,
+        base,
+        biomes,
+        (MOD_LOADED ? "Modded " : "Vanilla ") + name,
+        settings.seed(),
+        name);
     LOGGER.info(name + " matches");
   }
 
