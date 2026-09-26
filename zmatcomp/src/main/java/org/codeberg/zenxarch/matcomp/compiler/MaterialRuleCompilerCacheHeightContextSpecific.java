@@ -72,6 +72,11 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
 
     final var biomes = (RegistryEntry<Biome>[]) included.toArray(RegistryEntry[]::new);
 
+    if (biomes.length == 1) {
+      fillBiomeCacheKeySingle(arr, rule, biomes[0]);
+      return;
+    }
+
     for (int i = 0; i < rule.biomeConditions.length; i++) {
       var cond = rule.biomeConditions[i];
       RegistryEntry<Biome> lastBiome = null;
@@ -97,6 +102,14 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
         if (biomeIdx >= 65533) throw new IllegalStateException("Too many biomes detected");
       } else if (count == biomes.length) arr[i] = BIOME_ALL;
       else arr[i] = BIOME_MANY;
+    }
+  }
+
+  private static void fillBiomeCacheKeySingle(
+      short[] arr, FlattenedMaterialRule rule, RegistryEntry<Biome> biome) {
+    for (int i = 0; i < rule.biomeConditions.length; i++) {
+      if (rule.biomeConditions[i].contains(biome)) arr[i] = BIOME_ALL;
+      else arr[i] = BIOME_NONE;
     }
   }
 
