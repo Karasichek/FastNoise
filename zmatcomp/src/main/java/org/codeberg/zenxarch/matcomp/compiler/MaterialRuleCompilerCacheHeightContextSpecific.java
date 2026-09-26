@@ -43,9 +43,13 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
   public static final int NOT_SINGLE_BIOME_CONDITION = 9;
   public static final int NOT_STATIC_CONDITION = 10;
 
-  public synchronized FlattenedBlockStateRule get(MaterialRuleContext ctx) {
+  public FlattenedBlockStateRule get(MaterialRuleContext ctx) {
     var key = new short[flattened.biomeConditions.length];
     fillBiomeCacheKey(key, flattened, ctx);
+    return get(key);
+  }
+
+  public synchronized FlattenedBlockStateRule get(short[] key) {
     var res = cache.getAndMoveToFirst(key);
     if (res != null) return res;
 
