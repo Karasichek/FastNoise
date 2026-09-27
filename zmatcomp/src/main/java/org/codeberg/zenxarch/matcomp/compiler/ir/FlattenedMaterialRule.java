@@ -1,5 +1,7 @@
 package org.codeberg.zenxarch.matcomp.compiler.ir;
 
+import static org.codeberg.zenxarch.matcomp.config.MaterialRuleCompilerConfig.MAX_DEPTH;
+
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
@@ -122,8 +124,6 @@ public class FlattenedMaterialRule {
         states.toArray(BlockState[]::new),
         program.toIntArray());
   }
-
-  private static final int MAX_DEPTH = 7;
 
   private static void push(
       IntArrayList program,
