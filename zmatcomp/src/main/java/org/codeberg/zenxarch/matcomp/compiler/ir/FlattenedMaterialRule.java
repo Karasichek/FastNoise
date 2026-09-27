@@ -1,5 +1,7 @@
 package org.codeberg.zenxarch.matcomp.compiler.ir;
 
+import static org.codeberg.zenxarch.matcomp.config.MaterialRuleCompilerConfig.MAX_DEPTH;
+
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
@@ -121,8 +123,6 @@ public class FlattenedMaterialRule {
         program.toIntArray());
   }
 
-  private static final int MAX_DEPTH = 7;
-
   private static void push(
       IntArrayList program,
       List<MaterialRule> rules,
@@ -221,7 +221,7 @@ public class FlattenedMaterialRule {
               ctx,
               config,
               rulex,
-              depth);
+              (depth + 1 == MAX_DEPTH) ? depth : depth + 1);
           if (curIdx + 2 == program.size() && program.getInt(program.size() - 2) == STATE_RULE) {
             break; // break since if there is simple block state rule present it would always
             // discontinue from here
