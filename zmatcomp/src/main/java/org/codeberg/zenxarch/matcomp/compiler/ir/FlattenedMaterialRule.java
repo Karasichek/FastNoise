@@ -223,7 +223,7 @@ public class FlattenedMaterialRule {
               ctx,
               config,
               rulex,
-              depth);
+              (depth + 1 == MAX_DEPTH) ? depth : depth + 1);
           if (curIdx + 2 == program.size() && program.getInt(program.size() - 2) == STATE_RULE) {
             break; // break since if there is simple block state rule present it would always
             // discontinue from here
