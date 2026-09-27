@@ -61,10 +61,14 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
     var cw = new MaterialRuleClassWriter(classname, instructions, flattenedRule);
     cw.start();
 
-    var compiled = new BitSet(instructions.length);
-    cw.compile(0, compiled, contextSpecificCache);
+    if (instructions.length == 0) {
+      cw.emitNullReturn();
+    } else {
+      var compiled = new BitSet(instructions.length);
+      cw.compile(0, compiled, contextSpecificCache);
+    }
 
-    var clazz = cw.finish();
+    var clazz = cw.finish(false);
 
     try {
       return MethodHandles.lookup()
@@ -255,6 +259,17 @@ public final class MaterialRuleClassWriter extends ExtendedClassWriter {
     mv.visitLabel(l1);
 
     emitTailCall(mv, ifFalse);
+
+    visitFunctionParams(mv, l0);
+    endMethodVisit(mv);
+  }
+
+  public void emitNullReturn() {
+    var mv = newMethod(0);
+    var l0 = startMethodVisit(mv);
+
+    mv.aconst(null);
+    mv.visitInsn(ARETURN);
 
     visitFunctionParams(mv, l0);
     endMethodVisit(mv);

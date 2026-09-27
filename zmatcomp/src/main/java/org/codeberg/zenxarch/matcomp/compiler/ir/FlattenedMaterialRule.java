@@ -20,6 +20,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRule.RegisteredRule;
 import net.minecraft.world.gen.surfacebuilder.NotMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.SequenceMaterialRule;
+import org.codeberg.zenxarch.matcomp.compiler.CompiledMaterialRule;
 import org.codeberg.zenxarch.matcomp.compiler.StaticMaterialCondition;
 import org.codeberg.zenxarch.matcomp.compiler.StaticMaterialRule;
 import org.codeberg.zenxarch.matcomp.compiler.cw.FlattenedMaterialRuleClassWriter;
@@ -106,7 +107,8 @@ public class FlattenedMaterialRule {
         staticRules,
         ctx,
         config,
-        rule);
+        rule,
+        0);
 
     for (var cond : biomeConditions) for (var biome : cond) add(biomes, biome);
 
@@ -121,6 +123,8 @@ public class FlattenedMaterialRule {
         program.toIntArray());
   }
 
+  private static final int MAX_DEPTH = 7;
+
   private static void push(
       IntArrayList program,
       List<MaterialRule> rules,
@@ -131,7 +135,25 @@ public class FlattenedMaterialRule {
       List<StaticMaterialRule> staticRules,
       HeightContext ctx,
       NoiseConfig config,
-      MaterialRule rule) {
+      MaterialRule ruleValue,
+      int depth) {
+
+    final var rule = dereference(ruleValue);
+
+    if (depth >= MAX_DEPTH) {
+      switch (rule) {
+        case BlockMaterialRule block -> {
+          program.add(STATE_RULE);
+          program.add(add(states, block.resultState()));
+        }
+        default -> {
+          program.add(MATERIAL_RULE);
+          program.add(add(rules, new CompiledMaterialRule(rule)));
+        }
+      }
+      return;
+    }
+
     switch (rule) {
       case BlockMaterialRule block -> {
         program.add(STATE_RULE);
@@ -176,7 +198,8 @@ public class FlattenedMaterialRule {
             staticRules,
             ctx,
             config,
-            cond.thenRun());
+            cond.thenRun(),
+            depth + 1);
         program.set(idx, program.size());
       }
       case SequenceMaterialRule seq -> {
@@ -192,25 +215,13 @@ public class FlattenedMaterialRule {
               staticRules,
               ctx,
               config,
-              rulex);
+              rulex,
+              depth);
           if (curIdx + 2 == program.size() && program.getInt(program.size() - 2) == STATE_RULE) {
             break; // break since if there is simple block state rule present it would always
             // discontinue from here
           }
         }
-      }
-      case RegisteredRule reg -> {
-        push(
-            program,
-            rules,
-            conditions,
-            states,
-            biomeConditions,
-            staticConditions,
-            staticRules,
-            ctx,
-            config,
-            reg.holder().value());
       }
       default -> {
         var staticRule = StaticMaterialRule.getRule(rule);
@@ -228,6 +239,11 @@ public class FlattenedMaterialRule {
   private static MaterialCondition dereference(MaterialCondition condition) {
     if (condition instanceof RegisteredCondition reg) return dereference(reg.holder().value());
     return condition;
+  }
+
+  private static MaterialRule dereference(MaterialRule rule) {
+    if (rule instanceof RegisteredRule reg) return dereference(reg.holder().value());
+    return rule;
   }
 
   private static <T> int add(List<T> array, T value) {

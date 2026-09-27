@@ -69,7 +69,7 @@ public final class FlattenedMaterialRuleClassWriter extends ExtendedClassWriter 
       cw.writeStaticCondition(rule.staticConditions[i], i);
     }
 
-    return cw.finish();
+    return cw.finish(true);
   }
 
   public FlattenedMaterialRuleClassWriter(String classname) {
