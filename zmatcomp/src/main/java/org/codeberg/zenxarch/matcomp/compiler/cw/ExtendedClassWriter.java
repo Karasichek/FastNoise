@@ -71,13 +71,15 @@ public abstract class ExtendedClassWriter {
     mv.visitEnd();
   }
 
-  public Class<?> finish() {
+  public Class<?> finish(boolean permanent) {
     cw.visitEnd();
     var bytes = cw.toByteArray();
 
     if (dumpClasses) dumpClass(classname, bytes);
 
-    return defineClass(classname, bytes);
+    return permanent
+        ? definePermanentClass(classname, bytes)
+        : defineTemporaryClass(classname, bytes);
   }
 
   public void addStaticFinalField(String name, String desc, String signature) {
@@ -125,31 +127,45 @@ public abstract class ExtendedClassWriter {
     mv.visitVarInsn(ALOAD, index);
   }
 
-  private static final Object2ObjectMap<String, byte[]> clazzes =
+  private static final Object2ObjectMap<String, byte[]> permanentClazzes =
+      Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>());
+
+  private static final Object2ObjectMap<String, byte[]> temporaryClazzes =
       Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>());
 
   private static final ClassLoader clazzLoader =
       new ClassLoader(ExtendedClassWriter.class.getClassLoader()) {
         @Override
         public Class<?> loadClass(String name) throws ClassNotFoundException {
-          synchronized (this.getClassLoadingLock(name)) {
-            var c = this.findLoadedClass(name);
-            if (c != null) return c;
-            if (clazzes.containsKey(name)) {
-              var bytes = clazzes.get(name);
-              return super.defineClass(name, bytes, 0, bytes.length);
-            }
 
-            return super.loadClass(name);
+          if (permanentClazzes.containsKey(name)) {
+            var bytes = permanentClazzes.get(name);
+            return super.defineClass(name, bytes, 0, bytes.length);
+          } else if (temporaryClazzes.containsKey(name)) {
+            var bytes = temporaryClazzes.get(name);
+            temporaryClazzes.remove(name);
+            return super.defineClass(name, bytes, 0, bytes.length);
           }
+
+          return super.loadClass(name);
         }
       };
 
-  public static Class<?> defineClass(String className, byte[] bytes) {
-    clazzes.put(className, bytes);
+  public static Class<?> defineTemporaryClass(String className, byte[] bytes) {
+    temporaryClazzes.put(className, bytes);
 
     try {
-      return clazzLoader.loadClass(className);
+      return Class.forName(className, true, clazzLoader);
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static Class<?> definePermanentClass(String className, byte[] bytes) {
+    permanentClazzes.put(className, bytes);
+
+    try {
+      return Class.forName(className, true, clazzLoader);
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }

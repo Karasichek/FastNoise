@@ -43,9 +43,13 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
   public static final int NOT_SINGLE_BIOME_CONDITION = 9;
   public static final int NOT_STATIC_CONDITION = 10;
 
-  public synchronized FlattenedBlockStateRule get(MaterialRuleContext ctx) {
+  public FlattenedBlockStateRule get(MaterialRuleContext ctx) {
     var key = new short[flattened.biomeConditions.length];
     fillBiomeCacheKey(key, flattened, ctx);
+    return get(key);
+  }
+
+  public synchronized FlattenedBlockStateRule get(short[] key) {
     var res = cache.getAndMoveToFirst(key);
     if (res != null) return res;
 
@@ -72,6 +76,11 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
 
     final var biomes = (RegistryEntry<Biome>[]) included.toArray(RegistryEntry[]::new);
 
+    if (biomes.length == 1) {
+      fillBiomeCacheKeySingle(arr, rule, biomes[0]);
+      return;
+    }
+
     for (int i = 0; i < rule.biomeConditions.length; i++) {
       var cond = rule.biomeConditions[i];
       RegistryEntry<Biome> lastBiome = null;
@@ -97,6 +106,14 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
         if (biomeIdx >= 65533) throw new IllegalStateException("Too many biomes detected");
       } else if (count == biomes.length) arr[i] = BIOME_ALL;
       else arr[i] = BIOME_MANY;
+    }
+  }
+
+  private static void fillBiomeCacheKeySingle(
+      short[] arr, FlattenedMaterialRule rule, RegistryEntry<Biome> biome) {
+    for (int i = 0; i < rule.biomeConditions.length; i++) {
+      if (rule.biomeConditions[i].contains(biome)) arr[i] = BIOME_ALL;
+      else arr[i] = BIOME_NONE;
     }
   }
 

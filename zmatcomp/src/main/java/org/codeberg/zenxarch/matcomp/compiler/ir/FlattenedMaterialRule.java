@@ -18,6 +18,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.NotMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
+import org.codeberg.zenxarch.matcomp.compiler.CompiledMaterialRule;
 import org.codeberg.zenxarch.matcomp.compiler.StaticMaterialCondition;
 import org.codeberg.zenxarch.matcomp.compiler.StaticMaterialRule;
 import org.codeberg.zenxarch.matcomp.compiler.cw.FlattenedMaterialRuleClassWriter;
@@ -104,7 +105,8 @@ public class FlattenedMaterialRule {
         staticRules,
         ctx,
         config,
-        rule);
+        rule,
+        0);
 
     for (var cond : biomeConditions) for (var biome : cond) add(biomes, biome);
 
@@ -119,6 +121,8 @@ public class FlattenedMaterialRule {
         program.toIntArray());
   }
 
+  private static final int MAX_DEPTH = 7;
+
   private static void push(
       IntArrayList program,
       List<MaterialRule> rules,
@@ -129,7 +133,53 @@ public class FlattenedMaterialRule {
       List<StaticMaterialRule> staticRules,
       HeightContext ctx,
       NoiseConfig config,
-      MaterialRule rule) {
+      MaterialRule ruleValue,
+      int depth) {
+
+    final var rule = dereference(ruleValue);
+
+    if (depth >= MAX_DEPTH) {
+      switch (rule) {
+        case BlockMaterialRule block -> {
+          program.add(STATE_RULE);
+          program.add(add(states, block.resultState()));
+        }
+        case ConditionMaterialRule cond -> {
+          var ifTrue = dereference(cond.ifTrue());
+          var reversed = false;
+          while (ifTrue instanceof NotMaterialCondition notCond) {
+            ifTrue = dereference(notCond.target());
+            reversed = !reversed;
+          }
+
+          if (ifTrue instanceof BiomeMaterialRule biomeCond) {
+            pushCond(
+                program,
+                rules,
+                conditions,
+                states,
+                biomeConditions,
+                staticConditions,
+                staticRules,
+                ctx,
+                config,
+                biomeCond,
+                cond.thenRun(),
+                reversed,
+                depth);
+          } else {
+            program.add(MATERIAL_RULE);
+            program.add(add(rules, new CompiledMaterialRule(rule)));
+          }
+        }
+        default -> {
+          program.add(MATERIAL_RULE);
+          program.add(add(rules, new CompiledMaterialRule(rule)));
+        }
+      }
+      return;
+    }
+
     switch (rule) {
       case BlockMaterialRule block -> {
         program.add(STATE_RULE);
@@ -142,29 +192,7 @@ public class FlattenedMaterialRule {
           ifTrue = dereference(notCond.target());
           reversed = !reversed;
         }
-
-        if (ifTrue instanceof BiomeMaterialRule biomeCond) {
-          program.add(BIOME_CONDITION);
-          program.add(add(biomeConditions, biomeCond.biomes()));
-        } else {
-          var staticCond = StaticMaterialCondition.tryCreate(ifTrue, ctx, config);
-          if (staticCond != null) {
-            program.add(STATIC_CONDITION);
-            program.add(add(staticConditions, staticCond));
-          } else {
-            program.add(CONDITION);
-            program.add(add(conditions, ifTrue));
-          }
-        }
-
-        if (reversed) {
-          var opcodeIdx = program.size() - 2;
-          program.set(opcodeIdx, invertOpcode(program.getInt(opcodeIdx)));
-        }
-
-        var idx = program.size();
-        program.add(0);
-        push(
+        pushCond(
             program,
             rules,
             conditions,
@@ -174,8 +202,10 @@ public class FlattenedMaterialRule {
             staticRules,
             ctx,
             config,
-            cond.thenRun());
-        program.set(idx, program.size());
+            ifTrue,
+            cond.thenRun(),
+            reversed,
+            depth);
       }
       case SequenceMaterialRule seq -> {
         for (var rulex : seq.sequence()) {
@@ -190,7 +220,8 @@ public class FlattenedMaterialRule {
               staticRules,
               ctx,
               config,
-              rulex);
+              rulex,
+              depth);
           if (curIdx + 2 == program.size() && program.getInt(program.size() - 2) == STATE_RULE) {
             break; // break since if there is simple block state rule present it would always
             // discontinue from here
@@ -210,8 +241,63 @@ public class FlattenedMaterialRule {
     }
   }
 
+  private static void pushCond(
+      IntArrayList program,
+      List<MaterialRule> rules,
+      List<MaterialCondition> conditions,
+      List<BlockState> states,
+      List<RegistryEntryList<Biome>> biomeConditions,
+      List<StaticMaterialCondition> staticConditions,
+      List<StaticMaterialRule> staticRules,
+      HeightContext ctx,
+      NoiseConfig config,
+      MaterialCondition ifTrue,
+      MaterialRule thenRun,
+      boolean reversed,
+      int depth) {
+
+    if (ifTrue instanceof BiomeMaterialRule biomeCond) {
+      program.add(BIOME_CONDITION);
+      program.add(add(biomeConditions, biomeCond.biomes()));
+    } else {
+      var staticCond = StaticMaterialCondition.tryCreate(ifTrue, ctx, config);
+      if (staticCond != null) {
+        program.add(STATIC_CONDITION);
+        program.add(add(staticConditions, staticCond));
+      } else {
+        program.add(CONDITION);
+        program.add(add(conditions, ifTrue));
+      }
+    }
+
+    if (reversed) {
+      var opcodeIdx = program.size() - 2;
+      program.set(opcodeIdx, invertOpcode(program.getInt(opcodeIdx)));
+    }
+
+    var idx = program.size();
+    program.add(0);
+    push(
+        program,
+        rules,
+        conditions,
+        states,
+        biomeConditions,
+        staticConditions,
+        staticRules,
+        ctx,
+        config,
+        thenRun,
+        depth + 1);
+    program.set(idx, program.size());
+  }
+
   private static MaterialCondition dereference(MaterialCondition condition) {
     return condition;
+  }
+
+  private static MaterialRule dereference(MaterialRule rule) {
+    return rule;
   }
 
   private static <T> int add(List<T> array, T value) {
