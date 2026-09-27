@@ -23,7 +23,7 @@ public class MaterialRuleCompilerConfigEntries extends ConfigEntries {
           builder ->
               builder
                   .addComment("Max depth of surface rule program")
-                  .defaultValue(7)
+                  .defaultValue(4)
                   .constraints(2, 128));
 
   public static final BooleanConfigEntry MIXIN_COMPILER =
