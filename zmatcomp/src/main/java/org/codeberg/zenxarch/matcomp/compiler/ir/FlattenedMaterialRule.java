@@ -146,6 +146,34 @@ public class FlattenedMaterialRule {
           program.add(STATE_RULE);
           program.add(add(states, block.resultState()));
         }
+        case ConditionMaterialRule cond -> {
+          var ifTrue = dereference(cond.ifTrue());
+          var reversed = false;
+          while (ifTrue instanceof NotMaterialCondition notCond) {
+            ifTrue = dereference(notCond.target());
+            reversed = !reversed;
+          }
+
+          if (ifTrue instanceof BiomeMaterialCondition biomeCond) {
+            pushCond(
+                program,
+                rules,
+                conditions,
+                states,
+                biomeConditions,
+                staticConditions,
+                staticRules,
+                ctx,
+                config,
+                biomeCond,
+                cond.thenRun(),
+                reversed,
+                depth);
+          } else {
+            program.add(MATERIAL_RULE);
+            program.add(add(rules, new CompiledMaterialRule(rule)));
+          }
+        }
         default -> {
           program.add(MATERIAL_RULE);
           program.add(add(rules, new CompiledMaterialRule(rule)));
@@ -166,29 +194,7 @@ public class FlattenedMaterialRule {
           ifTrue = dereference(notCond.target());
           reversed = !reversed;
         }
-
-        if (ifTrue instanceof BiomeMaterialCondition biomeCond) {
-          program.add(BIOME_CONDITION);
-          program.add(add(biomeConditions, biomeCond.biomes()));
-        } else {
-          var staticCond = StaticMaterialCondition.tryCreate(ifTrue, ctx, config);
-          if (staticCond != null) {
-            program.add(STATIC_CONDITION);
-            program.add(add(staticConditions, staticCond));
-          } else {
-            program.add(CONDITION);
-            program.add(add(conditions, ifTrue));
-          }
-        }
-
-        if (reversed) {
-          var opcodeIdx = program.size() - 2;
-          program.set(opcodeIdx, invertOpcode(program.getInt(opcodeIdx)));
-        }
-
-        var idx = program.size();
-        program.add(0);
-        push(
+        pushCond(
             program,
             rules,
             conditions,
@@ -198,9 +204,10 @@ public class FlattenedMaterialRule {
             staticRules,
             ctx,
             config,
+            ifTrue,
             cond.thenRun(),
-            depth + 1);
-        program.set(idx, program.size());
+            reversed,
+            depth);
       }
       case SequenceMaterialRule seq -> {
         for (var rulex : seq.sequence()) {
@@ -234,6 +241,57 @@ public class FlattenedMaterialRule {
         }
       }
     }
+  }
+
+  private static void pushCond(
+      IntArrayList program,
+      List<MaterialRule> rules,
+      List<MaterialCondition> conditions,
+      List<BlockState> states,
+      List<RegistryEntryList<Biome>> biomeConditions,
+      List<StaticMaterialCondition> staticConditions,
+      List<StaticMaterialRule> staticRules,
+      HeightContext ctx,
+      NoiseConfig config,
+      MaterialCondition ifTrue,
+      MaterialRule thenRun,
+      boolean reversed,
+      int depth) {
+
+    if (ifTrue instanceof BiomeMaterialCondition biomeCond) {
+      program.add(BIOME_CONDITION);
+      program.add(add(biomeConditions, biomeCond.biomes()));
+    } else {
+      var staticCond = StaticMaterialCondition.tryCreate(ifTrue, ctx, config);
+      if (staticCond != null) {
+        program.add(STATIC_CONDITION);
+        program.add(add(staticConditions, staticCond));
+      } else {
+        program.add(CONDITION);
+        program.add(add(conditions, ifTrue));
+      }
+    }
+
+    if (reversed) {
+      var opcodeIdx = program.size() - 2;
+      program.set(opcodeIdx, invertOpcode(program.getInt(opcodeIdx)));
+    }
+
+    var idx = program.size();
+    program.add(0);
+    push(
+        program,
+        rules,
+        conditions,
+        states,
+        biomeConditions,
+        staticConditions,
+        staticRules,
+        ctx,
+        config,
+        thenRun,
+        depth + 1);
+    program.set(idx, program.size());
   }
 
   private static MaterialCondition dereference(MaterialCondition condition) {
