@@ -24,6 +24,8 @@ import org.codeberg.zenxarch.matcomp.compiler.CompiledMaterialRule;
 import org.codeberg.zenxarch.matcomp.compiler.StaticMaterialCondition;
 import org.codeberg.zenxarch.matcomp.compiler.StaticMaterialRule;
 import org.codeberg.zenxarch.matcomp.compiler.cw.FlattenedMaterialRuleClassWriter;
+import org.codeberg.zenxarch.matcomp.rules.LithostitchedConditions.LithostitchedBiomeCondition;
+import org.codeberg.zenxarch.matcomp.rules.LithostitchedRules;
 
 public class FlattenedMaterialRule {
 
@@ -228,6 +230,27 @@ public class FlattenedMaterialRule {
           }
         }
       }
+      case LithostitchedRules.ReferenceRule ref -> {
+        for (var rulex : ref.options()) {
+          var curIdx = program.size();
+          push(
+              program,
+              rules,
+              conditions,
+              states,
+              biomeConditions,
+              staticConditions,
+              staticRules,
+              ctx,
+              config,
+              rulex.value(),
+              (depth + 1 == MAX_DEPTH) ? depth : depth + 1);
+          if (curIdx + 2 == program.size() && program.getInt(program.size() - 2) == STATE_RULE) {
+            break; // break since if there is simple block state rule present it would always
+            // discontinue from here
+          }
+        }
+      }
       default -> {
         var staticRule = StaticMaterialRule.getRule(rule);
         if (staticRule != null) {
@@ -257,6 +280,9 @@ public class FlattenedMaterialRule {
       int depth) {
 
     if (ifTrue instanceof BiomeMaterialRule biomeCond) {
+      program.add(BIOME_CONDITION);
+      program.add(add(biomeConditions, biomeCond.biomes()));
+    } else if (ifTrue instanceof LithostitchedBiomeCondition biomeCond) {
       program.add(BIOME_CONDITION);
       program.add(add(biomeConditions, biomeCond.biomes()));
     } else {

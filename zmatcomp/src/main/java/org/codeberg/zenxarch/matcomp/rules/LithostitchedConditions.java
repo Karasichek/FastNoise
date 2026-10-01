@@ -2,8 +2,10 @@ package org.codeberg.zenxarch.matcomp.rules;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
+import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.util.dynamic.Range;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BooleanSupplier;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
@@ -19,6 +21,10 @@ public final class LithostitchedConditions {
 
   public static interface AllOfCondition extends MaterialCondition {
     public List<MaterialCondition> conditions();
+  }
+
+  public static interface LithostitchedBiomeCondition extends MaterialCondition {
+    public RegistryEntryList<Biome> biomes();
   }
 
   public static BooleanSupplier compileAllofCondition(

@@ -13,7 +13,10 @@
     "lithostitched.SlopeConditionMixin",
     "lithostitched.AnyOfConditionMixin",
     "lithostitched.AllOfConditionMixin",
-    "lithostitched.BandlandsRuleMixin"
+    "lithostitched.BandlandsRuleMixin",
+    "lithostitched.ExtraMaterialRules$LithostitchedBiomeConditionMixin",
+    "lithostitched.ExtraMaterialRules$TagFilledConditionMixin",
+    "lithostitched.ExtraMaterialRules$ReferenceRuleMixin"
   ],
   "injectors": {
     "defaultRequire": 1

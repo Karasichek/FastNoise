@@ -2,6 +2,7 @@ package org.codeberg.zenxarch.matcomp.rules;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
@@ -15,6 +16,10 @@ public final class LithostitchedRules {
 
   public static interface BandlandsRule extends MaterialRule {
     public RegistryEntry<Bandlands> options();
+  }
+
+  public static interface ReferenceRule extends MaterialRule {
+    public RegistryEntryList<MaterialRule> options();
   }
 
   public static BlockStateRule compile(BandlandsRule rule, MaterialRuleContext ctx) {
