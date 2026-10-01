@@ -164,8 +164,6 @@ public final class FastCopyBufferDataIntoChunks {
 
     final var postProcessingLists = chunk.getPostProcessingLists();
 
-    var defaultState = mappings[2];
-
     var idx = (chunkOffX * 16) + (horizontalSize * chunkOffZ * 16);
     final var yStep = horizontalSize * horizontalSize;
 
@@ -182,7 +180,6 @@ public final class FastCopyBufferDataIntoChunks {
             sections,
             rawSections,
             postProcessingLists,
-            defaultState,
             mappings,
             getLong(rawData, zidx));
         handleLong(
@@ -193,7 +190,6 @@ public final class FastCopyBufferDataIntoChunks {
             sections,
             rawSections,
             postProcessingLists,
-            defaultState,
             mappings,
             getLong(rawData, zidx + 8));
       }
@@ -201,7 +197,7 @@ public final class FastCopyBufferDataIntoChunks {
       idx += yStep;
     }
 
-    finalizeChunks(sections, chunk, defaultState);
+    finalizeChunks(sections, chunk, mappings[2] == null ? FastNoiseGen.AIR : mappings[2]);
   }
 
   private static long getLong(MemorySegment rawData, int idx) {
@@ -216,7 +212,6 @@ public final class FastCopyBufferDataIntoChunks {
       FastChunkSection[] sections,
       ChunkSection[] chunkSections,
       ShortList[] postProcessingLists,
-      BlockState defaultState,
       BlockState[] mappings,
       long value) {
     if (value == 0x0101010101010101L) return;
