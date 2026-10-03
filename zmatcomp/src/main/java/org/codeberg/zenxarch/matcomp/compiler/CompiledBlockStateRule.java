@@ -2,13 +2,12 @@ package org.codeberg.zenxarch.matcomp.compiler;
 
 import java.lang.invoke.MethodHandle;
 import net.minecraft.block.BlockState;
-import net.minecraft.world.gen.HeightContext;
-import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.surfacebuilder.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.BooleanSupplier;
-import net.minecraft.world.gen.surfacebuilder.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
 import org.codeberg.zenxarch.matcomp.MaterialRuleCompilerConstants;
+import org.codeberg.zenxarch.matcomp.compiler.ir.FlattenedBlockStateRule;
+import org.codeberg.zenxarch.matcomp.compiler.ir.FlattenedMaterialRule;
 import org.jspecify.annotations.Nullable;
 
 public final class CompiledBlockStateRule implements BlockStateRule {
@@ -19,25 +18,20 @@ public final class CompiledBlockStateRule implements BlockStateRule {
   private final MethodHandle handle;
 
   public CompiledBlockStateRule(
-      MaterialRuleContext ctx, HeightContext heightContext, NoiseConfig config, MaterialRule rule) {
-    var cache =
-        ((MaterialRuleCompilerCacheHolder) ctx.surfaceBuilder)
-            .zenxarch$getCache()
-            .get(heightContext, config, rule);
-
-    var flattenedRule = cache.get(ctx);
-
+      MaterialRuleContext ctx,
+      FlattenedMaterialRule flattened,
+      FlattenedBlockStateRule flattenedRule) {
     this.handle = flattenedRule.handle;
     this.conditions = new BooleanSupplier[flattenedRule.condIdx.length];
 
     for (int i = 0; i < this.conditions.length; i++) {
-      this.conditions[i] = cache.flattened.conditions[flattenedRule.condIdx[i]].getPredicate(ctx);
+      this.conditions[i] = flattened.conditions[flattenedRule.condIdx[i]].getPredicate(ctx);
     }
 
     this.rules = new BlockStateRule[flattenedRule.ruleIdx.length];
 
     for (int i = 0; i < this.rules.length; i++) {
-      this.rules[i] = cache.flattened.rules[flattenedRule.ruleIdx[i]].getBlockStateRule(ctx);
+      this.rules[i] = flattened.rules[flattenedRule.ruleIdx[i]].getBlockStateRule(ctx);
     }
 
     this.ctx = ctx;

@@ -9,7 +9,12 @@ public final record CompiledMaterialRule(MaterialRule rule) implements MaterialR
 
   @Override
   public BlockStateRule getBlockStateRule(MaterialRuleContext context) {
-    return new CompiledBlockStateRule(context, context.heightContext, context.noiseConfig, rule);
+    var cache =
+        ((MaterialRuleCompilerCacheHolder) context.surfaceBuilder)
+            .zenxarch$getCache()
+            .get(context.heightContext, context.noiseConfig, rule);
+
+    return cache.get(context);
   }
 
   @Override

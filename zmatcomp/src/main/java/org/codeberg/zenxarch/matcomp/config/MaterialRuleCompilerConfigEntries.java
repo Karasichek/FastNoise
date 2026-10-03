@@ -17,15 +17,6 @@ public class MaterialRuleCompilerConfigEntries extends ConfigEntries {
                   .defaultValue(4096)
                   .constraints(16, 1048576));
 
-  public static final IntConfigEntry MAX_DEPTH =
-      INSTANCE.createIntEntry(
-          "perf.compiler.max_depth",
-          builder ->
-              builder
-                  .addComment("Max depth of surface rule program")
-                  .defaultValue(4)
-                  .constraints(2, 128));
-
   public static final BooleanConfigEntry MIXIN_COMPILER =
       INSTANCE.createEntry(
           "mixin.perf.compiler",

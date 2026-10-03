@@ -8,7 +8,8 @@ import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(SurfaceBuilder.class)
 public abstract class SurfaceBuilderMixin implements MaterialRuleCompilerCacheHolder {
-  @Unique MaterialRuleCompilerCache zenxarch$cache = MaterialRuleCompilerCache.create();
+  @Unique
+  private final MaterialRuleCompilerCache zenxarch$cache = MaterialRuleCompilerCache.create();
 
   @Override
   public MaterialRuleCompilerCache zenxarch$getCache() {
