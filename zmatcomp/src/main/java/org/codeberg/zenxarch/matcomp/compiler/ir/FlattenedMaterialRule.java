@@ -1,7 +1,5 @@
 package org.codeberg.zenxarch.matcomp.compiler.ir;
 
-import static org.codeberg.zenxarch.matcomp.config.MaterialRuleCompilerConfig.MAX_DEPTH;
-
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
@@ -20,7 +18,6 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.NotMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
-import org.codeberg.zenxarch.matcomp.compiler.CompiledMaterialRule;
 import org.codeberg.zenxarch.matcomp.compiler.StaticMaterialCondition;
 import org.codeberg.zenxarch.matcomp.compiler.StaticMaterialRule;
 import org.codeberg.zenxarch.matcomp.compiler.cw.FlattenedMaterialRuleClassWriter;
@@ -109,8 +106,7 @@ public class FlattenedMaterialRule {
         staticRules,
         ctx,
         config,
-        rule,
-        0);
+        rule);
 
     for (var cond : biomeConditions) for (var biome : cond) add(biomes, biome);
 
@@ -135,52 +131,9 @@ public class FlattenedMaterialRule {
       List<StaticMaterialRule> staticRules,
       HeightContext ctx,
       NoiseConfig config,
-      MaterialRule ruleValue,
-      int depth) {
+      MaterialRule ruleValue) {
 
     final var rule = dereference(ruleValue);
-
-    if (depth >= MAX_DEPTH) {
-      switch (rule) {
-        case BlockMaterialRule block -> {
-          program.add(STATE_RULE);
-          program.add(add(states, block.resultState()));
-        }
-        case ConditionMaterialRule cond -> {
-          var ifTrue = dereference(cond.ifTrue());
-          var reversed = false;
-          while (ifTrue instanceof NotMaterialCondition notCond) {
-            ifTrue = dereference(notCond.target());
-            reversed = !reversed;
-          }
-
-          if (ifTrue instanceof BiomeMaterialRule biomeCond) {
-            pushCond(
-                program,
-                rules,
-                conditions,
-                states,
-                biomeConditions,
-                staticConditions,
-                staticRules,
-                ctx,
-                config,
-                biomeCond,
-                cond.thenRun(),
-                reversed,
-                depth);
-          } else {
-            program.add(MATERIAL_RULE);
-            program.add(add(rules, new CompiledMaterialRule(rule)));
-          }
-        }
-        default -> {
-          program.add(MATERIAL_RULE);
-          program.add(add(rules, new CompiledMaterialRule(rule)));
-        }
-      }
-      return;
-    }
 
     switch (rule) {
       case BlockMaterialRule block -> {
@@ -206,8 +159,7 @@ public class FlattenedMaterialRule {
             config,
             ifTrue,
             cond.thenRun(),
-            reversed,
-            depth);
+            reversed);
       }
       case SequenceMaterialRule seq -> {
         for (var rulex : seq.sequence()) {
@@ -222,8 +174,7 @@ public class FlattenedMaterialRule {
               staticRules,
               ctx,
               config,
-              rulex,
-              (depth + 1 == MAX_DEPTH) ? depth : depth + 1);
+              rulex);
           if (curIdx + 2 == program.size() && program.getInt(program.size() - 2) == STATE_RULE) {
             break; // break since if there is simple block state rule present it would always
             // discontinue from here
@@ -243,8 +194,7 @@ public class FlattenedMaterialRule {
               staticRules,
               ctx,
               config,
-              rulex.value(),
-              (depth + 1 == MAX_DEPTH) ? depth : depth + 1);
+              rulex.value());
           if (curIdx + 2 == program.size() && program.getInt(program.size() - 2) == STATE_RULE) {
             break; // break since if there is simple block state rule present it would always
             // discontinue from here
@@ -276,8 +226,7 @@ public class FlattenedMaterialRule {
       NoiseConfig config,
       MaterialCondition ifTrue,
       MaterialRule thenRun,
-      boolean reversed,
-      int depth) {
+      boolean reversed) {
 
     if (ifTrue instanceof BiomeMaterialRule biomeCond) {
       program.add(BIOME_CONDITION);
@@ -313,8 +262,7 @@ public class FlattenedMaterialRule {
         staticRules,
         ctx,
         config,
-        thenRun,
-        depth + 1);
+        thenRun);
     program.set(idx, program.size());
   }
 

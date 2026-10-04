@@ -3,7 +3,6 @@ package org.codeberg.zenxarch.matcomp.compiler;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
@@ -37,9 +36,9 @@ public final class MaterialRuleCompilerCache {
       };
 
   private final Object2ObjectMap<CacheKey, MaterialRuleCompilerCacheHeightContextSpecific> cache =
-      Object2ObjectMaps.synchronize(new Object2ObjectOpenCustomHashMap<>(HEIGHT_CONTEXT_STRATEGY));
+      new Object2ObjectOpenCustomHashMap<>(HEIGHT_CONTEXT_STRATEGY);
 
-  public MaterialRuleCompilerCacheHeightContextSpecific get(
+  public synchronized MaterialRuleCompilerCacheHeightContextSpecific get(
       HeightContext context, NoiseConfig config, MaterialRule rule) {
     return this.cache.computeIfAbsent(
         new CacheKey(context, config, rule),

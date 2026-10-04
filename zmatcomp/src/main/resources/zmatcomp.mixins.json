@@ -10,6 +10,7 @@
     "perf.surface.AboveYMaterialConditionMixin",
     "perf.surface.SurfaceBuilderMixin",
     "perf.biome.SurfaceBuilderMixin",
+    "perf.packed.ChunkGeneratingMixin",
     "lithostitched.SlopeConditionMixin",
     "lithostitched.AnyOfConditionMixin",
     "lithostitched.AllOfConditionMixin",
