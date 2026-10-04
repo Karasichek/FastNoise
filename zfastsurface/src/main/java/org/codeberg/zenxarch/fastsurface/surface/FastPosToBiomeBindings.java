@@ -43,6 +43,7 @@ public final class FastPosToBiomeBindings {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public static Function<BlockPos, RegistryEntry<Biome>> call_FastPosToBiome$createPosToBiome(
       final BiomeAccess biomeAccess,
       final Chunk chunk,

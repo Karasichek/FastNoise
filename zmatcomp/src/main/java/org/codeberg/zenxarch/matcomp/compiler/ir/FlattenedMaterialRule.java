@@ -83,6 +83,7 @@ public class FlattenedMaterialRule {
             "FlattenedRule$" + classNum.incrementAndGet(), this);
   }
 
+  @SuppressWarnings("unchecked")
   public static FlattenedMaterialRule flatten(
       MaterialRule rule, HeightContext ctx, NoiseConfig config) {
     var program = new IntArrayList(64);

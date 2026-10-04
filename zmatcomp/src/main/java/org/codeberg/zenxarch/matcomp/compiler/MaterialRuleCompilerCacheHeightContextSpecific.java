@@ -44,7 +44,8 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
 
     public synchronized void access(short[] key) {
       this.accessCount++;
-      if (this.compiled == null && this.accessCount > 128) {
+      if (this.compiled == null
+          && this.accessCount > MaterialRuleCompilerConfig.MAX_INVOCATIONS_BEFORE_COMPILE) {
         this.compiled = MaterialRuleCompilerCacheHeightContextSpecific.this.getCompiled(key);
       }
     }
@@ -138,6 +139,7 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
       return;
     }
 
+    @SuppressWarnings("unchecked")
     final var biomes = (RegistryEntry<Biome>[]) included.toArray(RegistryEntry[]::new);
 
     if (biomes.length == 1) {
