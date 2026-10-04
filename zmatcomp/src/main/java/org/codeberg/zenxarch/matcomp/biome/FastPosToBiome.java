@@ -81,7 +81,7 @@ public final class FastPosToBiome {
   public static Set<RegistryEntry<Biome>> getBiomes(
       final ChunkRegion chunkRegion, final int rangeChunks) {
     final var result = new ObjectArraySet<RegistryEntry<Biome>>();
-    final var reusableIntSet = new IntArraySet();
+    final var reusableIntSet = new IntArraySet(4);
     final var cpos = chunkRegion.getCenterPos();
     final var cx = cpos.x();
     final var cz = cpos.z();
