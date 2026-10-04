@@ -44,7 +44,8 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
 
     public synchronized void access(short[] key) {
       this.accessCount++;
-      if (this.compiled == null && this.accessCount > 128) {
+      if (this.compiled == null
+          && this.accessCount > MaterialRuleCompilerConfig.MAX_INVOCATIONS_BEFORE_COMPILE) {
         this.compiled = MaterialRuleCompilerCacheHeightContextSpecific.this.getCompiled(key);
       }
     }
