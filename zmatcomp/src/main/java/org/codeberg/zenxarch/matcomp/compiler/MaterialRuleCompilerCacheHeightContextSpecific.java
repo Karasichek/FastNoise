@@ -138,6 +138,7 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
       return;
     }
 
+    @SuppressWarnings("unchecked")
     final var biomes = (RegistryEntry<Biome>[]) included.toArray(RegistryEntry[]::new);
 
     if (biomes.length == 1) {
