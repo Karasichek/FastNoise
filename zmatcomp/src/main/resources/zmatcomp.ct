@@ -53,7 +53,7 @@ accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRu
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BlockStateRule
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BooleanSupplier
 
-accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BiomeMaterialRule
+accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$BiomeMaterialCondition
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$NoiseThresholdMaterialCondition
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$VerticalGradientMaterialCondition
 accessible class net/minecraft/world/gen/surfacebuilder/MaterialRules$AboveYMaterialCondition

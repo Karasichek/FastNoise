@@ -11,7 +11,7 @@ import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
-import net.minecraft.world.gen.surfacebuilder.MaterialRules.BiomeMaterialRule;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BiomeMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.ConditionMaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
@@ -229,7 +229,7 @@ public class FlattenedMaterialRule {
       MaterialRule thenRun,
       boolean reversed) {
 
-    if (ifTrue instanceof BiomeMaterialRule biomeCond) {
+    if (ifTrue instanceof BiomeMaterialCondition biomeCond) {
       program.add(BIOME_CONDITION);
       program.add(add(biomeConditions, biomeCond.biomes()));
     } else if (ifTrue instanceof LithostitchedBiomeCondition biomeCond) {
