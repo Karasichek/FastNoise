@@ -9,7 +9,15 @@
     "perf.surface.ConditionMaterialRuleMixin",
     "perf.surface.AboveYMaterialConditionMixin",
     "perf.surface.SurfaceBuilderMixin",
-    "perf.biome.SurfaceBuilderMixin"
+    "perf.biome.SurfaceBuilderMixin",
+    "lithostitched.SlopeConditionMixin",
+    "lithostitched.AnyOfConditionMixin",
+    "lithostitched.AllOfConditionMixin",
+    "lithostitched.BandlandsRuleMixin",
+    "lithostitched.ExtraMaterialRules$LithostitchedBiomeConditionMixin",
+    "lithostitched.ExtraMaterialRules$TagFilledConditionMixin",
+    "lithostitched.ExtraMaterialRules$ReferenceRuleMixin",
+    "MaterialRuleContextMixin"
   ],
   "injectors": {
     "defaultRequire": 1

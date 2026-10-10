@@ -4,7 +4,8 @@ task taskName options="":
     ./gradlew {{options}} :{{taskName}}
 
 build:
-    just task build
+    # just task build
+    ./gradlew build
 
 wrapper:
     ./gradlew wrapper --gradle-version=latest && ./gradlew wrapper
@@ -26,6 +27,9 @@ stop:
 
 clean:
     ./gradlew clean
+
+perf +args="":
+  ./perf.sh {{args}}
 
 # Available props zperfbenchmark zuseasync zworldname zbenchmode zwarmuptime zmeasuretime zwarmups zmeasures zforks zthreads zseed zworldradius zendcenter zworldcenter
 perfSurface +args="":
@@ -57,6 +61,14 @@ parityServer +args="":
 
 parityClient +args="":
     ./gradlew :perf:runServer -Pzparity="true" -Pzparityserver="false" -Pzmod="false" {{args}}
+
+parity +args="":
+  tmux new-session -d 'bash'
+  tmux split-window -h 'bash'
+  tmux send -t 0:0.0 "just parityServer {{args}}" C-m
+  tmux send -t 0:0.1 "sleep 10" C-m
+  tmux send -t 0:0.1 "just parityClient {{args}}" C-m
+  tmux -2 attach-session -d
 
 bytecode:
     ./bytecode.sh

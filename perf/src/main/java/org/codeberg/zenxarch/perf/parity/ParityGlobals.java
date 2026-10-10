@@ -85,7 +85,10 @@ public class ParityGlobals {
     while (true) {
       synchronized (clientData) {
         var res = clientData.getOrDefault(key, null);
-        if (res != null) return res;
+        if (res != null) {
+          clientData.remove(key);
+          return res;
+        }
       }
       try {
         Thread.sleep(100);

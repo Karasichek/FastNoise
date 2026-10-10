@@ -6,6 +6,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import org.codeberg.zenxarch.matcomp.rules.BiomePredicate;
+import org.codeberg.zenxarch.matcomp.rules.ConditionalBlockStateRule;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -25,6 +26,6 @@ public abstract class ConditionMaterialRuleMixin {
     if (rule == BiomePredicate.ALWAYS_NULL) return rule;
     if (condition == BiomePredicate.ALWAYS_TRUE) return rule;
 
-    return (x, y, z) -> condition.get() ? rule.tryApply(x, y, z) : null;
+    return new ConditionalBlockStateRule(condition, rule);
   }
 }

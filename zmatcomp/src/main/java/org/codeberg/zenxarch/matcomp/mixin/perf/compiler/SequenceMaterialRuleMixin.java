@@ -5,7 +5,7 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.SequenceMaterialRule;
-import org.codeberg.zenxarch.matcomp.compiler.MaterialRuleInterpreter;
+import org.codeberg.zenxarch.matcomp.compiler.CompiledBlockStateRule;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -17,7 +17,7 @@ public abstract class SequenceMaterialRuleMixin {
 
   @Overwrite
   public BlockStateRule apply(final MaterialRuleContext context) {
-    return MaterialRuleInterpreter.of(
+    return new CompiledBlockStateRule(
         context, context.heightContext, context.noiseConfig, (SequenceMaterialRule) (Object) this);
   }
 }

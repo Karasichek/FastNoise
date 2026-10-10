@@ -12,6 +12,7 @@ loom {
 dependencies {
   implementation project(path: ":zconfig", configuration: "namedElements")
   include project(":zfastnoise-ocl")
+  runtimeOnly project(path: ":zfastnoise-ocl", configuration: "namedElements")
 }
 
 processResources {
@@ -62,6 +63,10 @@ publishMods {
     announcementTitle = "Download from Modrinth"
 
     additionalFile(sourcesJar) {
+      type = SOURCES_JAR
+    }
+
+    additionalFile(project(":zfastnoise-ocl").sourcesJar) {
       type = SOURCES_JAR
     }
 

@@ -1,7 +1,7 @@
 default: build
 
 task taskName options="":
-    ../gradlew {{options}} :zmatcomp:{{taskName}}
+    ../gradlew :zmatcomp:{{taskName}} {{options}}
 
 build:
     just task build
@@ -14,6 +14,9 @@ run:
 
 runFast:
     just task runClient -Pzfastsurface=true
+
+runWithDump:
+    just task runClient -Pzdumpclass
 
 server:
     just task runServer
