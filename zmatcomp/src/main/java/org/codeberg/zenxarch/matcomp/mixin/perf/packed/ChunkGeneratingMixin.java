@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 public abstract class ChunkGeneratingMixin {
   @Overwrite
   private static Set<RegistryEntry<Biome>> getBiomesAround(
-      final ChunkRegion region, final int radiusChunks) {
-    return FastPosToBiome.getBiomes(region, radiusChunks);
+      final ChunkRegion chunkRegion, final int rangeChunks) {
+    return FastPosToBiome.getBiomes(chunkRegion, chunkRegion.getCenterPos(), rangeChunks);
   }
 }
