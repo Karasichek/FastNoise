@@ -22,3 +22,7 @@ accessible method net/minecraft/test/TestServer <init> (Ljava/lang/Thread;Lnet/m
 
 accessible field net/minecraft/world/gen/GeneratorOptions seed J
 mutable field net/minecraft/world/gen/GeneratorOptions seed J
+
+accessible method net/minecraft/world/chunk/ChunkGenerating populateBiomes (Lnet/minecraft/world/chunk/ChunkGenerationContext;Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/util/collection/BoundedRegionArray;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;
+accessible method net/minecraft/world/chunk/ChunkGenerating populateNoise (Lnet/minecraft/world/chunk/ChunkGenerationContext;Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/util/collection/BoundedRegionArray;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;
+accessible method net/minecraft/world/chunk/ChunkGenerating buildSurface (Lnet/minecraft/world/chunk/ChunkGenerationContext;Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/util/collection/BoundedRegionArray;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;
