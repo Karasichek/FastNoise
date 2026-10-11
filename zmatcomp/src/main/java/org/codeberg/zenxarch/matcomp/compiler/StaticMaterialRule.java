@@ -4,12 +4,12 @@ import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.TerracottaBandsMaterialRule;
-import org.codeberg.zenxarch.matcomp.compiler.cw.MaterialRuleClassWriter;
+import org.codeberg.zenxarch.matcomp.compiler.cw.BaseMaterialRuleClassWriter;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
 public interface StaticMaterialRule {
-  public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv);
+  public void emitBytecode(BaseMaterialRuleClassWriter cw, InstructionAdapter mv);
 
   public static BlockState callTerracottaRule(MaterialRuleContext context, int x, int y, int z) {
     return context.surfaceBuilder.getTerracottaBlock(x, y, z);
@@ -31,7 +31,7 @@ public interface StaticMaterialRule {
     public static final TerracottaBandsRule INSTANCE = new TerracottaBandsRule();
 
     @Override
-    public void emitBytecode(MaterialRuleClassWriter cw, InstructionAdapter mv) {
+    public void emitBytecode(BaseMaterialRuleClassWriter cw, InstructionAdapter mv) {
       cw.loadCtx(mv);
       cw.loadx(mv);
       cw.loady(mv);

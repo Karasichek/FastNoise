@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
 import it.unimi.dsi.fastutil.shorts.ShortArrays;
+import java.lang.invoke.MethodHandle;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.registry.Registry;
@@ -11,9 +12,11 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.noise.NoiseConfig;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules.BlockStateRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRule;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.MaterialRuleContext;
 import org.codeberg.zenxarch.matcomp.compiler.cw.MaterialRuleClassWriter;
+import org.codeberg.zenxarch.matcomp.compiler.cw.PreCompileMaterialRuleClassWriter;
 import org.codeberg.zenxarch.matcomp.compiler.ir.FlattenedBlockStateRule;
 import org.codeberg.zenxarch.matcomp.compiler.ir.FlattenedMaterialRule;
 import org.codeberg.zenxarch.matcomp.config.MaterialRuleCompilerConfig;
@@ -21,16 +24,54 @@ import org.codeberg.zenxarch.matcomp.context.MaterialRuleContextExtension;
 
 public class MaterialRuleCompilerCacheHeightContextSpecific {
   public final FlattenedMaterialRule flattened;
+  public final MethodHandle precompile;
 
-  private final Object2ObjectLinkedOpenCustomHashMap<short[], FlattenedBlockStateRule> cache =
-      new Object2ObjectLinkedOpenCustomHashMap<>(
-          MaterialRuleCompilerConfig.MAX_CACHE_SIZE,
-          Object2ObjectOpenCustomHashMap.FAST_LOAD_FACTOR,
-          ShortArrays.HASH_STRATEGY);
+  private final class BlockStateRuleCacheKey {
+    public final Object[] biomeObjs;
+    public int accessCount = 0;
+    public FlattenedBlockStateRule compiled;
+
+    public BlockStateRuleCacheKey(short[] key) {
+      this.biomeObjs = new Object[key.length];
+      for (int i = 0; i < key.length; i++) {
+        this.biomeObjs[i] =
+            switch (key[i]) {
+              case BIOME_ALL -> Boolean.TRUE;
+              case BIOME_NONE -> Boolean.FALSE;
+              case BIOME_MANY -> flattened.biomeConditions[i];
+              default -> flattened.biomes[key[i] - BIOME_SINGLE];
+            };
+      }
+    }
+
+    public synchronized void access(short[] key) {
+      this.accessCount++;
+      if (this.compiled == null
+          && this.accessCount > MaterialRuleCompilerConfig.MAX_INVOCATIONS_BEFORE_COMPILE) {
+        this.compiled = MaterialRuleCompilerCacheHeightContextSpecific.this.getCompiled(key);
+      }
+    }
+  }
+
+  private final Object2ObjectOpenCustomHashMap<short[], BlockStateRuleCacheKey> cache =
+      new Object2ObjectOpenCustomHashMap<>(
+          1024, Object2ObjectOpenCustomHashMap.FAST_LOAD_FACTOR, ShortArrays.HASH_STRATEGY);
+
+  private final Object2ObjectLinkedOpenCustomHashMap<short[], FlattenedBlockStateRule>
+      compileCache =
+          new Object2ObjectLinkedOpenCustomHashMap<>(
+              MaterialRuleCompilerConfig.MAX_CACHE_SIZE,
+              Object2ObjectOpenCustomHashMap.FAST_LOAD_FACTOR,
+              ShortArrays.HASH_STRATEGY);
+
+  private static final AtomicInteger precompileCounter = new AtomicInteger();
 
   public MaterialRuleCompilerCacheHeightContextSpecific(
       HeightContext context, NoiseConfig config, MaterialRule rule, Registry<Biome> registry) {
     this.flattened = FlattenedMaterialRule.flatten(rule, context, config, registry);
+    this.precompile =
+        PreCompileMaterialRuleClassWriter.compile(
+            flattened, "PreCompileBlockStateRule$" + precompileCounter.incrementAndGet());
   }
 
   public static final int MATERIAL_RULE = 0;
@@ -45,20 +86,44 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
   public static final int NOT_SINGLE_BIOME_CONDITION = 9;
   public static final int NOT_STATIC_CONDITION = 10;
 
-  public FlattenedBlockStateRule get(MaterialRuleContext ctx) {
+  public BlockStateRule get(MaterialRuleContext ctx) {
     var key = new short[flattened.biomeConditions.length];
     fillBiomeCacheKey(key, flattened, ctx);
-    return get(key);
+    return get(key, ctx);
   }
 
-  public synchronized FlattenedBlockStateRule get(short[] key) {
-    var res = cache.getAndMoveToFirst(key);
-    if (res != null) return res;
+  public synchronized BlockStateRule get(short[] key, MaterialRuleContext ctx) {
+    var cacheKey = getCacheKey(key);
+    if (cacheKey.compiled != null) {
+      return new CompiledBlockStateRule(ctx, flattened, cacheKey.compiled);
+    }
 
-    res = MaterialRuleCompilerCacheHeightContextSpecific.of(flattened, key, this);
+    return new PreCompileBlockStateRule(flattened, ctx, precompile, cacheKey.biomeObjs);
+  }
+
+  private BlockStateRuleCacheKey getCacheKey(short[] key) {
+    var res = cache.get(key);
+    if (res != null) {
+      res.access(key);
+      return res;
+    }
+
+    res = new BlockStateRuleCacheKey(key);
 
     cache.put(key, res);
-    while (cache.size() > MaterialRuleCompilerConfig.MAX_CACHE_SIZE) cache.removeLast();
+    res.access(key);
+    return res;
+  }
+
+  private FlattenedBlockStateRule getCompiled(short[] key) {
+    var res = compileCache.getAndMoveToFirst(key);
+    if (res != null) return res;
+
+    res = this.of(key);
+
+    compileCache.put(key, res);
+    while (compileCache.size() > MaterialRuleCompilerConfig.MAX_CACHE_SIZE)
+      compileCache.removeLast();
     return res;
   }
 
@@ -76,6 +141,7 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
       return;
     }
 
+    @SuppressWarnings("unchecked")
     final var biomes = (RegistryEntry<Biome>[]) included.toArray(RegistryEntry[]::new);
 
     if (biomes.length == 1) {
@@ -121,11 +187,8 @@ public class MaterialRuleCompilerCacheHeightContextSpecific {
 
   private static AtomicInteger counter = new AtomicInteger(0);
 
-  public static FlattenedBlockStateRule of(
-      FlattenedMaterialRule rule,
-      short[] biomeIdx,
-      MaterialRuleCompilerCacheHeightContextSpecific ctx) {
-    return new Builder(rule, biomeIdx).build(ctx);
+  public FlattenedBlockStateRule of(short[] biomeIdx) {
+    return new Builder(this.flattened, biomeIdx).build(this);
   }
 
   private static class Builder {

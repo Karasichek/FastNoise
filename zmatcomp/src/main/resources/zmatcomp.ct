@@ -89,5 +89,4 @@ accessible method net/minecraft/world/gen/surfacebuilder/SurfaceBuilder getTerra
 
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext chunk Lnet/minecraft/world/chunk/Chunk;
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext uniqueHorizontalPosValue J
-
 accessible field net/minecraft/world/gen/surfacebuilder/MaterialRules$BiomeMaterialCondition biomes Ljava/util/List;

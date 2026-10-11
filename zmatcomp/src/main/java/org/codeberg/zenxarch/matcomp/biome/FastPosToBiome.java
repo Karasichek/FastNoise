@@ -1,5 +1,6 @@
 package org.codeberg.zenxarch.matcomp.biome;
 
+import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import java.util.Set;
 import java.util.function.Function;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -10,6 +11,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.PalettedContainer;
 import org.codeberg.zenxarch.matcomp.config.MaterialRuleCompilerConfig;
 
 public final class FastPosToBiome {
@@ -73,5 +75,51 @@ public final class FastPosToBiome {
     }
 
     return chunks;
+  }
+
+  public static Set<RegistryEntry<Biome>> getBiomes(
+      final ChunkRegion chunkRegion, final ChunkPos centerPos, final int rangeChunks) {
+    final var result = new ReferenceArraySet<RegistryEntry<Biome>>();
+    final var cx = centerPos.x();
+    final var cz = centerPos.z();
+    for (int z = -rangeChunks; z <= rangeChunks; z++) {
+      for (int x = -rangeChunks; x <= rangeChunks; x++) {
+        var chunkSections = chunkRegion.getChunk(cx + x, cz + z).getSectionArray();
+        for (int i = 0; i < chunkSections.length; i++) {
+          getBiomes(
+              result, (PalettedContainer<RegistryEntry<Biome>>) chunkSections[i].biomeContainer);
+        }
+      }
+    }
+    return result;
+  }
+
+  private static void getBiomes(
+      Set<RegistryEntry<Biome>> biomes, PalettedContainer<RegistryEntry<Biome>> container) {
+    var data = container.data;
+    var palette = data.palette();
+    if (palette.getSize() == 1) {
+      biomes.add(palette.get(0));
+      return;
+    }
+
+    if (palette.getSize() == 2) {
+      var val = data.storage().getData()[0];
+      if (val != 0x0L) biomes.add(palette.get(1));
+      if (val != ~0x0L) biomes.add(palette.get(0));
+      return;
+    }
+
+    final var storage = data.storage();
+    final var ssize = storage.getSize();
+
+    int last = -1;
+    for (int i = 0; i < ssize; i++) {
+      var c = storage.get(i);
+      if (c != last) {
+        biomes.add(palette.get(c));
+        last = c;
+      }
+    }
   }
 }
