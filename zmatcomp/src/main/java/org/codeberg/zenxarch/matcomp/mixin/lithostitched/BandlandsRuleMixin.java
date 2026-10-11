@@ -19,5 +19,5 @@ public abstract class BandlandsRuleMixin implements BandlandsRule {
 
   @Pseudo
   @Mixin(targets = "dev.worldgen.lithostitched.impl.worldgen.bandlands.Bandlands")
-  public static abstract class BandlandsMixin implements Bandlands {}
+  public abstract static class BandlandsMixin implements Bandlands {}
 }
