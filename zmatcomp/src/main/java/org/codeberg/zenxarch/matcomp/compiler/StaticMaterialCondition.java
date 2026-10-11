@@ -16,7 +16,6 @@ import net.minecraft.world.gen.surfacebuilder.MaterialRules.SteepMaterialConditi
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.StoneDepthMaterialCondition;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules.VerticalGradientMaterialCondition;
 import org.codeberg.zenxarch.matcomp.compiler.cw.FlattenedMaterialRuleClassWriter;
-import org.codeberg.zenxarch.matcomp.rules.LithostitchedConditions;
 import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -128,8 +127,6 @@ public interface StaticMaterialCondition {
       case net.minecraft.world.gen.surfacebuilder.MaterialRules.WaterMaterialCondition water ->
           new WaterMaterialCondition(
               water.offset(), water.surfaceDepthMultiplier(), water.addStoneDepth());
-      case LithostitchedConditions.SlopeCondition slope ->
-          new SlopeCondition(slope.threshold().minInclusive(), slope.threshold().maxInclusive());
       default -> null;
     };
   }
@@ -157,8 +154,6 @@ public interface StaticMaterialCondition {
   public static final String getMultipliedSecondaryDepthRange =
       Type.getMethodDescriptor(
           Type.INT_TYPE, Type.INT_TYPE, Type.getType(MaterialRuleContext.class));
-  public static final String slopeCondDesc = getDescriptorForCondition(int.class, int.class);
-  public static final String slopeCondDescAlt = getDescriptorForCondition(int.class);
 
   public static record AboveYCondition(int y, int surfaceDepthMultiplier, boolean addStoneDepth)
       implements StaticMaterialCondition {
@@ -337,27 +332,6 @@ public interface StaticMaterialCondition {
 
       mv.visitLabel(retFalse);
       retBoolean(mv, false);
-    }
-  }
-
-  public static record SlopeCondition(int min, int max) implements StaticMaterialCondition {
-    @Override
-    public void emitBytecode(FlattenedMaterialRuleClassWriter cw, InstructionAdapter mv) {
-      if (min == max) {
-        mv.iconst(min);
-        callFuncWithCtxAtEnd(cw, mv, "slopeConditionEquals", slopeCondDescAlt);
-      } else if (min <= 0) {
-        mv.iconst(max);
-        callFuncWithCtxAtEnd(cw, mv, "slopeConditionBelow", slopeCondDescAlt);
-      } else if (max == Integer.MAX_VALUE) {
-        mv.iconst(min);
-        callFuncWithCtxAtEnd(cw, mv, "slopeConditionAbove", slopeCondDescAlt);
-      } else {
-        mv.iconst(min);
-        mv.iconst(max);
-        callFuncWithCtxAtEnd(cw, mv, "slopeCondition", slopeCondDesc);
-      }
-      retBoolean(mv);
     }
   }
 }
