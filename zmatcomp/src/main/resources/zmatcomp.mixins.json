@@ -14,6 +14,7 @@
     "lithostitched.AnyOfConditionMixin",
     "lithostitched.AllOfConditionMixin",
     "lithostitched.BandlandsRuleMixin",
+    "lithostitched.BandlandsRuleMixin$BandlandsMixin",
     "lithostitched.ExtraMaterialRules$LithostitchedBiomeConditionMixin",
     "lithostitched.ExtraMaterialRules$ReferenceRuleMixin",
     "MaterialRuleContextMixin"
