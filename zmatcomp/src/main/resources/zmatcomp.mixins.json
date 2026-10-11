@@ -15,7 +15,8 @@
     "lithostitched.SlopeConditionMixin",
     "lithostitched.AnyOfConditionMixin",
     "lithostitched.AllOfConditionMixin",
-    "lithostitched.BandlandsRuleMixin"
+    "lithostitched.BandlandsRuleMixin",
+    "lithostitched.BandlandsRuleMixin$BandlandsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
