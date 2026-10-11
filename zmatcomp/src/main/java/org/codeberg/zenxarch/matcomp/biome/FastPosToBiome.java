@@ -1,6 +1,5 @@
 package org.codeberg.zenxarch.matcomp.biome;
 
-import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import java.util.Set;
 import java.util.function.Function;
@@ -79,20 +78,16 @@ public final class FastPosToBiome {
   }
 
   public static Set<RegistryEntry<Biome>> getBiomes(
-      final ChunkRegion chunkRegion, final int rangeChunks) {
+      final ChunkRegion chunkRegion, final ChunkPos centerPos, final int rangeChunks) {
     final var result = new ReferenceArraySet<RegistryEntry<Biome>>();
-    final var reusableIntSet = new IntArraySet(4);
-    final var cpos = chunkRegion.getCenterPos();
-    final var cx = cpos.x();
-    final var cz = cpos.z();
+    final var cx = centerPos.x();
+    final var cz = centerPos.z();
     for (int z = -rangeChunks; z <= rangeChunks; z++) {
       for (int x = -rangeChunks; x <= rangeChunks; x++) {
         var chunkSections = chunkRegion.getChunk(cx + x, cz + z).getSectionArray();
         for (int i = 0; i < chunkSections.length; i++) {
           getBiomes(
-              result,
-              (PalettedContainer<RegistryEntry<Biome>>) chunkSections[i].biomeContainer,
-              reusableIntSet);
+              result, (PalettedContainer<RegistryEntry<Biome>>) chunkSections[i].biomeContainer);
         }
       }
     }
@@ -100,9 +95,7 @@ public final class FastPosToBiome {
   }
 
   private static void getBiomes(
-      Set<RegistryEntry<Biome>> biomes,
-      PalettedContainer<RegistryEntry<Biome>> container,
-      IntArraySet reusableIntSet) {
+      Set<RegistryEntry<Biome>> biomes, PalettedContainer<RegistryEntry<Biome>> container) {
     var data = container.data;
     var palette = data.palette();
     if (palette.getSize() == 1) {
@@ -110,9 +103,23 @@ public final class FastPosToBiome {
       return;
     }
 
-    reusableIntSet.clear();
-    data.storage().forEach(reusableIntSet::add);
+    if (palette.getSize() == 2) {
+      var val = data.storage().getData()[0];
+      if (val != 0x0L) biomes.add(palette.get(1));
+      if (val != ~0x0L) biomes.add(palette.get(0));
+      return;
+    }
 
-    reusableIntSet.forEach(k -> biomes.add(palette.get(k)));
+    final var storage = data.storage();
+    final var ssize = storage.getSize();
+
+    int last = -1;
+    for (int i = 0; i < ssize; i++) {
+      var c = storage.get(i);
+      if (c != last) {
+        biomes.add(palette.get(c));
+        last = c;
+      }
+    }
   }
 }

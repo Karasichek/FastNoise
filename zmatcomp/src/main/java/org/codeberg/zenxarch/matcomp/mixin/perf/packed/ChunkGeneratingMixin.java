@@ -14,6 +14,6 @@ public abstract class ChunkGeneratingMixin {
   @Overwrite
   private static Set<RegistryEntry<Biome>> getBiomes(
       final ChunkRegion chunkRegion, final int rangeChunks) {
-    return FastPosToBiome.getBiomes(chunkRegion, rangeChunks);
+    return FastPosToBiome.getBiomes(chunkRegion, chunkRegion.getCenterPos(), rangeChunks);
   }
 }
