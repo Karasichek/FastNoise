@@ -1,0 +1,25 @@
+{
+	"schemaVersion": 1,
+	"id": "zconfig",
+	"version": "${version}",
+	"name": "ZConfig",
+	"description": "A mixin config mod for zfastnoise",
+	"authors": [
+		"ZenXArch"
+	],
+	"contact": {
+		"mastodon": "https://mastodon.social/@ZenXArch",
+		"discord": "https://discord.gg/RFSmd7debX",
+		"sources": "https://codeberg.org/ZenXArch/example",
+		"modrinth": "https://modrinth.com/mod/zenxarch-example"
+	},
+	"license": "Mozilla Public License 2.0",
+	"icon": "assets/zconfig/icon.png",
+	"environment": "*",
+	"entrypoints": {},
+	"mixins": [],
+	"depends": {
+		"fabricloader": ">=${loader_version}",
+		"java": ">=21"
+	}
+}

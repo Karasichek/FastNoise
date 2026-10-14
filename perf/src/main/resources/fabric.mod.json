@@ -1,0 +1,16 @@
+{
+	"schemaVersion": 1,
+	"id": "zperf",
+	"version": "${version}",
+	"name": "ZPerf",
+	"description": "This mod tests vanilla parity and benchmarks performance",
+	"authors": [
+		"ZenXArch"
+	],
+	"license": "Mozilla Public License 2.0",
+	"environment": "*",
+	"mixins": [
+		"zperf.mixins.json"
+	],
+	"accessWidener": "zperf.ct"
+}
