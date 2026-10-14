@@ -1,6 +1,8 @@
 package org.codeberg.zenxarch.fastnoise.ocl;
 
 import it.unimi.dsi.fastutil.shorts.ShortList;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import net.minecraft.block.BlockState;
@@ -39,6 +41,9 @@ public final class FastCopyBufferDataIntoChunks {
       ChunkPos startingPos,
       int batchSize) {
 
+    var blockDataSegment = MemorySegment.ofBuffer(blockOutBufferData);
+    // .reinterpret(horizontalSize * horizontalSize * verticalSize);
+
     for (int chunkOffZ = 0; chunkOffZ < batchSize; chunkOffZ++) {
       for (int chunkOffX = 0; chunkOffX < batchSize; chunkOffX++) {
         var chunk = chunks.get(startingPos.x + chunkOffX, startingPos.z + chunkOffZ);
@@ -49,7 +54,7 @@ public final class FastCopyBufferDataIntoChunks {
             chunk,
             clBlockStateMappings,
             verticalSize,
-            blockOutBufferData,
+            blockDataSegment,
             horizontalSize);
         chunk.setStatus(ChunkStatus.NOISE);
       }
@@ -152,7 +157,7 @@ public final class FastCopyBufferDataIntoChunks {
       ProtoChunk chunk,
       BlockState[] mappings,
       int verticalSize,
-      ByteBuffer rawData,
+      MemorySegment rawData,
       int horizontalSize) {
     var rawSections = chunk.getSectionArray();
     var sections = new FastChunkSection[rawSections.length];
@@ -195,8 +200,8 @@ public final class FastCopyBufferDataIntoChunks {
     finalizeChunks(sections, chunk, mappings[2] == null ? FastNoiseGen.AIR : mappings[2]);
   }
 
-  private static long getLong(ByteBuffer rawData, int idx) {
-    return rawData.getLong(idx);
+  private static long getLong(MemorySegment rawData, int idx) {
+    return rawData.get(ValueLayout.JAVA_LONG, idx);
   }
 
   private static void handleLong(
