@@ -1,5 +1,6 @@
 package org.codeberg.zenxarch.perf.parity;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import java.io.Serializable;
 import java.util.Arrays;
@@ -57,25 +58,32 @@ public final class ChunkStorage implements Serializable {
   @Override
   public String toString() {
     var res = new StringBuilder();
-    res.append("ChunkStorage[");
+    res.append("ChunkStorage[\n");
 
-    res.append("seed=").append(seed).append(",");
-    res.append("worldName=").append(worldName).append(",");
-    res.append("chunkX=").append(chunkX).append(",");
-    res.append("chunkZ=").append(chunkZ).append(",");
+    res.append("seed=").append(seed).append("\n");
+    res.append("worldName=").append(worldName).append("\n");
+    res.append("chunkX=").append(chunkX).append("\n");
+    res.append("chunkZ=").append(chunkZ).append("\n");
 
-    res.append("sections=").append(Arrays.toString(this.sections)).append(",");
+    // TODO: make the output more reasonable
+    // res.append("sections=").append(Arrays.toString(this.sections)).append(",");
 
-    res.append("heightmaps=").append(this.heightmaps).append(",");
+    res.append("heightmaps=").append(this.heightmaps).append("\n");
     res.append("postProcessingList=").append(Arrays.deepToString(this.postProcessingList));
 
-    res.append("]");
+    res.append("\n]");
     return res.toString();
   }
+
+  private static final String RED_COLOR = "\033[31m";
+  private static final String GREEN_COLOR = "\033[32m";
+  private static final String RESET_COLOR = "\033[0m";
 
   public String matches(ProtoChunk chunk) {
     var pos = chunk.getPos();
     if (pos.x() != chunkX || pos.z() != chunkZ) return "Chunk Pos don't match";
+
+    var res = new StringBuilder();
 
     for (var heightmap : chunk.getHeightmaps()) {
       var key = heightmap.getKey();
@@ -96,11 +104,14 @@ public final class ChunkStorage implements Serializable {
     var sections = chunk.getSectionArray();
     if (sections.length != this.sections.length) return "Chunk section's length don't match";
     for (int i = 0; i < sections.length; i++) {
-      var err = this.sections[i].matches(sections[i]);
-      if (err != null) return err;
+      var len = res.length();
+      this.sections[i].matches(res, sections[i]);
+
+      if (len != res.length()) res.insert(len, "sections[" + i + "] is different\n");
     }
 
-    return null;
+    if (res.isEmpty()) return null;
+    return res.toString();
   }
 
   public static final class ChunkStorageSection implements Serializable {
@@ -124,30 +135,29 @@ public final class ChunkStorage implements Serializable {
       this.blocks = new PalettedContainerStorage(section.blockStateContainer, BlockState::toString);
     }
 
-    public String matches(ChunkSection section) {
-      if (this.nonEmptyBlockCount != section.nonEmptyBlockCount)
-        return "nonEmptyBlockCount don't match";
-      if (this.nonEmptyFluidCount != section.nonEmptyFluidCount)
-        return "nonEmptyFluidCount don't match";
-      if (this.randomTickableBlockCount != section.randomTickableBlockCount)
-        return "randomTickableBlockCount don't match";
-      if (this.randomTickableFluidCount != section.randomTickableFluidCount)
-        return "randomTickableFluidCount don't match";
+    public void matches(StringBuilder res, ChunkSection section) {
+      matchValue(res, "nonEmptyBlockCount", this.nonEmptyBlockCount, section.nonEmptyBlockCount);
+      matchValue(res, "nonEmptyFluidCount", this.nonEmptyFluidCount, section.nonEmptyFluidCount);
+      matchValue(
+          res,
+          "randomTickableBlockCount",
+          this.randomTickableBlockCount,
+          section.randomTickableBlockCount);
+      matchValue(
+          res,
+          "randomTickableFluidCount",
+          this.randomTickableFluidCount,
+          section.randomTickableFluidCount);
 
-      {
-        var blocksErr = this.blocks.matches(section.blockStateContainer, BlockState::toString);
-        if (blocksErr != null) return "Blocks " + blocksErr;
-      }
+      this.blocks.matches(res, section.blockStateContainer, BlockState::toString);
+      this.biomes.matches(
+          res,
+          ((PalettedContainer<RegistryEntry<Biome>>) section.biomeContainer),
+          RegistryEntry::getIdAsString);
+    }
 
-      {
-        var biomesErr =
-            this.biomes.matches(
-                ((PalettedContainer<RegistryEntry<Biome>>) section.biomeContainer),
-                RegistryEntry::getIdAsString);
-        if (biomesErr != null) return "Biomes " + biomesErr;
-      }
-
-      return null;
+    private void matchValue(StringBuilder builder, String name, int a, int b) {
+      if (a != b) builder.append(name).append(": ").append(a).append(" | ").append(b).append("\n");
     }
 
     @Override
@@ -188,29 +198,58 @@ public final class ChunkStorage implements Serializable {
       for (int i = 0; i < this.data.length; i++) this.data[i] = data.storage().get(i);
     }
 
-    public <T> String matches(PalettedContainer<T> container, Function<T, String> converter) {
-      return matches(new PalettedContainerStorage(container, converter));
+    public <T> void matches(
+        StringBuilder builder, PalettedContainer<T> container, Function<T, String> converter) {
+      matches(builder, new PalettedContainerStorage(container, converter));
     }
 
-    private String matches(PalettedContainerStorage other) {
+    private void matches(StringBuilder builder, PalettedContainerStorage other) {
+      var different = false;
       for (int i = 0; i < other.data.length; i++) {
         var idxA = this.data[i];
         var keyA = this.keys[idxA];
         var idxB = other.data[i];
         var keyB = other.keys[idxB];
-        if (!Objects.equals(keyA, keyB))
-          return "Storage entries don't match "
-              + idxA
-              + " "
-              + keyA
-              + " , "
-              + idxB
-              + " "
-              + keyB
-              + other.keys[other.data[i]];
+        if (!Objects.equals(keyA, keyB)) {
+          different = true;
+          break;
+        }
       }
 
-      return null;
+      if (!different) return;
+      var selfIdx = new int[16];
+      var otherIdx = new int[16];
+      final var commonIdx = new Object2IntOpenHashMap<String>(this.keys.length);
+      for (var key : this.keys) commonIdx.computeIfAbsent(key, k -> commonIdx.size());
+      for (var key : other.keys) commonIdx.computeIfAbsent(key, k -> commonIdx.size());
+
+      commonIdx.forEach(
+          (a, b) -> {
+            builder.append("[").append(b).append("]=").append(a).append("\n");
+          });
+
+      for (int i = 0; i < other.data.length; i += 16) {
+        for (int j = 0; j < 16; j++) {
+          selfIdx[j] = commonIdx.getOrDefault(this.keys[this.data[i + j]], -1);
+          otherIdx[j] = commonIdx.getOrDefault(other.keys[other.data[i + j]], -1);
+        }
+        if (!Arrays.equals(selfIdx, otherIdx)) {
+          builder.append("[").append(i).append("]=|");
+          for (var k = 0; k < 16; k++)
+            builder.append(selfIdx[k] == otherIdx[k] ? "." : RED_COLOR + "+" + RESET_COLOR);
+          builder.append("| ");
+          for (var k = 0; k < 16; k++) blockMatch(builder, selfIdx[k], otherIdx[k]);
+          builder.append("\n");
+        }
+      }
+    }
+
+    private void blockMatch(StringBuilder res, int a, int b) {
+      if (a == b) {
+        res.append(a).append(" ");
+        return;
+      }
+      res.append(GREEN_COLOR).append(a).append(RED_COLOR).append(b).append(RESET_COLOR).append(" ");
     }
 
     @Override

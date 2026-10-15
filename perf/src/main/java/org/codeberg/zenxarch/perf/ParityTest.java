@@ -97,8 +97,14 @@ public final class ParityTest {
             var err = against.matches(chunk);
             if (err != null) {
               ParityGlobals.LOGGER.info(
-                  "Ours: {} Theirs: {}", new ChunkStorage(seed, worldKey, chunk), against);
-              throw new IllegalStateException("Chunks don't match " + pos + " " + err);
+                  "Ours: {}\nTheirs: {}", new ChunkStorage(seed, worldKey, chunk), against);
+              throw new IllegalStateException(
+                  "Chunks don't match at x: "
+                      + pos.getCenterX()
+                      + " z: "
+                      + pos.getCenterZ()
+                      + " because: \n"
+                      + err);
             }
           } else {
             var storage = new ChunkStorage(seed, worldKey, chunk);
