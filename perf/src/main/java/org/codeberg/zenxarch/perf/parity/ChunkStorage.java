@@ -79,6 +79,18 @@ public final class ChunkStorage implements Serializable {
   private static final String GREEN_COLOR = "\033[32m";
   private static final String RESET_COLOR = "\033[0m";
 
+  private static StringBuilder append(StringBuilder res, int value, int size) {
+    var l = res.length();
+    res.append(value);
+
+    var c = res.length() - l;
+    while (c < size) {
+      res.insert(l, ' ');
+      c++;
+    }
+    return res;
+  }
+
   public String matches(ProtoChunk chunk) {
     var pos = chunk.getPos();
     if (pos.x() != chunkX || pos.z() != chunkZ) return "Chunk Pos don't match";
@@ -217,8 +229,6 @@ public final class ChunkStorage implements Serializable {
       }
 
       if (!different) return;
-      var selfIdx = new int[16];
-      var otherIdx = new int[16];
       final var commonIdx = new Object2IntOpenHashMap<String>(this.keys.length);
       for (var key : this.keys) commonIdx.computeIfAbsent(key, k -> commonIdx.size());
       for (var key : other.keys) commonIdx.computeIfAbsent(key, k -> commonIdx.size());
@@ -227,29 +237,42 @@ public final class ChunkStorage implements Serializable {
           (a, b) -> {
             builder.append("[").append(b).append("]=").append(a).append("\n");
           });
+      final var size = String.valueOf(commonIdx.size() - 1).length();
+      final var width =
+          switch (size) {
+            case 1 -> 64;
+            case 2 -> 32;
+            case 3 -> 16;
+            default -> 8;
+          };
 
-      for (int i = 0; i < other.data.length; i += 16) {
-        for (int j = 0; j < 16; j++) {
+      var selfIdx = new int[width];
+      var otherIdx = new int[width];
+      for (int i = 0; i < other.data.length; i += width) {
+        for (int j = 0; j < width; j++) {
           selfIdx[j] = commonIdx.getOrDefault(this.keys[this.data[i + j]], -1);
           otherIdx[j] = commonIdx.getOrDefault(other.keys[other.data[i + j]], -1);
         }
         if (!Arrays.equals(selfIdx, otherIdx)) {
-          builder.append("[").append(i).append("]=|");
-          for (var k = 0; k < 16; k++)
+          builder.append("[");
+          append(builder, i, 4).append("]=|");
+          for (var k = 0; k < width; k++)
             builder.append(selfIdx[k] == otherIdx[k] ? "." : RED_COLOR + "+" + RESET_COLOR);
           builder.append("| ");
-          for (var k = 0; k < 16; k++) blockMatch(builder, selfIdx[k], otherIdx[k]);
+          for (var k = 0; k < width; k++) blockMatch(builder, selfIdx[k], otherIdx[k], size);
           builder.append("\n");
         }
       }
     }
 
-    private void blockMatch(StringBuilder res, int a, int b) {
+    private void blockMatch(StringBuilder res, int a, int b, int size) {
       if (a == b) {
-        res.append(a).append(" ");
+        append(res, a, size + size);
         return;
       }
-      res.append(GREEN_COLOR).append(a).append(RED_COLOR).append(b).append(RESET_COLOR).append(" ");
+      res.append(GREEN_COLOR);
+      append(res, a, size).append(RED_COLOR);
+      append(res, b, size).append(RESET_COLOR);
     }
 
     @Override
