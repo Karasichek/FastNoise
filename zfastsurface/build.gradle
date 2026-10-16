@@ -75,8 +75,6 @@ publishMods {
     minecraftVersionRange {
       start = project.cf_mc_version
       end = project.max_minecraft_version
-
-      includeSnapshots = true
     }
 
     announcementTitle = "Download from Curseforge"
