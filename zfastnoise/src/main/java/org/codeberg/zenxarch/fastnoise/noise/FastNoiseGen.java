@@ -5,7 +5,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.SingularPalette;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import org.codeberg.zenxarch.fastnoise.heightmap.HeightmapUtil;
@@ -53,20 +52,12 @@ public class FastNoiseGen {
       chunkNoiseSampler.sampleEndDensity(cellXIndex);
 
       for (int cellZIndex = 0; cellZIndex < cellWidth; cellZIndex++) {
-        int lastSectionIndex = chunk.countVerticalSections() - 1;
-        ChunkSection section = chunk.getSection(lastSectionIndex);
-
         for (int cellYIndex = cellHeight - 1; cellYIndex >= 0; cellYIndex--) {
           chunkNoiseSampler.onSampledCellCorners(cellYIndex, cellZIndex);
 
           for (int yInCell = verticalCellBlockCount - 1; yInCell >= 0; yInCell--) {
             int blockY = (minimumCellY + cellYIndex) * verticalCellBlockCount + yInCell;
             int blockYInSection = blockY & 15;
-            int sectionIndex = chunk.getSectionIndex(blockY);
-            if (lastSectionIndex != sectionIndex) {
-              lastSectionIndex = sectionIndex;
-              section = chunk.getSection(sectionIndex);
-            }
 
             double factorY = (double) yInCell / verticalCellBlockCount;
             chunkNoiseSampler.interpolateY(blockY, factorY);

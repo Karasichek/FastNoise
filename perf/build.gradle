@@ -36,7 +36,8 @@ dependencies {
 
   if (loadMods) {
     implementation project(path: ":zfastnoise", configuration: "namedElements")
-    implementation project(path: ":zfastsurface", configuration: "namedElements")
+    // TODO: fix zfastsurface
+    // implementation project(path: ":zfastsurface", configuration: "namedElements")
     implementation project(path: ":zmatcomp", configuration: "namedElements")
   }
 }
