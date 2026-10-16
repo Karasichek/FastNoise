@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "perf.noise.NoiseChunkGeneratorMixin",
+    "perf.noise.BlockStateCounterMixin",
     "perf.biome.ChunkMixin",
     "perf.ore.OreVeinSamplerMixin",
     "debug.disable_carve_features_and_entities.ChunkGeneratingMixin",
