@@ -1,0 +1,27 @@
+classTweaker v1 named
+
+accessible field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+mutable field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+
+accessible field net/minecraft/world/chunk/ChunkSection biomeContainer Lnet/minecraft/world/chunk/ReadableContainer;
+
+accessible field net/minecraft/world/chunk/PalettedContainer data Lnet/minecraft/world/chunk/PalettedContainer$Data;
+
+accessible class net/minecraft/world/chunk/PalettedContainer$Data
+
+accessible method net/minecraft/world/chunk/ArrayPalette <init> ([Ljava/lang/Object;II)V
+
+## section
+
+accessible field net/minecraft/world/chunk/ChunkSection nonEmptyBlockCount S
+accessible field net/minecraft/world/chunk/ChunkSection nonEmptyFluidCount S
+accessible field net/minecraft/world/chunk/ChunkSection randomTickableBlockCount S
+
+accessible method net/minecraft/test/TestServer <init> (Ljava/lang/Thread;Lnet/minecraft/world/level/storage/LevelStorage$Session;Lnet/minecraft/resource/ResourcePackManager;Lnet/minecraft/server/SaveLoader;Ljava/util/Optional;Z)V
+
+accessible field net/minecraft/world/gen/GeneratorOptions seed J
+mutable field net/minecraft/world/gen/GeneratorOptions seed J
+
+accessible method net/minecraft/world/chunk/ChunkGenerating populateBiomes (Lnet/minecraft/world/chunk/ChunkGenerationContext;Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/util/collection/BoundedRegionArray;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;
+accessible method net/minecraft/world/chunk/ChunkGenerating populateNoise (Lnet/minecraft/world/chunk/ChunkGenerationContext;Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/util/collection/BoundedRegionArray;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;
+accessible method net/minecraft/world/chunk/ChunkGenerating buildSurface (Lnet/minecraft/world/chunk/ChunkGenerationContext;Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/util/collection/BoundedRegionArray;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;

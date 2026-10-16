@@ -1,0 +1,63 @@
+classTweaker v1 named
+
+accessible field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+mutable field net/minecraft/world/chunk/ChunkSection blockStateContainer Lnet/minecraft/world/chunk/PalettedContainer;
+
+accessible field net/minecraft/world/chunk/ChunkSection biomeContainer Lnet/minecraft/world/chunk/ReadableContainer;
+
+accessible field net/minecraft/world/chunk/PalettedContainer data Lnet/minecraft/world/chunk/PalettedContainer$Data;
+
+accessible class net/minecraft/world/chunk/PalettedContainer$Data
+
+accessible method net/minecraft/world/chunk/ArrayPalette <init> ([Ljava/lang/Object;II)V
+accessible field net/minecraft/world/chunk/ArrayPalette size I
+
+accessible field net/minecraft/world/chunk/SingularPalette entry Ljava/lang/Object;
+
+# Single biome skip
+accessible field net/minecraft/world/biome/source/TheEndBiomeSource centerBiome Lnet/minecraft/registry/entry/RegistryEntry;
+accessible field net/minecraft/world/biome/source/TheEndBiomeSource highlandsBiome Lnet/minecraft/registry/entry/RegistryEntry;
+accessible field net/minecraft/world/biome/source/TheEndBiomeSource midlandsBiome Lnet/minecraft/registry/entry/RegistryEntry;
+accessible field net/minecraft/world/biome/source/TheEndBiomeSource smallIslandsBiome Lnet/minecraft/registry/entry/RegistryEntry;
+accessible field net/minecraft/world/biome/source/TheEndBiomeSource barrensBiome Lnet/minecraft/registry/entry/RegistryEntry;
+
+accessible method net/minecraft/world/biome/source/TheEndBiomeSource getBiome (IIILnet/minecraft/world/biome/source/util/MultiNoiseUtil$MultiNoiseSampler;)Lnet/minecraft/registry/entry/RegistryEntry;
+
+accessible field net/minecraft/world/biome/source/FixedBiomeSource biome Lnet/minecraft/registry/entry/RegistryEntry;
+
+# block counting container
+accessible method net/minecraft/world/chunk/PalettedContainer <init> (Lnet/minecraft/world/chunk/PaletteProvider;Lnet/minecraft/world/chunk/PaletteType;Lnet/minecraft/util/collection/PaletteStorage;Lnet/minecraft/world/chunk/Palette;)V
+
+accessible field net/minecraft/world/chunk/PalettedContainer paletteProvider Lnet/minecraft/world/chunk/PaletteProvider;
+
+# threadlocal
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree
+accessible field net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree firstNode Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode;
+accessible field net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree previousResultNode Ljava/lang/ThreadLocal;
+
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode
+accessible field net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode value Ljava/lang/Object;
+
+accessible method net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode getSquaredDistance ([J)J
+accessible method net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode getResultingNode ([JLnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode;Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction;)Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode;
+
+accessible class net/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction
+
+# populateNoise
+accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler getHorizontalCellBlockCount ()I
+accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler getVerticalCellBlockCount ()I
+accessible method net/minecraft/world/gen/chunk/ChunkNoiseSampler sampleBlockState ()Lnet/minecraft/block/BlockState;
+
+# ore
+accessible class net/minecraft/world/gen/OreVeinSampler$VeinType
+accessible field net/minecraft/world/gen/OreVeinSampler$VeinType ore Lnet/minecraft/block/BlockState;
+accessible field net/minecraft/world/gen/OreVeinSampler$VeinType rawOreBlock Lnet/minecraft/block/BlockState;
+accessible field net/minecraft/world/gen/OreVeinSampler$VeinType stone Lnet/minecraft/block/BlockState;
+accessible field net/minecraft/world/gen/OreVeinSampler$VeinType minY I
+accessible field net/minecraft/world/gen/OreVeinSampler$VeinType maxY I
+
+## Xoroshiro128PlusPlusRandom
+accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedLo J
+accessible field net/minecraft/util/math/random/Xoroshiro128PlusPlusRandom$Splitter seedHi J
+accessible field net/minecraft/util/math/random/CheckedRandom$Splitter seed J
