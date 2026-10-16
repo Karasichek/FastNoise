@@ -64,7 +64,7 @@ parityClient +args="":
 
 parity +args="":
   tmux new-session -d 'bash'
-  tmux split-window -h 'bash'
+  tmux split-window -v 'bash'
   tmux send -t 0:0.0 "just parityServer {{args}}" C-m
   tmux send -t 0:0.1 "sleep 10" C-m
   tmux send -t 0:0.1 "just parityClient {{args}}" C-m
