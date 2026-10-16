@@ -59,20 +59,21 @@ public final class ChunkStorage implements Serializable {
   @Override
   public String toString() {
     var res = new StringBuilder();
-    res.append("ChunkStorage[\n");
+    res.append("ChunkStorage[");
 
-    res.append("seed=").append(seed).append("\n");
-    res.append("worldName=").append(worldName).append("\n");
-    res.append("chunkX=").append(chunkX).append("\n");
-    res.append("chunkZ=").append(chunkZ).append("\n");
+    res.append("seed=").append(seed).append(",");
+    res.append("worldName=").append(worldName).append(",");
+    res.append("chunkX=").append(chunkX).append(",");
+    res.append("chunkZ=").append(chunkZ).append(",");
 
     // TODO: make the output more reasonable
     // res.append("sections=").append(Arrays.toString(this.sections)).append(",");
 
-    res.append("heightmaps=").append(this.heightmaps).append("\n");
-    res.append("postProcessingList=").append(Arrays.deepToString(this.postProcessingList));
+    // TODO: make the output more reasonable
+    // res.append("heightmaps=").append(this.heightmaps).append("\n");
+    // res.append("postProcessingList=").append(Arrays.deepToString(this.postProcessingList));
 
-    res.append("\n]");
+    res.append("]");
     return res.toString();
   }
 
