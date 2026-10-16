@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.PalettedContainer;
@@ -42,8 +43,8 @@ public final class ChunkStorage implements Serializable {
 
     this.postProcessingList = new short[postProcessingList.length][];
     for (int i = 0; i < postProcessingList.length; i++) {
-      if (postProcessingList[i] == null) this.postProcessingList[i] = null;
-      else this.postProcessingList[i] = postProcessingList[i].toShortArray();
+      if (postProcessingList[i] != null)
+        this.postProcessingList[i] = postProcessingList[i].toShortArray();
     }
 
     this.heightmaps = new Object2ObjectArrayMap<>();
@@ -91,6 +92,16 @@ public final class ChunkStorage implements Serializable {
     return res;
   }
 
+  private static void blockMatch(StringBuilder res, int a, int b, int size) {
+    if (a == b) {
+      append(res, a, size + size);
+      return;
+    }
+    res.append(GREEN_COLOR);
+    append(res, a, size).append(RED_COLOR);
+    append(res, b, size).append(RESET_COLOR);
+  }
+
   public String matches(ProtoChunk chunk) {
     var pos = chunk.getPos();
     if (pos.x() != chunkX || pos.z() != chunkZ) return "Chunk Pos don't match";
@@ -100,8 +111,28 @@ public final class ChunkStorage implements Serializable {
     for (var heightmap : chunk.getHeightmaps()) {
       var key = heightmap.getKey();
       var value = heightmap.getValue();
-      if (!Arrays.equals(value.asLongArray(), this.heightmaps.get(key.asString())))
-        return "Heightmap don't match";
+      if (!Arrays.equals(value.asLongArray(), this.heightmaps.get(key.asString()))) {
+        final var size =
+            Math.max(
+                String.valueOf(chunk.getTopYInclusive()).length(),
+                String.valueOf(chunk.getBottomY()).length());
+        var self = new Heightmap(chunk, key);
+        self.setTo(chunk, key, this.heightmaps.get(key.asString()));
+
+        res.append("Heightmap ").append(key.asString()).append(" doesn't match\n");
+
+        for (int z = 0; z < 16; z++) {
+          for (int x = 0; x < 16; x++)
+            res.append(self.get(x, z) == value.get(x, z) ? "." : RED_COLOR + "+" + RESET_COLOR);
+          if (z == 7) res.append("\n");
+        }
+        res.append("\n");
+
+        for (int z = 0; z < 16; z++) {
+          for (int x = 0; x < 16; x++) blockMatch(res, self.get(x, z), value.get(x, z), size);
+          res.append("\n");
+        }
+      }
     }
 
     var post = ((ChunkAccessor) chunk).zenxarch$postProcessingLists();
@@ -109,8 +140,14 @@ public final class ChunkStorage implements Serializable {
       return "Post processing lists length don't match";
 
     for (int i = 0; i < post.length; i++) {
-      if (!matches((post[i] == null) ? null : post[i].toShortArray(), this.postProcessingList[i]))
-        return "Post processing lists don't match";
+      var ps = (post[i] == null) ? null : post[i].toShortArray();
+      if (!Arrays.equals(ps, this.postProcessingList[i])) {
+        res.append("Post Processing list[").append(i).append("] doesn't match\n");
+        res.append(Arrays.toString(ps))
+            .append("\n")
+            .append(Arrays.toString(this.postProcessingList[i]))
+            .append("\n");
+      }
     }
 
     var sections = chunk.getSectionArray();
@@ -119,7 +156,10 @@ public final class ChunkStorage implements Serializable {
       var len = res.length();
       this.sections[i].matches(res, sections[i]);
 
-      if (len != res.length()) res.insert(len, "sections[" + i + "] is different\n");
+      if (len != res.length())
+        res.insert(
+            len,
+            "sections[" + i + "] at y = " + (chunk.getBottomY() + (i * 16)) + " is different\n");
     }
 
     if (res.isEmpty()) return null;
@@ -265,16 +305,6 @@ public final class ChunkStorage implements Serializable {
       }
     }
 
-    private void blockMatch(StringBuilder res, int a, int b, int size) {
-      if (a == b) {
-        append(res, a, size + size);
-        return;
-      }
-      res.append(GREEN_COLOR);
-      append(res, a, size).append(RED_COLOR);
-      append(res, b, size).append(RESET_COLOR);
-    }
-
     @Override
     public String toString() {
       var res = new StringBuilder();
@@ -287,14 +317,5 @@ public final class ChunkStorage implements Serializable {
       res.append("]");
       return res.toString();
     }
-  }
-
-  private static boolean matches(short[] a, short[] b) {
-    if (a == null || b == null) return a == b;
-    if (a.length != b.length) return false;
-    for (int i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) return false;
-    }
-    return true;
   }
 }
