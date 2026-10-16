@@ -50,7 +50,13 @@ publishMods {
   modrinth {
     accessToken = providers.environmentVariable("MODRINTH_TOKEN")
     projectId = "FRSaEVFk"
-    minecraftVersions.add(project.minecraft_version)
+    
+    minecraftVersionRange {
+      start = project.min_minecraft_version
+      end = project.max_minecraft_version
+
+      includeSnapshots = true
+    }
 
     announcementTitle = "Download from Modrinth"
 
@@ -65,7 +71,13 @@ publishMods {
   curseforge {
     accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
     projectId = "1672869"
-    minecraftVersions.add(project.cf_mc_version)
+    
+    minecraftVersionRange {
+      start = project.cf_mc_version
+      end = project.max_minecraft_version
+
+      includeSnapshots = true
+    }
 
     announcementTitle = "Download from Curseforge"
 
