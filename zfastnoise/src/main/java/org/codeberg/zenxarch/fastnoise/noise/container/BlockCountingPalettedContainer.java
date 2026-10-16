@@ -37,9 +37,9 @@ public class BlockCountingPalettedContainer<T> extends PalettedContainer<T> {
       airCount -= blockCounts[i];
     }
 
-    output.accept(states[0], airCount);
+    if (airCount != 0) output.accept(states[0], airCount);
     for (int i = 1; i < this.palette.size; i++) {
-      output.accept(states[i], blockCounts[i]);
+      if (blockCounts[i] != 0) output.accept(states[i], blockCounts[i]);
     }
   }
 
