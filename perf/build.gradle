@@ -1,8 +1,7 @@
-version = project.mod_version + "+" + project.minecraft_version
-group = project.maven_group
-
-base {
-  archivesName = project.archives_base_name
+plugins {
+  id 'zfast.version'
+  id 'zfast.loom'
+  id 'zfast.java'
 }
 
 loom {
@@ -38,13 +37,5 @@ dependencies {
     implementation project(path: ":zfastnoise", configuration: "namedElements")
     implementation project(path: ":zfastsurface", configuration: "namedElements")
     implementation project(path: ":zmatcomp", configuration: "namedElements")
-  }
-}
-
-processResources {
-  inputs.property "version", project.version
-
-  filesMatching("fabric.mod.json") {
-    expand(inputs.properties)
   }
 }

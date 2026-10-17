@@ -1,30 +1,12 @@
 plugins {
-  id 'zfast.mod-publish'
-}
-
-version = project.mod_version + "+" + project.minecraft_version
-group = project.maven_group
-
-base {
-  archivesName = project.archives_base_name
+  id 'zfast.common'
 }
 
 loom {
   accessWidenerPath = file("src/main/resources/zfastsurface.ct")
 }
 
-dependencies {
-  implementation project(path: ":zconfig", configuration: "namedElements")
-}
-
-processResources {
-  inputs.property "version", project.version
-  inputs.property "zconfig_version", project(":zconfig").version
-
-  filesMatching("fabric.mod.json") {
-    expand(inputs.properties)
-  }
-}
+dependencies {}
 
 zmodPublish {
   name = "Fast Surface"
@@ -37,11 +19,9 @@ zmodPublish {
 publishMods {
   modrinth {
     incompatible("moonrise-opt")
-    requires("zconfig")
   }
 
   curseforge {
     incompatible("moonrise")
-    requires("zconfig")
   }
 }

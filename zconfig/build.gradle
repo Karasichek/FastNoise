@@ -1,25 +1,13 @@
 plugins {
+  id 'zfast.zconfig.version'
+  id 'zfast.loom'
+  id 'zfast.java'
   id 'zfast.mod-publish'
-}
-
-version = project.mod_version + "+" + project.version_suffix
-group = project.maven_group
-
-base {
-  archivesName = project.archives_base_name
 }
 
 dependencies {
   include api("com.electronwill.night-config:toml:${project.night_config_version}")
   include api("com.electronwill.night-config:core:${project.night_config_version}")
-}
-
-processResources {
-  inputs.property "version", project.version
-
-  filesMatching("fabric.mod.json") {
-    expand(inputs.properties)
-  }
 }
 
 zmodPublish {

@@ -1,0 +1,176 @@
+plugins {
+  id 'net.fabricmc.fabric-loom-remap'
+  id 'maven-publish'
+}
+
+group = project.maven_group
+
+base {
+  archivesName = project.archives_base_name
+}
+
+repositories {
+  maven {
+    url = "https://repo.codemc.io/repository/relativitymc/"
+  }
+}
+
+loom {
+  if (project.hasProperty("serverCompile")) {
+    serverOnlyMinecraftJar()
+  }
+
+  decompilerOptions.named("vineflower") {
+    options.put("mark-corresponding-synthetics", "1")
+  }
+
+  intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
+  useIntermediateMappings = true
+
+  runs {
+    client {
+      if (project.hasProperty("zdumpclass")) {
+        vmArgs '-Dorg.codeberg.zenxarch.zmatcomp.dumpClasses=true'
+      }
+    }
+
+    dap {
+      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+      client()
+    }
+
+    hotswapDap {
+      vmArgs '-agentlib:jdwp=transport=dt_socket,server=y,address=5005'
+      vmArgs '-XX:+AllowEnhancedClassRedefinition'
+      client()
+    }
+
+    printCompile {
+      vmArgs '-XX:CompileCommand=print,org.codeberg.zenxarch.*::*'
+      vmArgs '-XX:+UnlockDiagnosticVMOptions'
+      vmArgs '-XX:PrintAssemblyOptions=intel'
+      client()
+    }
+  }
+}
+
+test {
+  useJUnitPlatform()
+  workingDir = providers.provider {
+    mkdir(layout.buildDirectory.dir("testrun"))
+  }
+  jvmArgs += '-Dfabric.side=server'
+}
+
+dependencies {
+  minecraft "com.mojang:minecraft:${project.minecraft_version}"
+  mappings "org.relativitymc:modern-yarn:${project.yarn_mappings}:v2"
+  modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+  testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
+}
+
+processResources {
+  inputs.property "version", project.version
+  inputs.property "loader_version", project.loader_version
+  if (project.hasProperty("json_mc_version")) {
+    inputs.property "minecraft_version", project.json_mc_version
+  } else {
+    inputs.property "minecraft_version", project.minecraft_version
+  }
+
+  filesMatching("fabric.mod.json") {
+    expand(inputs.properties)
+  }
+}
+
+jar {
+  inputs.property "archivesName", project.base.archivesName
+
+  from("LICENSE") {
+    rename { "${it}_${inputs.properties.archivesName}"}
+  }
+}
+
+tasks.register("prodClient", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+  mods.from configurations.modImplementation
+  mods.from project(":zconfig").tasks.named("remapJar")
+  jvmArgs.add("-Xmx4G")
+  jvmArgs.add("-XX:+UseShenandoahGC")
+  jvmArgs.add("-XX:ShenandoahGCMode=generational")
+  if (project.hasProperty("zprodArgs")) {
+    def newArgs = project.getProperty("zprodArgs").split(',')
+    newArgs.stream().forEach { jvmArgs.add(it) }
+  }
+  if (project.hasProperty("zdumpclass")) {
+    jvmArgs.add('-Dorg.codeberg.zenxarch.zmatcomp.dumpClasses=true')
+  }
+  doNotTrackState("prod client task")
+}
+
+tasks.register("prodServer", net.fabricmc.loom.task.prod.ServerProductionRunTask) {
+  mods.from configurations.modImplementation
+  mods.from project(":zconfig").tasks.named("remapJar")
+  jvmArgs.add("-Xmx4G")
+  jvmArgs.add("-XX:+UseShenandoahGC")
+  jvmArgs.add("-XX:ShenandoahGCMode=generational")
+  if (project.hasProperty("zprodArgs")) {
+    def newArgs = project.getProperty("zprodArgs").split(',')
+    newArgs.stream().forEach { jvmArgs.add(it) }
+  }
+  if (project.hasProperty("zdumpclass")) {
+    jvmArgs.add('-Dorg.codeberg.zenxarch.zmatcomp.dumpClasses=true')
+  }
+  doNotTrackState("prod server task")
+}
+
+publishing {
+  publications {
+    create("mavenJava", MavenPublication) {
+      artifactId = project.archives_base_name
+      from components.java
+    }
+  }
+
+  // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+  repositories {
+    // Add repositories to publish to here.
+    // Notice: This block does NOT have the same function as the block in the top level.
+    // The repositories here will be used for publishing your artifact, not for
+    // retrieving dependencies.
+  }
+}
+
+if (project.hasProperty("modrinth")) {
+  repositories {
+    exclusiveContent {
+      forRepository {
+        maven {
+          name = "Modrinth"
+          url = "https://api.modrinth.com/maven"
+        }
+      }
+      filter {
+        includeGroup "maven.modrinth"
+      }
+    }
+  }
+
+  configurations {
+    register("modrinth")
+  }
+
+  dependencies {
+    ext.modrinth = new Properties()
+    def modFile = rootProject.layout.buildDirectory.file("mods.properties").get()
+    file(modFile).withInputStream { modrinth.load(it) }
+
+    modrinth.forEach { a,b ->
+      if (b.isEmpty()) return
+      modrinth "maven.modrinth:${a}:${b}"
+      modRuntimeOnly "maven.modrinth:${a}:${b}"
+    }
+
+    modRuntimeOnly configurations.modrinth.collect { zipTree(file(it)).matching { include '**/*.jar' } }
+  }
+}

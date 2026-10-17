@@ -1,12 +1,5 @@
 plugins {
-  id 'zfast.mod-publish'
-}
-
-version = project.mod_version + "+" + project.minecraft_version
-group = project.maven_group
-
-base {
-  archivesName = project.archives_base_name
+  id 'zfast.common'
 }
 
 loom {
@@ -14,18 +7,8 @@ loom {
 }
 
 dependencies {
-  implementation project(path: ":zconfig", configuration: "namedElements")
   include project(":zfastnoise-ocl")
   runtimeOnly project(path: ":zfastnoise-ocl", configuration: "namedElements")
-}
-
-processResources {
-  inputs.property "version", project.version
-  inputs.property "zconfig_version", project(":zconfig").version
-
-  filesMatching("fabric.mod.json") {
-    expand(inputs.properties)
-  }
 }
 
 zmodPublish {
@@ -36,25 +19,27 @@ zmodPublish {
   cfSlug = "zfastnoise"
 }
 
+def zconfigSources = providers.provider {
+  project(":zfastnoise-ocl").sourcesJar
+}
+
 publishMods {
   modrinth {
-    additionalFile(project(":zfastnoise-ocl").sourcesJar) {
+    additionalFile(zconfigSources) {
       type = SOURCES_JAR
     }
 
     incompatible("moonrise-opt")
     incompatible("anti-xray")
-    requires("zconfig")
   }
 
   curseforge {
-    additionalFile(project(":zfastnoise-ocl").sourcesJar) {
+    additionalFile(zconfigSources) {
       name = "Sources Jar for Opencl integration"
     }
 
     incompatible("moonrise")
     incompatible("antixray")
     incompatible("antixray-forge")
-    requires("zconfig")
   }
 }
