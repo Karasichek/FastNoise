@@ -1,3 +1,7 @@
+plugins {
+  id 'zfast.mod-publish'
+}
+
 version = project.mod_version + "+" + project.minecraft_version
 group = project.maven_group
 
@@ -22,67 +26,22 @@ processResources {
   }
 }
 
+zmodPublish {
+  name = "Fast Surface"
+  icon = "https://cdn.modrinth.com/data/FRSaEVFk/c393b58d86fd5fc416158aaabf84210fa20d568c.png"
+  mrId = "FRSaEVFk"
+  cfId = "1672869"
+  cfSlug = "zfastsurface"
+}
+
 publishMods {
-  file = remapJar.archiveFile
-  modLoaders.add("fabric")
-  modLoaders.add("quilt")
-
-  changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
-  def typeStr = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
-  type = switch(typeStr) {
-    case "stable" -> STABLE
-    case "release" -> STABLE
-    case "beta" -> BETA
-    default -> ALPHA
-  }
-
-  displayName = "Fast Surface " + project.version
-
-  discord {
-    username = "Fast Surface"
-    webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-    dryRunWebhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-    avatarUrl = "https://cdn.modrinth.com/data/FRSaEVFk/c393b58d86fd5fc416158aaabf84210fa20d568c.png"
-
-    content = "## " + displayName.get() + "\n" + changelog.get()
-  }
-
   modrinth {
-    accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-    projectId = "FRSaEVFk"
-    minecraftVersions.add(project.minecraft_version)
-
-    announcementTitle = "Download from Modrinth"
-
-    additionalFile(sourcesJar) {
-      type = SOURCES_JAR
-    }
-
     incompatible("moonrise-opt")
     requires("zconfig")
   }
 
   curseforge {
-    accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-    projectId = "1672869"
-    minecraftVersions.add(project.cf_mc_version)
-
-    announcementTitle = "Download from Curseforge"
-
-    javaVersions.add(JavaVersion.VERSION_25)
-
-    projectSlug = "zfastsurface"
-
-    client = true
-    server = true
-
-    additionalFile(sourcesJar) {
-      name = "Sources Jar"
-    }
-
     incompatible("moonrise")
     requires("zconfig")
   }
-
-  dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
 }

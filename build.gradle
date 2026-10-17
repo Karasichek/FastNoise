@@ -184,7 +184,7 @@ if (project.hasProperty("modrinth")) {
       def modFile = rootProject.layout.buildDirectory.file("mods.properties").get()
       file(modFile).withInputStream { modrinth.load(it) }
 
-      modrinth.forEach { a,b -> 
+      modrinth.forEach { a,b ->
         if (b.isEmpty()) return
         modrinth "maven.modrinth:${a}:${b}"
         modRuntimeOnly "maven.modrinth:${a}:${b}"
@@ -201,7 +201,7 @@ jmh {
   fork = 2
   timeOnIteration = '1s'
 
-  jvmArgsAppend = ["-XX:+UnlockDiagnosticVMOptions","-XX:CompileCommand=print,*WithinBoundsBenchmark.within*"]
+  jvmArgsAppend = ["-XX:+UnlockDiagnosticVMOptions", "-XX:CompileCommand=print,*WithinBoundsBenchmark.within*"]
 
   warmup = '2s'
   warmupIterations = 2

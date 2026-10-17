@@ -1,3 +1,7 @@
+plugins {
+  id 'zfast.mod-publish'
+}
+
 version = project.mod_version + "+" + project.minecraft_version
 group = project.maven_group
 
@@ -24,42 +28,16 @@ processResources {
   }
 }
 
+zmodPublish {
+  name = "Fast Noise"
+  icon = "https://cdn.modrinth.com/data/OnlVIpq5/6f2393cd87c37ef685efb82aacc5b0c9fae0c28d.png"
+  mrId = "OnlVIpq5"
+  cfId = "1460602"
+  cfSlug = "zfastnoise"
+}
+
 publishMods {
-  file = remapJar.archiveFile
-  modLoaders.add("fabric")
-  modLoaders.add("quilt")
-
-  changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
-  def typeStr = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
-  type = switch(typeStr) {
-    case "stable" -> STABLE
-    case "release" -> STABLE
-    case "beta" -> BETA
-    default -> ALPHA
-  }
-
-  displayName = "Fast Noise " + project.version
-
-  discord {
-    username = "Fast Noise"
-    webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-    dryRunWebhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-    avatarUrl = "https://cdn.modrinth.com/data/OnlVIpq5/6f2393cd87c37ef685efb82aacc5b0c9fae0c28d.png"
-
-    content = "## " + displayName.get() + "\n" + changelog.get()
-  }
-
   modrinth {
-    accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-    projectId = "OnlVIpq5"
-    minecraftVersions.add(project.minecraft_version)
-
-    announcementTitle = "Download from Modrinth"
-
-    additionalFile(sourcesJar) {
-      type = SOURCES_JAR
-    }
-
     additionalFile(project(":zfastnoise-ocl").sourcesJar) {
       type = SOURCES_JAR
     }
@@ -70,23 +48,6 @@ publishMods {
   }
 
   curseforge {
-    accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-    projectId = "1460602"
-    minecraftVersions.add(project.cf_mc_version)
-
-    announcementTitle = "Download from Curseforge"
-
-    javaVersions.add(JavaVersion.VERSION_25)
-
-    projectSlug = "zfastnoise"
-
-    client = true
-    server = true
-
-    additionalFile(sourcesJar) {
-      name = "Sources Jar"
-    }
-
     additionalFile(project(":zfastnoise-ocl").sourcesJar) {
       name = "Sources Jar for Opencl integration"
     }
@@ -96,6 +57,4 @@ publishMods {
     incompatible("antixray-forge")
     requires("zconfig")
   }
-
-  dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
 }
