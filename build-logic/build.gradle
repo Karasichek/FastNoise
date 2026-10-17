@@ -8,5 +8,6 @@ repositories {
 }
 
 dependencies {
+  implementation "net.fabricmc:fabric-loom:${loom_version}"
   implementation "me.modmuss50.mod-publish-plugin:me.modmuss50.mod-publish-plugin.gradle.plugin:${mod_publish_plugin_version}"
 }
