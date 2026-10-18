@@ -1,24 +1,45 @@
 package org.codeberg.zenxarch.fastnoise.mixin.perf.noise;
 
-import net.minecraft.block.BlockState;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.sugar.Cancellable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Coerce;
+import org.spongepowered.asm.mixin.injection.Slice;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(targets = "net.minecraft.world.chunk.ChunkSection$BlockStateCounter")
 public abstract class BlockStateCounterMixin {
-  @Shadow public int nonEmptyBlockCount;
-  @Shadow public int randomTickableBlockCount;
-  @Shadow public int nonEmptyFluidCount;
+  @ModifyExpressionValue(
+      method = "accept",
+      at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;isAir()Z"))
+  public boolean wrapWholeFunctionInAirCheck(boolean og, @Cancellable CallbackInfo ci) {
+    if (og) ci.cancel();
+    return og;
+  }
 
-  @Overwrite
-  public void accept(BlockState blockState, int i) {
-    if (!blockState.isAir()) {
-      this.nonEmptyBlockCount += i;
+  @WrapWithCondition(
+      method = "accept",
+      at =
+          @At(
+              value = "FIELD",
+              opcode = Opcodes.PUTFIELD,
+              target =
+                  "Lnet/minecraft/world/chunk/ChunkSection$BlockStateCounter;nonEmptyBlockCount:I"),
+      slice =
+          @Slice(
+              from =
+                  @At(value = "INVOKE:ONE", target = "Lnet/minecraft/fluid/FluidState;isEmpty()Z")))
+  public boolean removeDoubleCountOfSolidBlocks(@Coerce Object unused, int unusedCount) {
+    return false;
+  }
 
-      if (blockState.hasRandomTicks()) randomTickableBlockCount += i;
-
-      if (!blockState.getFluidState().isEmpty()) this.nonEmptyFluidCount += i;
-    }
+  @ModifyExpressionValue(
+      method = "accept",
+      at = @At(value = "INVOKE", target = "Lnet/minecraft/fluid/FluidState;hasRandomTicks()Z"))
+  public boolean removeRandomTickCheck(boolean og) {
+    return true;
   }
 }
