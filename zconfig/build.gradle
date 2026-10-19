@@ -1,8 +1,8 @@
-version = project.mod_version + "+" + project.version_suffix
-group = project.maven_group
-
-base {
-  archivesName = project.archives_base_name
+plugins {
+  id 'zfast.zconfig.version'
+  id 'zfast.loom'
+  id 'zfast.java'
+  id 'zfast.mod-publish'
 }
 
 dependencies {
@@ -10,79 +10,10 @@ dependencies {
   include api("com.electronwill.night-config:core:${project.night_config_version}")
 }
 
-processResources {
-  inputs.property "version", project.version
-
-  filesMatching("fabric.mod.json") {
-    expand(inputs.properties)
-  }
-}
-
-publishMods {
-  file = jar.archiveFile
-  modLoaders.add("fabric")
-  modLoaders.add("quilt")
-
-  changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
-  def typeStr = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
-  type = switch(typeStr) {
-    case "stable" -> STABLE
-    case "release" -> STABLE
-    case "beta" -> BETA
-    default -> ALPHA
-  }
-
-  displayName = "ZConfig " + project.version
-
-  discord {
-    username = "ZConfig"
-    webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-    dryRunWebhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-    avatarUrl = "https://cdn.modrinth.com/data/4qmvXRB9/cbb824fe58645294ee7aa783bf49d5ef6c574142.png"
-
-    content = "## " + displayName.get() + "\n" + changelog.get()
-  }
-
-  modrinth {
-    accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-    projectId = "4qmvXRB9"
-
-    minecraftVersionRange {
-      start = project.min_mc_version
-      end = project.max_mc_version
-
-      includeSnapshots = true
-    }
-
-    announcementTitle = "Download from Modrinth"
-
-    additionalFile(sourcesJar) {
-      type = SOURCES_JAR
-    }
-  }
-
-  curseforge {
-    accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-    projectId = "1632946"
-    
-    minecraftVersionRange {
-      start = project.min_mc_version
-      end = project.max_mc_version
-    }
-
-    announcementTitle = "Download from Curseforge"
-
-    javaVersions.add(JavaVersion.VERSION_25)
-
-    projectSlug = "zconfig"
-
-    client = true
-    server = true
-
-    additionalFile(sourcesJar) {
-      name = "Sources Jar"
-    }
-  }
-
-  dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
+zmodPublish {
+  name = "ZConfig"
+  icon = "https://cdn.modrinth.com/data/4qmvXRB9/cbb824fe58645294ee7aa783bf49d5ef6c574142.png"
+  mrId = "4qmvXRB9"
+  cfId = "1632946"
+  cfSlug = "zconfig"
 }
