@@ -1,8 +1,5 @@
-version = project.mod_version + "+" + project.minecraft_version
-group = project.maven_group
-
-base {
-  archivesName = project.archives_base_name
+plugins {
+  id 'zfast.common'
 }
 
 loom {
@@ -10,85 +7,27 @@ loom {
 }
 
 dependencies {
-  implementation project(path: ":zconfig", configuration: "namedElements")
-
   if (project.hasProperty("zfastsurface")) {
     modImplementation project(":zfastsurface")
   }
 }
 
-processResources {
-  inputs.property "version", project.version
-  inputs.property "zconfig_version", project(":zconfig").version
-
-  filesMatching("fabric.mod.json") {
-    expand(inputs.properties)
-  }
+zmodPublish {
+  name = "Material Rule Compiler"
+  icon = "https://cdn.modrinth.com/data/vnpqfrJN/6963040cae639580f9505d32de8110143fce7db1.png"
+  mrId = "vnpqfrJN"
+  cfId = "1672783"
+  cfSlug = "zmaterial-rule-compiler"
 }
 
 publishMods {
-  file = remapJar.archiveFile
-  modLoaders.add("fabric")
-  modLoaders.add("quilt")
-
-  changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
-  def typeStr = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
-  type = switch(typeStr) {
-    case "stable" -> STABLE
-    case "release" -> STABLE
-    case "beta" -> BETA
-    default -> ALPHA
-  }
-
-  displayName = "Material Rule Compiler " + project.version
-
-  discord {
-    username = "Material Rule Compiler"
-    webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-    dryRunWebhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
-    avatarUrl = "https://cdn.modrinth.com/data/vnpqfrJN/6963040cae639580f9505d32de8110143fce7db1.png"
-
-    content = "## " + displayName.get() + "\n" + changelog.get()
-  }
-
   modrinth {
-    accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-    projectId = "vnpqfrJN"
-    minecraftVersions.add(project.minecraft_version)
-
-    announcementTitle = "Download from Modrinth"
-
-    additionalFile(sourcesJar) {
-      type = SOURCES_JAR
-    }
-
     optional("zfastnoise")
     incompatible("moonrise-opt")
-    requires("zconfig")
   }
 
   curseforge {
-    accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-    projectId = "1672783"
-    minecraftVersions.add(project.cf_mc_version)
-
-    announcementTitle = "Download from Curseforge"
-
-    javaVersions.add(JavaVersion.VERSION_25)
-
-    projectSlug = "zmaterial-rule-compiler"
-
-    client = true
-    server = true
-
-    additionalFile(sourcesJar) {
-      name = "Sources Jar"
-    }
-
     optional("zfastnoise")
     incompatible("moonrise")
-    requires("zconfig")
   }
-
-  dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
 }

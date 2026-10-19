@@ -1,0 +1,103 @@
+plugins {
+  id 'me.modmuss50.mod-publish-plugin'
+}
+
+interface ModPublishDetails {
+  Property<String> getName()
+  Property<String> getIcon()
+  Property<String> getMrId()
+  Property<String> getCfId()
+  Property<String> getCfSlug()
+}
+
+def extension = project.extensions.create("zmodPublish", ModPublishDetails)
+
+publishMods {
+  file = remapJar.archiveFile
+  modLoaders.add("fabric")
+  modLoaders.add("quilt")
+
+  changelog = file("changelog.md").exists() ? file("changelog.md").getText() : ""
+  def typeStr = project.hasProperty("zmtype") ? project.getProperty("zmtype") : "alpha"
+  type = switch(typeStr) {
+    case "stable" -> STABLE
+    case "release" -> STABLE
+    case "beta" -> BETA
+    default -> ALPHA
+  }
+
+  displayName = providers.provider {
+    extension.name.get() + " " + project.version
+  }
+
+  discord {
+    username = extension.name
+    webhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
+    dryRunWebhookUrl = providers.environmentVariable("DISCORD_WEBHOOK")
+    avatarUrl = extension.icon
+
+    content = providers.provider {
+      "## " + displayName.get() + "\n" + changelog.get()
+    }
+  }
+
+  modrinth {
+    accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+    projectId = extension.mrId
+    
+    if (project.hasProperty("mr_mc_version")) {
+      def mr_mc_version_splitted = project.mr_mc_version.split(';')
+      if (mr_mc_version_splitted.length >= 2) {
+        minecraftVersionRange {
+          start = mr_mc_version_splitted[0]
+          end = mr_mc_version_splitted[1]
+          includeSnapshots = true
+        }
+      } else {
+        minecraftVersions.add(mr_mc_version_splitted[0])
+      }
+    } else {
+      minecraftVersions.add(minecraft_version)
+    }
+
+    announcementTitle = "Download from Modrinth"
+
+    additionalFile(sourcesJar) {
+      type = SOURCES_JAR
+    }
+  }
+
+  curseforge {
+    accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+    projectId = extension.cfId
+
+    if (project.hasProperty("cf_mc_version")) {
+      def cf_mc_version_splitted = project.cf_mc_version.split(';')
+      if (cf_mc_version_splitted.length >= 2) {
+        minecraftVersionRange {
+          start = cf_mc_version_splitted[0]
+          end = cf_mc_version_splitted[1]
+        }
+      } else {
+        minecraftVersions.add(cf_mc_version_splitted[0])
+      }
+    } else {
+      minecraftVersions.add(minecraft_version)
+    }
+
+    announcementTitle = "Download from Curseforge"
+
+    javaVersions.add(JavaVersion.VERSION_25)
+
+    projectSlug = extension.cfSlug
+
+    client = true
+    server = true
+
+    additionalFile(sourcesJar) {
+      name = "Sources Jar"
+    }
+  }
+
+  dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null
+}
