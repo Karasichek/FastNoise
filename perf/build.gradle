@@ -1,8 +1,7 @@
-version = project.mod_version + "+" + project.minecraft_version
-group = project.maven_group
-
-base {
-  archivesName = project.archives_base_name
+plugins {
+  id 'zfast.version'
+  id 'zfast.loom'
+  id 'zfast.java'
 }
 
 loom {
@@ -11,7 +10,7 @@ loom {
   runs {
     server {
       server()
-      def props = ["zperfbenchmark","zuseasync","zworldname","zbenchmode","zwarmuptime","zmeasuretime","zwarmups","zmeasures","zmod","zforks", "zthreads", "zparity", "zseed", "zworldradius", "zendcenter", "zworldcenter", "zseedcount", "zparityserver", "zparityport"]
+      def props = ["zperfbenchmark","zuseasync","zworldname","zbenchmode","zwarmuptime","zmeasuretime","zwarmups","zmeasures","zmod","zforks","zthreads","zparity","zseed","zworldradius","zendcenter","zworldcenter","zseedcount","zparityserver","zparityport"]
       for (def prop in props) {
         if (project.hasProperty(prop)) {
           property(prop, project.getProperty(prop))
@@ -29,7 +28,7 @@ loom {
 dependencies {
   implementation 'org.openjdk.jmh:jmh-core:1.37'
   annotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
-  
+
   implementation project(path: ":zconfig", configuration: "namedElements")
 
   def loadMods = project.hasProperty("zmod") ? project.getProperty("zmod") == "true" : true
@@ -39,13 +38,5 @@ dependencies {
     // TODO: fix zfastsurface
     // implementation project(path: ":zfastsurface", configuration: "namedElements")
     implementation project(path: ":zmatcomp", configuration: "namedElements")
-  }
-}
-
-processResources {
-  inputs.property "version", project.version
-
-  filesMatching("fabric.mod.json") {
-    expand(inputs.properties)
   }
 }
