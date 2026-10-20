@@ -3,10 +3,12 @@ package org.codeberg.zenxarch.matcomp.compiler.ir;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.world.biome.Biome;
@@ -238,8 +240,7 @@ public class FlattenedMaterialRule {
 
     if (ifTrue instanceof BiomeMaterialCondition biomeCond) {
       program.add(BIOME_CONDITION);
-      program.add(
-          add(biomeConditions, RegistryEntryList.of(registry::getOrThrow, biomeCond.biomes)));
+      program.add(add(biomeConditions, convert(registry, biomeCond.biomes)));
     } else if (ifTrue instanceof LithostitchedBiomeCondition biomeCond) {
       program.add(BIOME_CONDITION);
       program.add(add(biomeConditions, biomeCond.biomes()));
@@ -282,6 +283,20 @@ public class FlattenedMaterialRule {
 
   private static MaterialRule dereference(MaterialRule rule) {
     return rule;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static RegistryEntryList<Biome> convert(
+      Registry<Biome> registry, List<RegistryKey<Biome>> keys) {
+    var res = new ReferenceArraySet<>();
+    final var size = keys.size();
+    for (int i = 0; i < size; i++) {
+      var key = keys.get(i);
+      if (key == null) continue;
+      var value = registry.getOptional(key).orElse(null);
+      if (value != null) res.add(value);
+    }
+    return RegistryEntryList.of(res.toArray(RegistryEntry[]::new));
   }
 
   private static <T> int add(List<T> array, T value) {

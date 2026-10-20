@@ -1,0 +1,28 @@
+plugins {
+  id 'zfast.version'
+  id 'zfast.loom'
+  id 'zfast.java'
+  id 'zfast.mod-publish'
+}
+
+dependencies {
+  implementation project(path: ":zconfig", configuration: "namedElements")
+}
+
+processResources {
+  inputs.property "zconfig_version", project(":zconfig").version
+
+  filesMatching("fabric.mod.json") {
+    expand(inputs.properties)
+  }
+}
+
+publishMods {
+  modrinth {
+    requires("zconfig")
+  }
+
+  curseforge {
+    requires("zconfig")
+  }
+}
