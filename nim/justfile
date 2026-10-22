@@ -1,0 +1,11 @@
+build:
+  nim c -d:release -o:lsjava lsjava.nim
+  nim c -d:release -o:removeTabs removeTabs.nim
+
+install: build
+  install -m 755 ./lsjava ~/.local/bin/lsjava
+  install -m 755 ./removeTabs ~/.local/bin/removeTabs
+
+uninstall:
+  rm ~/.local/bin/lsjava
+  rm ~/.local/bin/removeTabs

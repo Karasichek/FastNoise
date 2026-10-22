@@ -13,7 +13,9 @@ wrapper:
 tidy:
     #!/bin/bash
 
-    git status -u --porcelain | awk '/\.java$/{print $2}' | xargs google-java-format -i
+    lsjava ".gradle" | xargs -r removeTabs
+    lsjava | xargs -r google-java-format -i
+    # git status -u --porcelain | awk '/\.java$/{print $2}' | xargs google-java-format -i
     # find -iname "*.java" | xargs clang-format -i
     # find -iname "*.java" | xargs google-java-format -i #--fix-imports-only -i
 
@@ -22,7 +24,8 @@ tidy:
 
 tidyAll:
     #!/bin/bash
-    git ls-files | awk '/\.java$/' | xargs google-java-format -i
+    lsjava -a ".gradle" | xargs -r removeTabs
+    lsjava -a | xargs -r google-java-format -i
 
 bench:
     just task jmh
