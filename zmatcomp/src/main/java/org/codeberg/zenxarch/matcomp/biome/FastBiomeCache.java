@@ -4,26 +4,30 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkSection;
 
 public final class FastBiomeCache {
-  private final Chunk[] chunks;
-  private final FastChunkBiomeCache[] cache;
+  private final ChunkSection[][] sections;
+  private final int[][][] cache;
   private final RegistryEntry<Biome>[] biomes;
 
   private final int minYInBiomes;
   private final int maxYInBiomes;
   private final int heightInBiomes;
+  private final int[][] ALWAYS_NULL;
 
   public FastBiomeCache(RegistryEntry<Biome>[] biomes, final Chunk[] chunks) {
-    this.chunks = chunks;
+    this.sections = new ChunkSection[9][];
+    for (int i = 0; i < 9; i++) this.sections[i] = chunks[i].getSectionArray();
     this.biomes = biomes;
+    this.ALWAYS_NULL = new int[4][biomes.length + 1];
 
     // get height params from center chunk to avoid retrogen stuff
     var heightView = chunks[4].getHeightLimitView();
 
     this.minYInBiomes = heightView.getBottomY() >> 2;
 
-    this.cache = new FastChunkBiomeCache[chunks[4].getSectionArray().length];
+    this.cache = new int[chunks[4].getSectionArray().length][][];
 
     this.heightInBiomes = this.cache.length << 2;
     this.maxYInBiomes = this.minYInBiomes + this.heightInBiomes - 1;
@@ -99,26 +103,33 @@ public final class FastBiomeCache {
   private int[] getCacheForY(int by) {
     final var cby = MathHelper.clamp(by, minYInBiomes, maxYInBiomes);
     final var lby = cby & 0x3;
-    return getForSectionY(cby).cache[lby];
+    return getForSectionY(cby)[lby];
   }
 
-  private FastChunkBiomeCache getForSectionY(int biomeY) {
+  private int[][] getForSectionY(int biomeY) {
     int secY = (biomeY - minYInBiomes) >> 2;
     var cached = this.cache[secY];
     if (cached == null) {
-      return (this.cache[secY] =
-          new FastChunkBiomeCache(
-              biomes,
-              this.chunks[0].getSectionArray()[secY],
-              this.chunks[1].getSectionArray()[secY],
-              this.chunks[2].getSectionArray()[secY],
-              this.chunks[3].getSectionArray()[secY],
-              this.chunks[4].getSectionArray()[secY],
-              this.chunks[5].getSectionArray()[secY],
-              this.chunks[6].getSectionArray()[secY],
-              this.chunks[7].getSectionArray()[secY],
-              this.chunks[8].getSectionArray()[secY]));
+      return (this.cache[secY] = this.getForSectionYUncached(secY));
     }
     return cached;
+  }
+
+  private int[][] getForSectionYUncached(int secY) {
+    try {
+      return FastChunkBiomeCache.createCache(
+          biomes,
+          this.sections[0][secY],
+          this.sections[1][secY],
+          this.sections[2][secY],
+          this.sections[3][secY],
+          this.sections[4][secY],
+          this.sections[5][secY],
+          this.sections[6][secY],
+          this.sections[7][secY],
+          this.sections[8][secY]);
+    } catch (Exception e) {
+      return ALWAYS_NULL;
+    }
   }
 }

@@ -27,8 +27,9 @@ public final class FastPosToBiome {
 
     if (MaterialRuleCompilerConfig.OPTIMIZE_BIOME_ACCESS
         && biomeAccess.storage instanceof ChunkRegion region) {
-      return new OptimizedGetter(
-          new FastBiomeCache(biomes, collectChunks(region, chunk.getPos())), biomeAccess);
+      var chunks = collectChunks(region, chunk.getPos());
+      if (chunks != null)
+        return new OptimizedGetter(new FastBiomeCache(biomes, chunks), biomeAccess);
     }
 
     return new VanillaGetter(biomeAccess);
@@ -68,13 +69,15 @@ public final class FastPosToBiome {
     for (int z = -1; z <= 1; z++) {
       for (int x = -1; x <= 1; x++) {
         final var idx = ((z + 1) * 3) + (x + 1);
-        if ((chunks[idx] = chunkRegion.getChunk(cx + x, cz + z))
-            .getStatus()
-            .isEarlierThan(ChunkStatus.BIOMES)) return null;
+        if (!containsBiomes(chunks[idx] = chunkRegion.getChunk(cx + x, cz + z))) return null;
       }
     }
 
     return chunks;
+  }
+
+  private static boolean containsBiomes(Chunk chunk) {
+    return chunk != null && chunk.getStatus().isAtLeast(ChunkStatus.BIOMES);
   }
 
   public static Set<RegistryEntry<Biome>> getBiomes(
@@ -84,7 +87,9 @@ public final class FastPosToBiome {
     final var cz = centerPos.z();
     for (int z = -rangeChunks; z <= rangeChunks; z++) {
       for (int x = -rangeChunks; x <= rangeChunks; x++) {
-        var chunkSections = chunkRegion.getChunk(cx + x, cz + z).getSectionArray();
+        var chunk = chunkRegion.getChunk(cx + x, cz + z);
+        if (!containsBiomes(chunk)) continue;
+        var chunkSections = chunk.getSectionArray();
         for (int i = 0; i < chunkSections.length; i++) {
           getBiomes(
               result, (PalettedContainer<RegistryEntry<Biome>>) chunkSections[i].biomeContainer);

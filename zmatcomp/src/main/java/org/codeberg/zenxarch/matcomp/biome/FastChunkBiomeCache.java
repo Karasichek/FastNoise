@@ -7,9 +7,11 @@ import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.SingularPalette;
 
 public final class FastChunkBiomeCache {
-  public final int[][] cache;
+  private FastChunkBiomeCache() {
+    throw new IllegalStateException("Shall not be instantiated");
+  }
 
-  public FastChunkBiomeCache(
+  public static int[][] createCache(
       RegistryEntry<Biome>[] biomes,
       ChunkSection aa,
       ChunkSection ab,
@@ -20,7 +22,7 @@ public final class FastChunkBiomeCache {
       ChunkSection ca,
       ChunkSection cb,
       ChunkSection cc) {
-    this.cache = new int[4][biomes.length + 1];
+    var cache = new int[4][biomes.length + 1];
 
     var sections =
         new ChunkSection[] {
@@ -32,9 +34,10 @@ public final class FastChunkBiomeCache {
     for (int y = 0; y < 4; y++) {
       fillArray(cache[y], y, biomes, sections);
     }
+    return cache;
   }
 
-  private void fillArray(
+  private static void fillArray(
       int[] cache, int y, RegistryEntry<Biome>[] biomes, ChunkSection[] sections) {
     int[][] localBiomes = new int[6][6];
 
@@ -77,18 +80,18 @@ public final class FastChunkBiomeCache {
     }
   }
 
-  private int setBit(int f, int idx) {
+  private static int setBit(int f, int idx) {
     return f | (0x1 << idx);
   }
 
-  private int indexOf(RegistryEntry<Biome>[] biomes, RegistryEntry<Biome> biome) {
+  private static int indexOf(RegistryEntry<Biome>[] biomes, RegistryEntry<Biome> biome) {
     for (int i = 0; i < biomes.length; i++) {
       if (biomes[i] == biome) return i;
     }
     throw new IllegalStateException("This cannot happen");
   }
 
-  private RegistryEntry<Biome> getBiome(ChunkSection[] sections, int x, int y, int z) {
+  private static RegistryEntry<Biome> getBiome(ChunkSection[] sections, int x, int y, int z) {
     int cx = (x >> 2) + 1;
     int cz = (z >> 2) + 1;
     var section = sections[cx + (cz * 3)];
